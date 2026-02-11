@@ -33,7 +33,7 @@ export default function Home() {
       description: "உடைகள்",
       link: "/apparel-wearables",
       subModules: [
-        { title: "Bride & Groom T-Shirts - 14-", link: "/apparel-wearables/bride-groom-tshirts" },
+        { title: "Bride & Groom T-Shirts ", link: "/apparel-wearables/bride-groom-tshirts" },
         { title: "Team Bride T-Shirts - மணப்பெண் குழு டி-ஷர்ட்", link: "/apparel-wearables/team-bride" },
         { title: "Team Groom T-Shirts - மணமகன் குழு டி-ஷர்ட்", link: "/apparel-wearables/team-groom" },
         { title: "Customized Shirts / Kurtas - தனிப்பயன் சட்டை / குர்தா", link: "/apparel-wearables/customized" },
@@ -42,23 +42,23 @@ export default function Home() {
     {
       title: "Traditional & Utility Items",
       description: "பாரம்பரிய & பயன்பாட்டு பொருட்கள்",
-      link: "/traditional-utility",
+      link: "/traditional-utility-items",
       subModules: [
-        { title: "Printed Visiri (Hand Fan) - அச்சிடப்பட்ட விசிறி 4", link: "/traditional-utility/printed-visiri" },
-        { title: "Visiri Bag - விசிறி பை", link: "/traditional-utility/visiri-bag" },
-        { title: "Traditional Umbrella / Parasol", link: "/traditional-utility/umbrella" },
+        { title: "Printed Visiri (Hand Fan) - அச்சிடப்பட்ட விசிறி ", link: "/traditional-utility-items/printed-visiri-hand-fan" },
+        { title: "Visiri Bag - விசிறி பை", link: "/traditional-utility-items/visiri-bag" },
+        { title: "Traditional Umbrella / Parasol", link: "/traditional-utility-items/traditional-umbrella-parasol" },
       ],
     },
     {
       title: "Guest Gifts & Keepsakes",
       description: "விருந்தினர் பரிசுகள்",
-      link: "/guest-gifts",
+      link: "/guest-gift-keepsakes",
       subModules: [
-        { title: "Welcome / Tote Bag - வரவேற்பு பை பூ", link: "/guest-gifts/tote-bag" },
-        { title: "Water Bottle Labels - தண்ணீர் பாட்டில் லேபிள் 4", link: "/guest-gifts/water-labels" },
-        { title: "Photo Frame - புகைப்பட சட்டகம்", link: "/guest-gifts/photo-frame" },
-        { title: "Fridge Magnet - ஃப்ரிட்ஜ் மேக்னெட்", link: "/guest-gifts/fridge-magnet" },
-        { title: "Mini Calendar - சிறிய காலண்டர் 3", link: "/guest-gifts/mini-calendar" },
+        { title: "Welcome / Tote Bag - வரவேற்பு பை பூ", link: "/guest-gift-keepsakes/welcome-tote-bag" },
+        { title: "Water Bottle Labels - தண்ணீர் பாட்டில் லேபிள் ", link: "/guest-gift-keepsakes/water-bottle-labels" },
+        { title: "Photo Frame - புகைப்பட சட்டகம்", link: "/guest-gift-keepsakes/photo-frame" },
+        { title: "Fridge Magnet - ஃப்ரிட்ஜ் மேக்னெட்", link: "/guest-gift-keepsakes/fridge-magnet" },
+        { title: "Mini Calendar - சிறிய காலண்டர் ", link: "/guest-gift-keepsakes/mini-calendar" },
       ],
     },
     {
@@ -75,8 +75,8 @@ export default function Home() {
       description: "சடங்கு பொருட்கள்",
       link: "/ritual-essentials",
       subModules: [
-        { title: "Pooja Kit Bag", link: "/ritual-essentials/pooja-kit" },
-        { title: "Ritual Name Boards - சடங்கு பெயர் பலகை", link: "/ritual-essentials/name-boards" },
+        { title: "Pooja Kit Bag", link: "/ritual-essentials/pooja-kit-bag" },
+        { title: "Ritual Name Boards - சடங்கு பெயர் பலகை", link: "/ritual-essentials/ritual-name-boards" },
       ],
     },
   ];
@@ -86,7 +86,7 @@ export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-amber-50">
+    <main className="min-h-screen bg-linear-to-br from-pink-50 via-rose-50 to-amber-50">
       {/* ================= NAVBAR ================= */}
       <nav className="fixed top-0 w-full z-50 backdrop-blur-md bg-white/70 shadow-lg border-b border-pink-200">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -179,7 +179,7 @@ export default function Home() {
       </nav>
 
       {/* ================= HERO ================= */}
-      <section className="pt-32 pb-24 text-center bg-gradient-to-br from-rose-100 via-amber-50 to-pink-100">
+      <section className="pt-32 pb-24 text-center bg-linear-to-br from-rose-100 via-amber-50 to-pink-100">
         <h1 className="text-5xl font-extrabold text-pink-800 mb-6 drop-shadow-md">
           Wedding Add-Ons (Tamil Nadu)
         </h1>
@@ -201,7 +201,7 @@ export default function Home() {
             <Link key={index} href={category.link}>
               <div className="group relative bg-white rounded-3xl p-8 text-center shadow-lg cursor-pointer transform transition-all duration-500 hover:scale-105 hover:-translate-y-3 hover:shadow-2xl overflow-hidden">
                 {/* Soft Glow Background */}
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-rose-100 via-pink-50 to-amber-100 opacity-0 group-hover:opacity-50 blur-xl transition duration-500"></div>
+                <div className="absolute inset-0 rounded-3xl bg-linear-to-tr from-rose-100 via-pink-50 to-amber-100 opacity-0 group-hover:opacity-50 blur-xl transition duration-500"></div>
 
                 <h3 className="relative text-xl font-semibold text-pink-800 mb-4 group-hover:text-rose-600 transition duration-300">
                   {category.title}

@@ -6,64 +6,72 @@ import { usePathname } from "next/navigation";
 
 const Navbar = () => {
   const pathname = usePathname();
-  const [openMenu, setOpenMenu] = useState(null);
+
+  // Separate states for desktop and mobile submenus
+  const [desktopOpenMenu, setDesktopOpenMenu] = useState(null);
+  const [mobileOpenMenu, setMobileOpenMenu] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isActive = (path) => {
-    return pathname === path ? "text-gold" : "text-cream";
-  };
-
-  const handleMouseEnter = (menu) => {
-    setOpenMenu(menu);
-  };
-
-  const handleMouseLeave = () => {
-    setOpenMenu(null);
+    return pathname === path ? "text-gold font-semibold" : "";
   };
 
   const menuItems = [
     {
       title: "Ceremony & Decor",
+      basePath: "/ceremony-decor",
       submenu: [
-        "Welcome Banner",
-        "Temple Theme Stage Backdrop",
-        "Kolam Entrance Board",
-        "Directional Sign Boards",
+        { name: "Welcome Banner", path: "/welcome-banner" },
+        { name: "Temple Theme Stage Backdrop", path: "/temple-theme-stage-backdrop" },
+        { name: "Kolam Entrance Board", path: "/kolam-entrance-board" },
+        { name: "Directional Sign Boards", path: "/directional-sign-boards" },
       ],
     },
     {
       title: "Apparel & Wearables",
+      basePath: "/apparel-wearables",
       submenu: [
-        "Bride & Groom T-Shirts",
-        "Team Bride T-Shirts",
-        "Team Groom T-Shirts",
-        "Customized Shirts / Kurtas",
+        { name: "Bride & Groom T-Shirts", path: "/bride-groom-t-shirts" },
+        { name: "Team Bride T-Shirts", path: "/team-bride-t-shirts" },
+        { name: "Team Groom T-Shirts", path: "/team-groom-t-shirts" },
+        { name: "Customized Shirts / Kurtas", path: "/customized-shirts-kurtas" },
       ],
     },
     {
       title: "Traditional & Utility Items",
+      basePath: "/traditional-utility-items",
       submenu: [
-        "Printed Visiri (Hand Fan)",
-        "Visiri Bag",
-        "Traditional Umbrella / Parasol",
+        { name: "Printed Visiri (Hand Fan)", path: "/printed-visiri-hand-fan" },
+        { name: "Visiri Bag", path: "/visiri-bag" },
+        { name: "Traditional Umbrella / Parasol", path: "/traditional-umbrella-parasol" },
       ],
     },
     {
       title: "Guest Gifts & Keepsakes",
+      basePath: "/guest-gift-keepsakes",
       submenu: [
-        "Welcome / Tote Bag",
-        "Water Bottle Labels",
-        "Photo Frame",
-        "Fridge Magnet",
-        "Mini Calendar",
+        { name: "Welcome Tote Bag", path: "/welcome-tote-bag" },
+        { name: "Water Bottle Labels", path: "/water-bottle-labels" },
+        { name: "Photo Frame", path: "/photo-frame" },
+        { name: "Fridge Magnet", path: "/fridge-magnet" },
+        { name: "Mini Calendar", path: "/mini-calendar" },
       ],
     },
     {
       title: "Photo & Fun Props",
-      submenu: ["Selfie Frame", "Traditional Photo Props"],
+      basePath: "/photo-fun-props",
+      submenu: [
+        { name: "Selfie Frame", path: "/selfie-frame" },
+        { name: "Traditional Photo Props", path: "/traditional-photo-props" },
+      ],
     },
     {
       title: "Ritual Essentials",
-      submenu: ["Pooja Kit Bag", "Ritual Name Boards"],
+      basePath: "/ritual-essentials",
+      submenu: [
+        { name: "Pooja Kit Bag", path: "/pooja-kit-bag" },
+        { name: "Ritual Name Boards", path: "/ritual-name-boards" },
+      ],
     },
   ];
 
@@ -71,46 +79,35 @@ const Navbar = () => {
     <nav className="bg-maroon text-cream sticky top-0 z-50 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          
           {/* Logo */}
-          <div className="shrink-0">
-            <Link href="/" className={`text-2xl font-bold ${isActive("/")}`}>
-              Wedding Add-Ons
-            </Link>
-          </div>
+          <Link href="/" className={`text-2xl font-bold ${isActive("/")}`}>
+            Wedding Add-Ons
+          </Link>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex space-x-4">
+          {/* ================= DESKTOP MENU ================= */}
+          <div className="hidden md:flex space-x-6">
             {menuItems.map((menu, index) => (
               <div
                 key={index}
                 className="relative"
-                onMouseEnter={() => handleMouseEnter(menu.title)}
-                onMouseLeave={handleMouseLeave}
+                onMouseEnter={() => setDesktopOpenMenu(menu.title)}
+                onMouseLeave={() => setDesktopOpenMenu(null)}
               >
-                <button className="font-medium text-cream">
+                <button className="font-medium hover:text-gold transition">
                   {menu.title}
                 </button>
 
-                {openMenu === menu.title && (
-                  <div className="absolute left-0 mt-2 w-56 bg-white text-maroon rounded-md shadow-lg">
+                {desktopOpenMenu === menu.title && (
+                  <div className="absolute left-0 mt-2 w-64 bg-white text-maroon rounded-md shadow-lg">
                     {menu.submenu.map((item, idx) => {
-                      const slug =
-                        "/" +
-                        item
-                          .toLowerCase()
-                          .replace(/[^\w\s]/gi, "")
-                          .replace(/\s+/g, "-");
-
+                      const slug = `${menu.basePath}${item.path}`;
                       return (
                         <Link
                           key={idx}
                           href={slug}
-                          className={`block px-4 py-2 text-sm hover:bg-maroon hover:text-cream ${
-                            isActive(slug)
-                          }`}
+                          className={`block px-4 py-2 text-sm hover:bg-maroon hover:text-cream transition ${isActive(slug)}`}
                         >
-                          {item}
+                          {item.name}
                         </Link>
                       );
                     })}
@@ -120,62 +117,55 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Mobile Menu */}
+          {/* ================= MOBILE BUTTON ================= */}
           <div className="md:hidden">
             <button
-              onClick={() =>
-                setOpenMenu(openMenu === "mobile" ? null : "mobile")
-              }
-              className="text-cream hover:text-gold font-medium"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="font-medium hover:text-gold"
             >
-              Menu
+              ☰ Menu
             </button>
-
-            {openMenu === "mobile" && (
-              <div className="absolute left-0 top-16 w-full bg-maroon text-cream shadow-lg">
-                {menuItems.map((menu, index) => (
-                  <div key={index} className="border-b border-gold">
-                    <button
-                      onClick={() =>
-                        setOpenMenu(
-                          openMenu === menu.title ? null : menu.title
-                        )
-                      }
-                      className="w-full text-left px-4 py-2 hover:bg-gold hover:text-maroon"
-                    >
-                      {menu.title}
-                    </button>
-
-                    {openMenu === menu.title && (
-                      <div className="bg-white text-maroon">
-                        {menu.submenu.map((item, idx) => {
-                          const slug =
-                            "/" +
-                            item
-                              .toLowerCase()
-                              .replace(/[^\w\s]/gi, "")
-                              .replace(/\s+/g, "-");
-
-                          return (
-                            <Link
-                              key={idx}
-                              href={slug}
-                              className="block px-4 py-2 text-sm hover:bg-maroon hover:text-cream"
-                            >
-                              {item}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
-
         </div>
       </div>
+
+      {/* ================= MOBILE MENU ================= */}
+      {mobileOpen && (
+        <div className="md:hidden bg-maroon text-cream shadow-lg">
+          {menuItems.map((menu, index) => (
+            <div key={index} className="border-t border-gold">
+              <button
+                onClick={() =>
+                  setMobileOpenMenu(
+                    mobileOpenMenu === menu.title ? null : menu.title
+                  )
+                }
+                className="w-full text-left px-4 py-3 hover:bg-gold hover:text-maroon"
+              >
+                {menu.title}
+              </button>
+
+              {mobileOpenMenu === menu.title && (
+                <div className="bg-white text-maroon">
+                  {menu.submenu.map((item, idx) => {
+                    const slug = `${menu.basePath}${item.path}`;
+                    return (
+                      <Link
+                        key={idx}
+                        href={slug}
+                        className="block px-4 py-2 text-sm hover:bg-maroon hover:text-cream"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </nav>
   );
 };

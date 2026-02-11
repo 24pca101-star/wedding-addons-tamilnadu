@@ -1,4 +1,25 @@
-export default function Home() {
+"use client";
+
+import { ReactNode, useState } from "react";
+import Link from "next/link";
+
+interface SubModule {
+  title: string;
+  link: string;
+}
+
+interface Category {
+  title: string;
+  description: string;
+  link: string;
+  subModules?: SubModule[];
+}
+
+interface LayoutProps {
+  children: ReactNode;
+}
+
+export default function Layout({ children }: LayoutProps) {
   const categories: Category[] = [
     {
       title: "Ceremony & Decor",
@@ -64,44 +85,31 @@ export default function Home() {
     },
   ];
 
-  // TypeScript state typing
   const [mobileDropdown, setMobileDropdown] = useState<number | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-amber-50">
+    <div className="min-h-screen bg-pink-50 text-gray-800">
       {/* ================= NAVBAR ================= */}
-      <nav className="fixed top-0 w-full z-50 backdrop-blur-md bg-white/70 shadow-lg border-b border-pink-200">
+      <nav className="fixed top-0 w-full z-50 backdrop-blur-md bg-white/70 shadow-md border-b border-pink-200">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          {/* Logo */}
           <h1 className="text-2xl font-extrabold text-pink-800 tracking-wide">
             Wedding Add-Ons
           </h1>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex gap-8 text-gray-700 font-medium">
+          <div className="hidden md:flex gap-8 font-medium text-gray-700">
             {categories.map((cat, index) => (
               <div key={index} className="relative group">
-                <Link
-                  href={cat.link}
-                  className="hover:text-pink-600 transition duration-300"
-                >
+                <Link href={cat.link} className="hover:text-pink-600 transition duration-300">
                   {cat.title}
                 </Link>
 
-                {/* Dropdown */}
                 {cat.subModules && (
                   <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl shadow-lg opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-300 z-50">
                     <ul className="flex flex-col p-4">
                       {cat.subModules.map((sub, i) => (
-                        <li
-                          key={i}
-                          className="py-2 hover:bg-pink-50 rounded-lg transition"
-                        >
-                          <Link
-                            href={sub.link}
-                            className="text-gray-700 hover:text-pink-700"
-                          >
+                        <li key={i} className="py-2 hover:bg-pink-50 rounded-lg transition">
+                          <Link href={sub.link} className="text-gray-700 hover:text-pink-700">
                             {sub.title}
                           </Link>
                         </li>
@@ -113,7 +121,7 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile menu button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -124,7 +132,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Mobile Menu Dropdown */}
+        {/* Mobile menu dropdown */}
         {isMobileMenuOpen && (
           <div className="md:hidden bg-white shadow-lg">
             <ul className="flex flex-col px-4 py-4 gap-2">
@@ -144,10 +152,7 @@ export default function Home() {
                     <ul className="flex flex-col pl-4 mt-1">
                       {cat.subModules.map((sub, i) => (
                         <li key={i} className="py-1">
-                          <Link
-                            href={sub.link}
-                            className="text-gray-700 hover:text-pink-700"
-                          >
+                          <Link href={sub.link} className="text-gray-700 hover:text-pink-700">
                             {sub.title}
                           </Link>
                         </li>
@@ -161,53 +166,15 @@ export default function Home() {
         )}
       </nav>
 
-      {/* ================= HERO ================= */}
-      <section className="pt-32 pb-24 text-center bg-gradient-to-br from-rose-100 via-amber-50 to-pink-100">
-        <h1 className="text-5xl font-extrabold text-pink-800 mb-6 drop-shadow-md">
-          Wedding Add-Ons (Tamil Nadu)
-        </h1>
+      {/* Page content */}
+      <main className="pt-28">{children}</main>
 
-        <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-          Customize your wedding with our exclusive add-ons and make your
-          special day unforgettable.
-        </p>
-      </section>
-
-      {/* ================= CATEGORY SECTION ================= */}
-      <section className="max-w-7xl mx-auto py-16 px-6">
-        <h2 className="text-3xl font-bold text-center text-pink-800 mb-12">
-          Explore Our Categories
-        </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          {categories.map((category, index) => (
-            <Link key={index} href={category.link}>
-              <div className="group relative bg-white rounded-3xl p-8 text-center shadow-lg cursor-pointer transform transition-all duration-500 hover:scale-105 hover:-translate-y-3 hover:shadow-2xl overflow-hidden">
-                {/* Soft Glow Background */}
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-rose-100 via-pink-50 to-amber-100 opacity-0 group-hover:opacity-50 blur-xl transition duration-500"></div>
-
-                <h3 className="relative text-xl font-semibold text-pink-800 mb-4 group-hover:text-rose-600 transition duration-300">
-                  {category.title}
-                </h3>
-
-                <p className="relative text-sm text-gray-600 group-hover:text-gray-800 transition duration-300">
-                  {category.description}
-                </p>
-
-                {/* Gold animated line */}
-                <div className="relative mt-6 h-1 w-12 mx-auto bg-amber-400 group-hover:w-24 transition-all duration-500 rounded-full"></div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* ================= FOOTER ================= */}
+      {/* Footer */}
       <footer className="bg-pink-800 text-white text-center py-6 mt-12">
         <p className="text-sm">
           © 2026 Wedding Add-Ons Tamil Nadu. Crafted with elegance ✨
         </p>
       </footer>
-    </main>
+    </div>
   );
 }

@@ -1,22 +1,37 @@
 import Image from "next/image";
 
-// Mark the component as async (recommended for App Router)
-export default async function BannerDetail({
+export default function BannerDetail({
   params,
 }: {
-  params: { id: string }; // always string from Next.js
+  params: { id: number };
 }) {
-  // If params is a Promise (some setups), unwrap it
-  // const { id } = await params; // uncomment if needed
-
   const bannerDesigns = [
-    { id: 1, name: "Floral Pink", image: "/card1.jpg", description: "Soft pink floral themed traditional welcome banner." },
-    { id: 2, name: "Soft Blue", image: "/card2.jpg", description: "Elegant blue tone banner with subtle decorations." },
-    { id: 3, name: "Minimal White", image: "/design1.jpg", description: "Clean and modern white aesthetic banner." },
-    { id: 4, name: "Traditional Red", image: "/design4.jpg", description: "Classic red wedding style welcome banner." },
+    {
+      id: 1,
+      name: "Floral Pink",
+      image: "/card1.jpg",
+      description: "Soft pink floral themed traditional welcome banner.",
+    },
+    {
+      id: 2,
+      name: "Soft Blue",
+      image: "/card2.jpg",
+      description: "Elegant blue tone banner with subtle decorations.",
+    },
+    {
+      id: 3,
+      name: "Minimal White",
+      image: "/design1.jpg",
+      description: "Clean and modern white aesthetic banner.",
+    },
+    {
+      id: 4,
+      name: "Traditional Red",
+      image: "/design4.jpg",
+      description: "Classic red wedding style welcome banner.",
+    },
   ];
 
-  // Convert params.id to number for comparison
   const selectedDesign = bannerDesigns.find(
     (design) => design.id === Number(params.id)
   );

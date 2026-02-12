@@ -11,7 +11,7 @@ export default function TraditionalUtilityItems() {
       link: "/traditional-utility-items/traditional-umbrella-parasol",
     },
     {
-      title: "Visiri Bag - விசிரி பை",
+      title: "Visiri Bag - விசிறி பை",
       link: "/traditional-utility-items/visiri-bag",
     },
   ];

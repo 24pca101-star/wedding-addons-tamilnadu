@@ -3,11 +3,11 @@ import Link from "next/link";
 export default function PhotoFunProps() {
   const items = [
     {
-      title: "Selfie-Frame Photo Props",
+      title: "Selfie-Frame Photo Props - செல்பி ஃப்ரேம்",
       link: "/photo-fun-props/selfie-frame",
     },
     {
-      title: "Traditional Photo Props",
+      title: "Traditional Photo Props - பாரம்பரிய புகைப்பட பொருட்கள்",
       link: "/photo-fun-props/traditional-photo-props",
     },
   ];

@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function GuestGiftsKeepsakes() {
   const items = [
     {
-      title: "Welcome / Tote Bag - வரவேற்பு பை பூ",
+      title: "Welcome / Tote Bag - வரவேற்பு டோட் பை",
       link: "/guest-gift-keepsakes/welcome-tote-bag",
     },
     {
@@ -27,7 +27,7 @@ export default function GuestGiftsKeepsakes() {
   return (
     <div className="min-h-screen bg-cream p-10">
       <h1 className="text-4xl font-bold text-maroon mb-6">
-        Guest Gifts & Keepsakes
+        Guest Gifts & Keepsakes - விருந்தினர் பரிசுகள்
       </h1>
 
       <p className="mb-10 text-gray-700">

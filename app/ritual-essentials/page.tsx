@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function RitualEssentials() {
   const items = [
     {
-      title: "Pooja Kit Bag - பூஜை கிட் பேக்",
+      title: "Pooja Kit Bag - பூஜை கிட் பை",
       link: "/ritual-essentials/pooja-kit-bag",
     },
     {

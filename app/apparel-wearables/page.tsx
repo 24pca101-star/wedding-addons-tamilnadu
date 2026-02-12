@@ -3,19 +3,19 @@ import Link from "next/link";
 export default function ApparelWearables() {
   const items = [
     {
-      title: "Bride & Groom T-Shirts",
+      title: "Bride & Groom T-Shirts - மணமக்கள் டி-ஷர்ட் ",
       link: "/apparel-wearables/bride-groom-t-shirts",
     },
     {
-      title: "Team Bride T-Shirts",
+      title: "Team Bride T-Shirts - மணப்பெண் குழு டி-ஷர்ட்",
       link: "/apparel-wearables/team-bride-t-shirts",
     },
     {
-      title: "Team Groom T-Shirts",
+      title: "Team Groom T-Shirts - மணமகன் குழு டி-ஷர்ட்",
       link: "/apparel-wearables/team-groom-t-shirts",
     },
     {
-      title: "Customized Shirts & Kurtas",
+      title: "Customized Shirts & Kurtas -  தனிப்பயன் சட்டை & குர்தா",
       link: "/apparel-wearables/customized-shirts-kurtas",
     },
   ];

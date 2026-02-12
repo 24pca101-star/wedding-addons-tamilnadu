@@ -1,10 +1,13 @@
 import Image from "next/image";
 
-export default function BannerDetail({
+export default async function BannerDetail({
   params,
 }: {
-  params: { id: number };
+  params: { id: string | number } | Promise<{ id: string | number }>;
 }) {
+  // Unwrap params if it’s a promise
+  const resolvedParams = await params;
+
   const bannerDesigns = [
     {
       id: 1,
@@ -33,7 +36,7 @@ export default function BannerDetail({
   ];
 
   const selectedDesign = bannerDesigns.find(
-    (design) => design.id === Number(params.id)
+    (design) => design.id === Number(resolvedParams.id)
   );
 
   if (!selectedDesign) {
@@ -55,31 +58,7 @@ export default function BannerDetail({
           {selectedDesign.name}
         </h1>
 
-        <p className="mt-4 text-gray-600">
-          {selectedDesign.description}
-        </p>
-
-        {/* Customization Section */}
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">
-            Customize Your Banner
-          </h2>
-
-          <input
-            type="text"
-            placeholder="Enter Bride & Groom Names"
-            className="w-full border p-3 rounded mb-4"
-          />
-
-          <input
-            type="date"
-            className="w-full border p-3 rounded mb-4"
-          />
-
-          <button className="bg-maroon text-white px-6 py-2 rounded-lg">
-            Save Customization
-          </button>
-        </div>
+        <p className="mt-4 text-gray-600">{selectedDesign.description}</p>
       </div>
     </div>
   );

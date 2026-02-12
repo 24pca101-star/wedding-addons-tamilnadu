@@ -3,19 +3,19 @@ import Link from "next/link";
 export default function CeremonyDecor() {
   const items = [
     {
-      title: "Welcome Banner",
+      title: "Welcome Banner - வரவேற்பு பேனர்",
       link: "/ceremony-decor/welcome-banner",
     },
     {
-      title: "Temple Theme Stage Backdrop",
+      title: "Temple Theme Stage Backdrop - கோவில் தீம் மேடை பின்னணி",
       link: "/ceremony-decor/temple-theme-stage-backdrop",
     },
     {
-      title: "Kolam Entrance Board",
+      title: "Kolam Entrance Board - கோலம் நுழைவுப் பலகை",
       link: "/ceremony-decor/kolam-entrance-board",
     },
     {
-      title: "Directional Sign Boards",
+      title: "Directional Sign Boards - வழிகாட்டி பலகைகள்",
       link: "/ceremony-decor/directional-sign-boards",
     },
   ];
@@ -23,7 +23,7 @@ export default function CeremonyDecor() {
   return (
     <div className="min-h-screen bg-cream p-10">
       <h1 className="text-4xl font-bold text-maroon mb-6">
-        Ceremony & Decor
+        Ceremony & Decor- விழா & அலங்காரம்
       </h1>
 
       <p className="mb-10 text-gray-700">

@@ -37,7 +37,7 @@ export default function Layout({ children }: LayoutProps) {
       description: "உடைகள்",
       link: "/apparel-wearables",
       subModules: [
-        { title: "Bride & Groom T-Shirts - 14-", link: "/apparel-wearables/bride-groom-tshirts" },
+        { title: "Bride & Groom T-Shirts - ", link: "/apparel-wearables/bride-groom-tshirts" },
         { title: "Team Bride T-Shirts - மணப்பெண் குழு டி-ஷர்ட்", link: "/apparel-wearables/team-bride" },
         { title: "Team Groom T-Shirts - மணமகன் குழு டி-ஷர்ட்", link: "/apparel-wearables/team-groom" },
         { title: "Customized Shirts / Kurtas - தனிப்பயன் சட்டை / குர்தா", link: "/apparel-wearables/customized" },
@@ -48,7 +48,7 @@ export default function Layout({ children }: LayoutProps) {
       description: "பாரம்பரிய & பயன்பாட்டு பொருட்கள்",
       link: "/traditional-utility",
       subModules: [
-        { title: "Printed Visiri (Hand Fan) - அச்சிடப்பட்ட விசிறி 4", link: "/traditional-utility/printed-visiri" },
+        { title: "Printed Visiri (Hand Fan) - அச்சிடப்பட்ட விசிறி ", link: "/traditional-utility/printed-visiri" },
         { title: "Visiri Bag - விசிறி பை", link: "/traditional-utility/visiri-bag" },
         { title: "Traditional Umbrella / Parasol", link: "/traditional-utility/umbrella" },
       ],
@@ -59,10 +59,10 @@ export default function Layout({ children }: LayoutProps) {
       link: "/guest-gifts",
       subModules: [
         { title: "Welcome / Tote Bag - வரவேற்பு பை பூ", link: "/guest-gifts/tote-bag" },
-        { title: "Water Bottle Labels - தண்ணீர் பாட்டில் லேபிள் 4", link: "/guest-gifts/water-labels" },
+        { title: "Water Bottle Labels - தண்ணீர் பாட்டில் லேபிள் ", link: "/guest-gifts/water-labels" },
         { title: "Photo Frame - புகைப்பட சட்டகம்", link: "/guest-gifts/photo-frame" },
         { title: "Fridge Magnet - ஃப்ரிட்ஜ் மேக்னெட்", link: "/guest-gifts/fridge-magnet" },
-        { title: "Mini Calendar - சிறிய காலண்டர் 3", link: "/guest-gifts/mini-calendar" },
+        { title: "Mini Calendar - சிறிய காலண்டர் ", link: "/guest-gifts/mini-calendar" },
       ],
     },
     {

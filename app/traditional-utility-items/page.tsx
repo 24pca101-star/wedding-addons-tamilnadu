@@ -8,6 +8,7 @@ export default function TraditionalUtilityItems() {
     },
     {
       title: "Traditional Umbrella & Parasol - பாரம்பரிய குடை & சிறுகுடை",
+      title: "Traditional Umbrella & Parasol - பழைய காத்திருக்கும் மற்றும் பாரசூல ்",
       link: "/traditional-utility-items/traditional-umbrella-parasol",
     },
     {

@@ -19,7 +19,7 @@ export default function TraditionalUtilityItems() {
   return (
     <div className="min-h-screen bg-cream p-10">
       <h1 className="text-4xl font-bold text-maroon mb-6">
-        Traditional Utility Items - பழைய பயன்பாட்டு உருப்படிகள்
+        Traditional Utility Items - பாரம்பரிய பயன்பாட்டு உருப்படிகள்
       </h1>
 
       <p className="mb-10 text-gray-700">

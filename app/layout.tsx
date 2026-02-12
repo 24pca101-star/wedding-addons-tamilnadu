@@ -4,6 +4,9 @@ import Layout from '../components/Layout';
 export const metadata = {
   title: 'Wedding Add-Ons Tamil Nadu',
   description: 'Customize your wedding with exclusive add-ons.',
+   icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

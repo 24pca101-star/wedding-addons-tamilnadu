@@ -2,7 +2,7 @@
 
 import { ReactNode, useState } from "react";
 import Link from "next/link";
-
+import Image from "next/image";
 interface SubModule {
   title: string;
   link: string;
@@ -91,11 +91,21 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-pink-50 text-gray-800">
       {/* ================= NAVBAR ================= */}
-      <nav className="fixed top-0 w-full z-50 backdrop-blur-md bg-white/70 shadow-md border-b border-pink-200">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-extrabold text-pink-800 tracking-wide">
-            Wedding Add-Ons
-          </h1>
+    
+<nav className="fixed top-0 w-full z-20 backdrop-blur-md bg-white/70 shadow-md border-b border-pink-200">
+  <div className="max-w-7xl mx-auto pl-4 pr-8 py-4 flex justify-between items-center">
+    
+
+    <Link href="/">
+      <div className="flex items-center cursor-pointer">
+        <Image
+          src="/logodesign.png" 
+          alt="Wedding Add-Ons Logo"
+          width={150}     
+          height={50}
+        />
+      </div>
+    </Link>
 
           <div className="hidden md:flex gap-8 font-medium text-gray-700">
             {categories.map((cat, index) => (

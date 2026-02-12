@@ -4,19 +4,29 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 
-const Navbar = () => {
+interface SubMenuItem {
+  name: string;
+  path: string;
+}
+
+interface MenuItem {
+  title: string;
+  basePath: string;
+  submenu: SubMenuItem[];
+}
+
+const Navbar: React.FC = () => {
   const pathname = usePathname();
 
-  // Separate states for desktop and mobile submenus
-  const [desktopOpenMenu, setDesktopOpenMenu] = useState(null);
-  const [mobileOpenMenu, setMobileOpenMenu] = useState(null);
+  const [desktopOpenMenu, setDesktopOpenMenu] = useState<string | null>(null);
+  const [mobileOpenMenu, setMobileOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isActive = (path) => {
+  const isActive = (path: string) => {
     return pathname === path ? "text-gold font-semibold" : "";
   };
 
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     {
       title: "Ceremony & Decor",
       basePath: "/ceremony-decor",
@@ -80,9 +90,7 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className={`text-2xl font-bold ${isActive("/")}`}>
-            Wedding Add-Ons
-          </Link>
+          <Link href="/" className={`text-2xl font-bold ${isActive("/")}`}>Wedding Add-Ons</Link>
 
           {/* ================= DESKTOP MENU ================= */}
           <div className="hidden md:flex space-x-6">
@@ -93,9 +101,7 @@ const Navbar = () => {
                 onMouseEnter={() => setDesktopOpenMenu(menu.title)}
                 onMouseLeave={() => setDesktopOpenMenu(null)}
               >
-                <button className="font-medium hover:text-gold transition">
-                  {menu.title}
-                </button>
+                <button className="font-medium hover:text-gold transition">{menu.title}</button>
 
                 {desktopOpenMenu === menu.title && (
                   <div className="absolute left-0 mt-2 w-64 bg-white text-maroon rounded-md shadow-lg">

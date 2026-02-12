@@ -50,7 +50,7 @@ export default function Layout({ children }: LayoutProps) {
       subModules: [
         { title: "Printed Visiri (Hand Fan) - அச்சிடப்பட்ட விசிறி ", link: "/traditional-utility-items/printed-visiri-hand-fan" },
         { title: "Visiri Bag - விசிறி பை", link: "/traditional-utility-items/visiri-bag" },
-        { title: "Traditional Umbrella / Parasol", link: "/traditional-utility-items/traditional-umbrella-parasol" },
+        { title: "Traditional Umbrella / Parasol - பாரம்பரிய குடை & சிறுகுடை", link: "/traditional-utility-items/traditional-umbrella-parasol" },
       ],
     },
     {

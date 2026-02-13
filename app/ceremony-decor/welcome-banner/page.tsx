@@ -1,15 +1,24 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
+interface Template {
+  id: number;
+  name: string;
+  image_path: string;
+}
+
 export default function WelcomeBanner() {
-  const bannerDesigns = [
-    { id: 1, name: "Floral Pink", image: "/card1.jpg" },
-    { id: 2, name: "Soft Blue", image: "/card2.jpg" },
-    { id: 3, name: "Minimal White", image: "/design1.jpg" },
-    { id: 4, name: "Traditional Red", image: "/design4.jpg" },
-  ];
+  const [bannerDesigns, setBannerDesigns] = useState<Template[]>([]);
+
+  useEffect(() => {
+    fetch('/api/templates')
+      .then(res => res.json())
+      .then(data => setBannerDesigns(data))
+      .catch(err => console.error("Failed to load templates", err));
+  }, []);
 
   return (
     <div className="min-h-screen bg-rose-50 p-10">
@@ -28,7 +37,7 @@ export default function WelcomeBanner() {
             className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition"
           >
             <Image
-              src={design.image}
+              src={design.image_path}
               alt={design.name}
               width={400}
               height={250}

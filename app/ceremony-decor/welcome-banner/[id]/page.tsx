@@ -1,43 +1,30 @@
 import Image from "next/image";
+import Link from "next/link";
+import pool from "@/lib/db";
+import { RowDataPacket } from "mysql2";
+
+interface Template extends RowDataPacket {
+  id: number;
+  name: string;
+  description: string;
+  image_path: string;
+  template_path: string;
+}
 
 export default async function BannerDetail({
   params,
 }: {
   params: { id: string | number } | Promise<{ id: string | number }>;
 }) {
-  // Unwrap params if it’s a promise
   const resolvedParams = await params;
+  const id = Number(resolvedParams.id);
 
-  const bannerDesigns = [
-    {
-      id: 1,
-      name: "Floral Pink",
-      image: "/card1.jpg",
-      description: "Soft pink floral themed traditional welcome banner.",
-    },
-    {
-      id: 2,
-      name: "Soft Blue",
-      image: "/card2.jpg",
-      description: "Elegant blue tone banner with subtle decorations.",
-    },
-    {
-      id: 3,
-      name: "Minimal White",
-      image: "/design1.jpg",
-      description: "Clean and modern white aesthetic banner.",
-    },
-    {
-      id: 4,
-      name: "Traditional Red",
-      image: "/design4.jpg",
-      description: "Classic red wedding style welcome banner.",
-    },
-  ];
-
-  const selectedDesign = bannerDesigns.find(
-    (design) => design.id === Number(resolvedParams.id)
+  // Fetch from Database
+  const [rows] = await pool.query<Template[]>(
+    'SELECT * FROM templates WHERE id = ?',
+    [id]
   );
+  const selectedDesign = rows[0];
 
   if (!selectedDesign) {
     return <h1 className="text-center mt-10">Design Not Found</h1>;
@@ -47,7 +34,7 @@ export default async function BannerDetail({
     <div className="min-h-screen bg-rose-50 p-10">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
         <Image
-          src={selectedDesign.image}
+          src={selectedDesign.image_path}
           alt={selectedDesign.name}
           width={800}
           height={320}
@@ -59,6 +46,15 @@ export default async function BannerDetail({
         </h1>
 
         <p className="mt-4 text-gray-600">{selectedDesign.description}</p>
+
+        <div className="mt-8 text-center">
+          <Link
+            href={`/editor?template=${selectedDesign.template_path}`}
+            className="inline-block bg-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-pink-700 transition"
+          >
+            Customize Design
+          </Link>
+        </div>
       </div>
     </div>
   );

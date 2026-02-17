@@ -1,6 +1,7 @@
-const mysql = require('mysql2/promise');
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../.env.local') });
+import mysql from 'mysql2/promise';
+import path from 'path';
+import dotenv from 'dotenv';
+dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
 
 async function syncTemplates() {
     const connection = await mysql.createConnection({

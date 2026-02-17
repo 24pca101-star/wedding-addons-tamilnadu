@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS saved_designs (
 
 -- Seed Data (Adjust paths if necessary)
 INSERT INTO templates (name, description, image_path, template_path) VALUES 
-('Floral Pink', 'Soft pink floral themed traditional welcome banner.', '/card1.jpg', '/templates/design-1.psd'),
-('Soft Blue', 'Elegant blue tone banner with subtle decorations.', '/card2.jpg', '/templates/design-2.psd'),
-('Minimal White', 'Clean and modern white aesthetic banner.', '/design1.jpg', '/templates/design-3.psd'),
+('Floral Pink', 'Soft pink floral themed traditional welcome banner.', '/design1.jpg', '/templates/design-1.psd'),
+('Soft Blue', 'Elegant blue tone banner with subtle decorations.', '/design2.jpg', '/templates/design-2.psd'),
+('Minimal White', 'Clean and modern white aesthetic banner.', '/design3.jpg', '/templates/design-3.psd'),
 ('Traditional Red', 'Classic red wedding style welcome banner.', '/design4.jpg', '/templates/design-4.psd');

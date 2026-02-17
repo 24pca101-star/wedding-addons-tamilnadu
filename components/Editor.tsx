@@ -19,6 +19,9 @@ interface EditorProps {
 }
 
 export default function Editor({ templateUrl }: EditorProps) {
+    // Snap to Grid State
+    const [snapToGrid, setSnapToGrid] = useState(true);
+    const gridSize = 20; // px
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [canvas, setCanvas] = useState<fabric.Canvas | null>(null);
@@ -80,7 +83,8 @@ export default function Editor({ templateUrl }: EditorProps) {
     };
 
     // Boundary Lock Logic
-    const setupCanvasEvents = (canvas: fabric.Canvas) => {
+    const setupCanvasEvents = useCallback(() => {
+        if (!canvas) return;
         canvas.on('object:moving', (e) => {
             const obj = (e.target as CustomFabricObject | undefined);
             if (!obj) return;
@@ -94,6 +98,12 @@ export default function Editor({ templateUrl }: EditorProps) {
 
             let targetLeft = Math.max(minLeft, Math.min(obj.left || 0, maxLeft));
             let targetTop = Math.max(minTop, Math.min(obj.top || 0, maxTop));
+
+            // Snap to Grid
+            if (snapToGrid) {
+                targetLeft = Math.round(targetLeft / gridSize) * gridSize;
+                targetTop = Math.round(targetTop / gridSize) * gridSize;
+            }
 
             // Snap to Center Logic
             const centerX = (canvas.width! / canvas.getZoom()) / 2;
@@ -138,16 +148,17 @@ export default function Editor({ templateUrl }: EditorProps) {
         });
 
         canvas.on('mouse:up', () => {
+            if (!canvas) return;
             const guides = canvas.getObjects().filter(o => (o as CustomFabricObject).isSnapGuide);
             guides.forEach(g => canvas.remove(g));
             canvas.requestRenderAll();
         });
-    };
+    }, [canvas, snapToGrid]);
 
     const alignObject = (position: 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom') => {
         if (!selectedObject || !canvas) return;
-        const canvasWidth = canvas.width! / canvas.getZoom();
-        const canvasHeight = canvas.height! / canvas.getZoom();
+        const canvasWidth = canvas ? canvas.width! / canvas.getZoom() : 0;
+        const canvasHeight = canvas ? canvas.height! / canvas.getZoom() : 0;
         const objWidth = (selectedObject.width || 0) * (selectedObject.scaleX || 1);
         const objHeight = (selectedObject.height || 0) * (selectedObject.scaleY || 1);
 
@@ -160,7 +171,9 @@ export default function Editor({ templateUrl }: EditorProps) {
             case 'bottom': selectedObject.set('top', canvasHeight - objHeight); break;
         }
         selectedObject.setCoords();
-        canvas.requestRenderAll();
+        if (canvas) {
+            canvas.requestRenderAll();
+        }
         saveHistory();
     };
 
@@ -176,6 +189,7 @@ export default function Editor({ templateUrl }: EditorProps) {
         const containerHeight = containerRef.current.clientHeight - padding;
         const scale = Math.min(containerWidth / width, containerHeight / height);
 
+        if (!canvas) return;
         canvas.setZoom(scale);
         canvas.setDimensions({ width: width * scale, height: height * scale });
         canvas.renderAll();
@@ -186,7 +200,8 @@ export default function Editor({ templateUrl }: EditorProps) {
         const width = targetWidth || canvasSize.width;
         const height = targetHeight || canvasSize.height;
 
-        canvas.setZoom(1);
+        if (!canvas) return;
+        canvas.setZoom(1); // Set zoom to 1 (100%)
         canvas.setDimensions({ width, height });
         canvas.renderAll();
     };
@@ -216,7 +231,7 @@ export default function Editor({ templateUrl }: EditorProps) {
         const dims = await loadPsdToCanvas(psd, canvas);
         setCanvasSize(dims);
         addGuides(canvas, dims.width, dims.height);
-        setupCanvasEvents(canvas);
+        setupCanvasEvents();
         zoomToFit(dims.width, dims.height); // Start at fit zoom (Canva style)
     };
 
@@ -235,7 +250,7 @@ export default function Editor({ templateUrl }: EditorProps) {
                     const dims = await loadPsdToCanvas(psd, canvas);
                     setCanvasSize(dims);
                     addGuides(canvas, dims.width, dims.height);
-                    setupCanvasEvents(canvas);
+                    setupCanvasEvents();
                     zoomToFit(dims.width, dims.height); // Start at fit zoom (Canva style)
                 } catch (error) {
                     console.error("Error loading template:", error);
@@ -244,8 +259,7 @@ export default function Editor({ templateUrl }: EditorProps) {
             }
         };
         loadTemplate();
-    }, [templateUrl, canvas, zoomToFit]);
-
+    }, [templateUrl, canvas, zoomToFit, setupCanvasEvents]);
 
     // Add Text
     const addText = () => {
@@ -510,6 +524,14 @@ export default function Editor({ templateUrl }: EditorProps) {
 
     return (
         <div className="flex h-screen bg-gray-100 overflow-hidden font-inter">
+            {/* Snap to Grid Toggle */}
+            <div className="absolute top-4 right-4 z-50 bg-white rounded shadow p-2 flex items-center gap-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={snapToGrid} onChange={e => setSnapToGrid(e.target.checked)} />
+                    <span className="text-xs font-semibold">Snap to Grid</span>
+                </label>
+                <span className="text-xs text-gray-400">Grid: {gridSize}px</span>
+            </div>
             {/* Sidebar Tools */}
             <aside className={`
                 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}

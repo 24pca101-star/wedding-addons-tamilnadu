@@ -16,7 +16,7 @@ export default function WelcomeBanner() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/api/templates')
+    fetch('/api/welcome-banner-template')
       .then(res => {
         if (!res.ok) {
           throw new Error('Failed to fetch templates');
@@ -59,7 +59,7 @@ export default function WelcomeBanner() {
           <p className="text-lg font-medium">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 bg-[#C5A022] text-white px-6 py-2 rounded-lg hover:bg-[#B38F1E] transition shadow-sm"
+            className="mt-4 bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-[#f709a3] transition shadow-sm"
           >
             Try Again
           </button>
@@ -75,9 +75,11 @@ export default function WelcomeBanner() {
               key={design.id}
               className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition"
             >
-              <img
+              <Image
                 src={design.image_path}
                 alt={design.name}
+                width={400} // Set a default width
+                height={224} // Set a default height (16:9 ratio)
                 className="w-full h-56 object-cover"
               />
 
@@ -88,7 +90,7 @@ export default function WelcomeBanner() {
 
                 <Link
                   href={`/ceremony-decor/welcome-banner/${design.id}`}
-                  className="inline-block bg-[#C5A022] text-white px-6 py-2 rounded-lg hover:bg-[#B38F1E] transition shadow-sm"
+                  className="inline-block bg-pink-500 text-white px-6 py-2 rounded-lg hover:bg-[#f709a3] transition shadow-sm"
                 >
                   Customize
                 </Link>

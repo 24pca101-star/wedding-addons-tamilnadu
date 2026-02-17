@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS saved_designs (
 
 -- Seed Data (Adjust paths if necessary)
 INSERT INTO templates (name, description, image_path, template_path) VALUES 
-('Floral Pink', 'Soft pink floral themed traditional welcome banner.', '/card1.jpg', '/templates/design-1.psd'),
-('Soft Blue', 'Elegant blue tone banner with subtle decorations.', '/card2.jpg', '/templates/design-2.psd'),
-('Minimal White', 'Clean and modern white aesthetic banner.', '/design1.jpg', '/templates/design-3.psd'),
-('Traditional Red', 'Classic red wedding style welcome banner.', '/design4.jpg', '/templates/design-4.psd');
+('Rose Gold Floral', 'Soft pink floral welcome banner with elegant rose gold accents, perfect for traditional weddings.', '/templates/design-1.jpg', '/templates/design-1.psd'),
+('Winter Watercolor', 'Elegant winter wedding banner featuring deep blue watercolor textures and lush greenery.', '/templates/design-2.jpg', '/templates/design-2.psd'),
+('Winter Photo Invitation', 'Modern winter-themed invitation with cool blue accents and a central photo placeholder.', '/templates/design-3.jpg', '/templates/design-3.psd'),
+('Romantic Hearts', 'Peach-toned wedding banner adorned with romantic doves, golden bells, and floral corner details.', '/templates/design-4.jpg', '/templates/design-4.psd'),
+('Premium Gold Photo', 'Luxury gold and white banner with elegant floral outlines and a central photo frame.', '/templates/design-5.jpg', '/templates/design-5.psd'),
+('Artistic Yellow Floral', 'Artistic floral banner featuring bold yellow blossoms and refined typography.', '/templates/design-6.jpg', '/templates/design-6.psd');

@@ -16,12 +16,12 @@ async function updateImages() {
         console.log('Connected to MySQL server.');
 
         const updates = [
-            { id: 1, image: '/templates/design1.jpg' },
-            { id: 2, image: '/templates/design2.jpg' },
-            { id: 3, image: '/templates/design3.jpg' },
-            { id: 4, image: '/templates/design4.jpg' },
-            { id: 5, image: '/templates/design5.jpg' },
-            { id: 6, image: '/templates/design6.jpg' }
+            { id: 1, image: '/templates/design-1.jpg' },
+            { id: 2, image: '/templates/design-2.jpg' },
+            { id: 3, image: '/templates/design-3.jpg' },
+            { id: 4, image: '/templates/design-4.jpg' },
+            { id: 5, image: '/templates/design-5.jpg' },
+            { id: 6, image: '/templates/design-6.jpg' }
         ];
 
         for (const update of updates) {

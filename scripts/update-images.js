@@ -1,6 +1,8 @@
-const mysql = require('mysql2/promise');
-const path = require('path');
-require('dotenv').config({ path: path.resolve(__dirname, '../.env.local') });
+import mysql from 'mysql2/promise';
+import path from 'path';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: path.resolve(new URL(import.meta.url).pathname, '../.env.local') });
 
 async function updateImages() {
     const connection = await mysql.createConnection({
@@ -18,10 +20,12 @@ async function updateImages() {
             { id: 2, image: '/templates/design2.jpg' },
             { id: 3, image: '/templates/design3.jpg' },
             { id: 4, image: '/templates/design4.jpg' },
+            { id: 5, image: '/templates/design5.jpg' },
+            { id: 6, image: '/templates/design6.jpg' }
         ];
 
         for (const update of updates) {
-            const [result] = await connection.execute(
+            await connection.execute(
                 'UPDATE templates SET image_path = ? WHERE id = ?',
                 [update.image, update.id]
             );

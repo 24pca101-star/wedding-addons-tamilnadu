@@ -1,5 +1,6 @@
-require('dotenv').config({ path: '.env.local' });
-const mysql = require('mysql2/promise');
+import dotenv from 'dotenv';
+import mysql from 'mysql2/promise';
+dotenv.config({ path: '.env.local' });
 
 async function addTemplates() {
     const connection = await mysql.createConnection({
@@ -11,9 +12,9 @@ async function addTemplates() {
 
     try {
         const templates = [
-            { id: 4, name: 'Floral Elegance', description: 'Traditional floral design', psd: '/templates/design-4.psd', img: '/templates/design4.jpg' },
-            { id: 5, name: 'Royal Wedding', description: 'Premium royal design', psd: '/templates/design-5.psd', img: '/templates/design5.jpg' },
-            { id: 6, name: 'Modern Minimalist', description: 'Sleek and modern layout', psd: '/templates/design-6.psd', img: '/templates/design6.jpg' }
+            { id: 4, name: 'Floral Elegance', description: 'Traditional floral design', psd: '/templates/design-4.psd', img: '/templates/design-4.jpg' },
+            { id: 5, name: 'Royal Wedding', description: 'Premium royal design', psd: '/templates/design-5.psd', img: '/templates/design-5.jpg' },
+            { id: 6, name: 'Modern Minimalist', description: 'Sleek and modern layout', psd: '/templates/design-6.psd', img: '/templates/design-6.jpg' }
         ];
 
         for (const t of templates) {

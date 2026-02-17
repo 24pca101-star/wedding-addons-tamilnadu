@@ -15,7 +15,8 @@ export async function POST(request: Request) {
             [name, JSON.stringify(canvas_json), preview_image]
         );
 
-        return NextResponse.json({ success: true, id: (result as any).insertId });
+        const insertResult = result as { insertId: number };
+        return NextResponse.json({ success: true, id: insertResult.insertId });
     } catch (error) {
         console.error('Database Error:', error);
         return NextResponse.json({ error: 'Failed to save design' }, { status: 500 });

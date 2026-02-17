@@ -1,10 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import * as fabric from "fabric";
+
 import { readPsd } from "ag-psd";
 import { loadPsdToCanvas } from "@/utils/psdParser";
 
+
+// ✅ Custom type for your extended properties
+interface CustomFabricObject extends fabric.Object {
+    isGuide?: boolean;
+    isSnapGuide?: boolean;
+    locked?: boolean;
+    name?: string;
+}
 interface EditorProps {
     templateUrl?: string; // Optional URL for pre-loading a PSD
 }
@@ -38,12 +47,12 @@ export default function Editor({ templateUrl }: EditorProps) {
                 newCanvas.dispose();
             };
         }
-    }, [canvasRef]); // Removed `canvas` dependency to avoid re-init loop
+    }, [canvas]);
 
     // Professional Canvas Guides (Bleed & Safe Area)
     const addGuides = (canvas: fabric.Canvas, width: number, height: number) => {
         // Remove existing guides
-        canvas.getObjects().filter(obj => (obj as any).isGuide).forEach(obj => canvas.remove(obj));
+        canvas.getObjects().filter(obj => (obj as CustomFabricObject).isGuide).forEach(obj => canvas.remove(obj));
 
         // 5mm Bleed (Red dashed line)
         const bleedGuide = new fabric.Rect({
@@ -51,8 +60,8 @@ export default function Editor({ templateUrl }: EditorProps) {
             stroke: 'red', strokeDashArray: [5, 5], fill: 'transparent',
             selectable: false, evented: false, strokeWidth: 2,
         });
-        (bleedGuide as any).isGuide = true;
-        (bleedGuide as any).excludeFromExport = true;
+        (bleedGuide as CustomFabricObject).isGuide = true;
+        (bleedGuide as CustomFabricObject).excludeFromExport = true;
 
         // Safe Area (Cyan dashed line - 5mm in from bleed)
         const safeOffset = 20;
@@ -62,8 +71,8 @@ export default function Editor({ templateUrl }: EditorProps) {
             stroke: 'cyan', strokeDashArray: [2, 2], fill: 'transparent',
             selectable: false, evented: false, strokeWidth: 1,
         });
-        (safeArea as any).isGuide = true;
-        (safeArea as any).excludeFromExport = true;
+        (safeArea as CustomFabricObject).isGuide = true;
+        (safeArea as CustomFabricObject).excludeFromExport = true;
 
         canvas.add(bleedGuide, safeArea);
         canvas.bringObjectToFront(bleedGuide);
@@ -72,8 +81,8 @@ export default function Editor({ templateUrl }: EditorProps) {
 
     // Boundary Lock Logic
     const setupCanvasEvents = (canvas: fabric.Canvas) => {
-        canvas.on('object:moving', (e: any) => {
-            const obj = e.target;
+        canvas.on('object:moving', (e) => {
+            const obj = (e.target as CustomFabricObject | undefined);
             if (!obj) return;
 
             // Boundary Lock
@@ -109,27 +118,27 @@ export default function Editor({ templateUrl }: EditorProps) {
             obj.set({ left: targetLeft, top: targetTop });
 
             // Visual Snap Guides
-            const guides = canvas.getObjects().filter(o => (o as any).isSnapGuide);
+            const guides = canvas.getObjects().filter(o => (o as CustomFabricObject).isSnapGuide);
             guides.forEach(g => canvas.remove(g));
 
             if (snappedX) {
                 const lineX = new fabric.Line([centerX, 0, centerX, canvas.height! / canvas.getZoom()], {
                     stroke: '#8b5cf6', strokeWidth: 1, selectable: false, evented: false, strokeDashArray: [5, 5]
                 });
-                (lineX as any).isSnapGuide = true;
+                (lineX as CustomFabricObject).isSnapGuide = true;
                 canvas.add(lineX);
             }
             if (snappedY) {
                 const lineY = new fabric.Line([0, centerY, canvas.width! / canvas.getZoom(), centerY], {
                     stroke: '#8b5cf6', strokeWidth: 1, selectable: false, evented: false, strokeDashArray: [5, 5]
                 });
-                (lineY as any).isSnapGuide = true;
+                (lineY as CustomFabricObject).isSnapGuide = true;
                 canvas.add(lineY);
             }
         });
 
         canvas.on('mouse:up', () => {
-            const guides = canvas.getObjects().filter(o => (o as any).isSnapGuide);
+            const guides = canvas.getObjects().filter(o => (o as CustomFabricObject).isSnapGuide);
             guides.forEach(g => canvas.remove(g));
             canvas.requestRenderAll();
         });
@@ -156,7 +165,7 @@ export default function Editor({ templateUrl }: EditorProps) {
     };
 
     // Zoom to Fit Logic (using setZoom)
-    const zoomToFit = (targetWidth?: number, targetHeight?: number) => {
+    const zoomToFit = useCallback((targetWidth?: number, targetHeight?: number) => {
         if (!canvas || !containerRef.current) return;
         const width = targetWidth || canvasSize.width;
         const height = targetHeight || canvasSize.height;
@@ -170,7 +179,7 @@ export default function Editor({ templateUrl }: EditorProps) {
         canvas.setZoom(scale);
         canvas.setDimensions({ width: width * scale, height: height * scale });
         canvas.renderAll();
-    };
+    }, [canvas, canvasSize]);
 
     const setZoom100 = (targetWidth?: number, targetHeight?: number) => {
         if (!canvas) return;
@@ -192,7 +201,7 @@ export default function Editor({ templateUrl }: EditorProps) {
 
         resizeObserver.observe(containerRef.current);
         return () => resizeObserver.disconnect();
-    }, [canvas, canvasSize]);
+    }, [canvas, canvasSize, zoomToFit]);
 
     // Handle File Upload
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -200,7 +209,7 @@ export default function Editor({ templateUrl }: EditorProps) {
         if (!file || !canvas) return;
 
         const arrayBuffer = await file.arrayBuffer();
-        // @ts-ignore
+        // @ts-expect-error: ag-psd types may not match fabric.js usage
         const psd = readPsd(arrayBuffer, { useImageData: true, useCanvas: true });
 
         await document.fonts.ready;
@@ -219,7 +228,7 @@ export default function Editor({ templateUrl }: EditorProps) {
                     const response = await fetch(templateUrl);
                     if (!response.ok) throw new Error("Failed to load template");
                     const arrayBuffer = await response.arrayBuffer();
-                    // @ts-ignore
+                    // @ts-expect-error: ag-psd types may not match fabric.js usage
                     const psd = readPsd(arrayBuffer, { useImageData: true, useCanvas: true });
 
                     await document.fonts.ready;
@@ -235,7 +244,7 @@ export default function Editor({ templateUrl }: EditorProps) {
             }
         };
         loadTemplate();
-    }, [templateUrl, canvas]);
+    }, [templateUrl, canvas, zoomToFit]);
 
 
     // Add Text
@@ -254,11 +263,11 @@ export default function Editor({ templateUrl }: EditorProps) {
     };
 
     // Update Text Properties
-    const updateTextProperty = (property: string, value: string | number) => {
+    const updateTextProperty = (property: keyof fabric.IText, value: string | number) => {
         if (selectedObject && (selectedObject.type === "i-text" || selectedObject.type === "text")) {
-            (selectedObject as fabric.IText).set(property as any, value);
+            (selectedObject as fabric.IText).set(property, value);
             canvas?.requestRenderAll();
-            setSelectedObject({ ...selectedObject } as fabric.Object); // Force re-render
+            setSelectedObject(selectedObject); // Fix type error: do not spread
         }
     };
 
@@ -285,30 +294,30 @@ export default function Editor({ templateUrl }: EditorProps) {
     };
 
     // Add Shapes
-    const addRectangle = () => {
-        if (!canvas) return;
-        const rect = new fabric.Rect({
-            left: 100,
-            top: 100,
-            fill: "red",
-            width: 100,
-            height: 100,
-        });
-        canvas.add(rect);
-        canvas.setActiveObject(rect);
-    };
+    // const addRectangle = () => {
+    //     if (!canvas) return;
+    //     const rect = new fabric.Rect({
+    //         left: 100,
+    //         top: 100,
+    //         fill: "red",
+    //         width: 100,
+    //         height: 100,
+    //     });
+    //     canvas.add(rect);
+    //     canvas.setActiveObject(rect);
+    // };
 
-    const addCircle = () => {
-        if (!canvas) return;
-        const circle = new fabric.Circle({
-            left: 100,
-            top: 100,
-            fill: "blue",
-            radius: 50,
-        });
-        canvas.add(circle);
-        canvas.setActiveObject(circle);
-    };
+    // const addCircle = () => {
+    //     if (!canvas) return;
+    //     const circle = new fabric.Circle({
+    //         left: 100,
+    //         top: 100,
+    //         fill: "blue",
+    //         radius: 50,
+    //     });
+    //     canvas.add(circle);
+    //     canvas.setActiveObject(circle);
+    // };
 
     // Layer Management
     const moveLayer = (direction: "up" | "down" | "top" | "bottom") => {
@@ -333,20 +342,20 @@ export default function Editor({ templateUrl }: EditorProps) {
     };
 
     // Delete Object
-    const deleteObject = () => {
+    const deleteObject = useCallback(() => {
         if (selectedObject && canvas) {
             canvas.remove(selectedObject);
             canvas.discardActiveObject();
             canvas.requestRenderAll();
         }
-    };
+    }, [selectedObject, canvas]);
 
     // Download Image (300 DPI High-Res)
     const downloadImage = () => {
         if (!canvas) return;
 
         // Hide guides for export
-        const guides = canvas.getObjects().filter(obj => (obj as any).isGuide);
+        const guides = canvas.getObjects().filter(obj => (obj as CustomFabricObject).isGuide);
         guides.forEach(g => g.set('visible', false));
 
         // 300 DPI Multiplier (300 / 72 = 4.166...)
@@ -406,7 +415,7 @@ export default function Editor({ templateUrl }: EditorProps) {
         setHistoryIndex(newHistory.length - 1);
     };
 
-    const undo = () => {
+    const undo = useCallback(() => {
         if (historyIndex > 0 && canvas) {
             const nextIndex = historyIndex - 1;
             const state = history[nextIndex];
@@ -415,9 +424,9 @@ export default function Editor({ templateUrl }: EditorProps) {
                 setHistoryIndex(nextIndex);
             });
         }
-    };
+    }, [historyIndex, canvas, history]);
 
-    const redo = () => {
+    const redo = useCallback(() => {
         if (historyIndex < history.length - 1 && canvas) {
             const nextIndex = historyIndex + 1;
             const state = history[nextIndex];
@@ -426,7 +435,7 @@ export default function Editor({ templateUrl }: EditorProps) {
                 setHistoryIndex(nextIndex);
             });
         }
-    };
+    }, [historyIndex, canvas, history]);
 
     // Keyboard Shortcuts
     useEffect(() => {
@@ -444,7 +453,7 @@ export default function Editor({ templateUrl }: EditorProps) {
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [canvas, selectedObject, historyIndex, history]);
+    }, [canvas, deleteObject, undo, redo]);
 
     const duplicateObject = async () => {
         if (!selectedObject || !canvas) return;
@@ -497,7 +506,7 @@ export default function Editor({ templateUrl }: EditorProps) {
                 flex flex-col border-r border-gray-200
             `}>
                 <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                    <h2 className="text-xl font-bold bg-gradient-to-r from-maroon to-rose-600 bg-clip-text text-transparent">
+                    <h2 className="text-xl font-bold bg-linear-to-r from-maroon to-rose-600 bg-clip-text text-transparent">
                         Design Studio
                     </h2>
                     <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-gray-400">✕</button>
@@ -524,51 +533,54 @@ export default function Editor({ templateUrl }: EditorProps) {
                     <div>
                         <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-1">Layers</h3>
                         <div className="space-y-1 max-h-48 overflow-y-auto pr-2 custom-scrollbar border border-gray-100 rounded-xl p-2 bg-gray-50/50">
-                            {canvas?.getObjects().filter(obj => !(obj as any).isGuide).reverse().map((obj, i) => (
-                                <div
-                                    key={i}
-                                    onClick={() => {
-                                        canvas.setActiveObject(obj);
-                                        canvas.requestRenderAll();
-                                    }}
-                                    className={`flex items-center gap-2 p-2 rounded-lg text-xs cursor-pointer transition-all ${selectedObject === obj ? 'bg-white shadow-sm border border-rose-100' : 'hover:bg-white/60'}`}
-                                >
-                                    <span className="text-[10px] text-gray-400 w-4 font-mono">{i + 1}</span>
-                                    <span className="flex-1 truncate font-medium text-gray-700">
-                                        {(obj as any).name || (obj.type === 'i-text' ? 'Text' : 'Image')}
-                                    </span>
-                                    <div className="flex gap-1">
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                obj.set('visible', !obj.visible);
-                                                canvas.requestRenderAll();
-                                            }}
-                                            className={`p-1 rounded hover:bg-white ${!obj.visible ? 'grayscale opacity-30 shadow-none' : 'shadow-sm bg-white'}`}
-                                            title="Toggle Visibility"
-                                        >
-                                            {obj.visible ? '👁️' : '🕶️'}
-                                        </button>
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                (obj as any).locked = !(obj as any).locked;
-                                                obj.set({
-                                                    selectable: !(obj as any).locked,
-                                                    evented: !(obj as any).locked,
-                                                    lockMovementX: (obj as any).locked,
-                                                    lockMovementY: (obj as any).locked
-                                                });
-                                                canvas.requestRenderAll();
-                                            }}
-                                            className={`p-1 rounded hover:bg-white ${(obj as any).locked ? 'bg-rose-500 text-white shadow-rose-200' : 'shadow-sm bg-white'}`}
-                                            title="Toggle Lock"
-                                        >
-                                            {(obj as any).locked ? '🔒' : '🔓'}
-                                        </button>
+                            {canvas?.getObjects().filter(obj => !(obj as CustomFabricObject).isGuide).reverse().map((obj, i) => {
+                                const customObj = obj as CustomFabricObject;
+                                return (
+                                    <div
+                                        key={i}
+                                        onClick={() => {
+                                            canvas.setActiveObject(obj);
+                                            canvas.requestRenderAll();
+                                        }}
+                                        className={`flex items-center gap-2 p-2 rounded-lg text-xs cursor-pointer transition-all ${selectedObject === obj ? 'bg-white shadow-sm border border-rose-100' : 'hover:bg-white/60'}`}
+                                    >
+                                        <span className="text-[10px] text-gray-400 w-4 font-mono">{i + 1}</span>
+                                        <span className="flex-1 truncate font-medium text-gray-700">
+                                            {customObj.name || (obj.type === 'i-text' ? 'Text' : 'Image')}
+                                        </span>
+                                        <div className="flex gap-1">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    obj.set('visible', !obj.visible);
+                                                    canvas.requestRenderAll();
+                                                }}
+                                                className={`p-1 rounded hover:bg-white ${!obj.visible ? 'grayscale opacity-30 shadow-none' : 'shadow-sm bg-white'}`}
+                                                title="Toggle Visibility"
+                                            >
+                                                {obj.visible ? '👁️' : '🕶️'}
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    customObj.locked = !customObj.locked;
+                                                    obj.set({
+                                                        selectable: !customObj.locked,
+                                                        evented: !customObj.locked,
+                                                        lockMovementX: customObj.locked,
+                                                        lockMovementY: customObj.locked
+                                                    });
+                                                    canvas.requestRenderAll();
+                                                }}
+                                                className={`p-1 rounded hover:bg-white ${customObj.locked ? 'bg-rose-500 text-white shadow-rose-200' : 'shadow-sm bg-white'}`}
+                                                title="Toggle Lock"
+                                            >
+                                                {customObj.locked ? '🔒' : '🔓'}
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -586,7 +598,7 @@ export default function Editor({ templateUrl }: EditorProps) {
                                     <input
                                         type="text"
                                         className="w-full p-3 rounded-lg border border-gray-200 text-sm focus:ring-2 focus:ring-rose-500 outline-none"
-                                        value={(selectedObject as any).text}
+                                        value={(selectedObject as fabric.IText).text}
                                         onChange={(e) => updateTextProperty("text", e.target.value)}
                                     />
 
@@ -594,7 +606,7 @@ export default function Editor({ templateUrl }: EditorProps) {
                                         <label className="text-[10px] font-bold text-gray-500 uppercase">Font Family</label>
                                         <select
                                             className="w-full p-2.5 rounded-lg border border-gray-200 text-sm bg-gray-50 focus:ring-2 focus:ring-rose-500 outline-none"
-                                            value={(selectedObject as any).fontFamily}
+                                            value={(selectedObject as fabric.IText).fontFamily}
                                             onChange={(e) => updateTextProperty("fontFamily", e.target.value)}
                                         >
                                             <optgroup label="Tamil Fonts">
@@ -616,7 +628,7 @@ export default function Editor({ templateUrl }: EditorProps) {
                                             <input
                                                 type="number"
                                                 className="w-full p-2.5 rounded-lg border border-gray-200 text-sm bg-gray-50"
-                                                value={(selectedObject as any).fontSize}
+                                                value={(selectedObject as fabric.IText).fontSize}
                                                 onChange={(e) => updateTextProperty("fontSize", parseInt(e.target.value))}
                                             />
                                         </div>
@@ -624,8 +636,8 @@ export default function Editor({ templateUrl }: EditorProps) {
                                             <label className="text-[10px] font-bold text-gray-500 uppercase">Color</label>
                                             <input
                                                 type="color"
-                                                className="w-full h-[43px] p-1 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer"
-                                                value={(selectedObject as any).fill}
+                                                className="w-full h-10.75 p-1 rounded-lg border border-gray-200 bg-gray-50 cursor-pointer"
+                                                value={(selectedObject as fabric.IText).fill as string}
                                                 onChange={(e) => updateTextProperty("fill", e.target.value)}
                                             />
                                         </div>
@@ -635,24 +647,24 @@ export default function Editor({ templateUrl }: EditorProps) {
                                         <div className="space-y-1.5">
                                             <div className="flex justify-between">
                                                 <label className="text-[10px] font-bold text-gray-500 uppercase">Letter Spacing</label>
-                                                <span className="text-[10px] text-gray-400">{(selectedObject as any).charSpacing || 0}</span>
+                                                <span className="text-[10px] text-gray-400">{(selectedObject as fabric.IText).charSpacing || 0}</span>
                                             </div>
                                             <input
                                                 type="range" min="-100" max="1000" step="5"
                                                 className="w-full accent-rose-500"
-                                                value={(selectedObject as any).charSpacing || 0}
+                                                value={(selectedObject as fabric.IText).charSpacing || 0}
                                                 onChange={(e) => updateTextProperty("charSpacing", parseInt(e.target.value))}
                                             />
                                         </div>
                                         <div className="space-y-1.5">
                                             <div className="flex justify-between">
                                                 <label className="text-[10px] font-bold text-gray-500 uppercase">Line Height</label>
-                                                <span className="text-[10px] text-gray-400">{(selectedObject as any).lineHeight?.toFixed(1) || 1.1}</span>
+                                                <span className="text-[10px] text-gray-400">{(selectedObject as fabric.IText).lineHeight?.toFixed(1) || 1.1}</span>
                                             </div>
                                             <input
                                                 type="range" min="0.5" max="3" step="0.1"
                                                 className="w-full accent-rose-500"
-                                                value={(selectedObject as any).lineHeight || 1.1}
+                                                value={(selectedObject as fabric.IText).lineHeight || 1.1}
                                                 onChange={(e) => updateTextProperty("lineHeight", parseFloat(e.target.value))}
                                             />
                                         </div>
@@ -716,7 +728,7 @@ export default function Editor({ templateUrl }: EditorProps) {
                         <div className="flex items-center gap-3">
                             <span className="text-[10px] font-bold text-gray-400">ZOOM</span>
                             <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
-                                <span className="text-xs font-bold text-gray-600 px-2 min-w-[3rem]">{(canvas?.getZoom() || 1 * 100).toFixed(0)}%</span>
+                                <span className="text-xs font-bold text-gray-600 px-2 min-w-12">{(canvas?.getZoom() || 1 * 100).toFixed(0)}%</span>
                                 <button onClick={() => zoomToFit()} className="text-[10px] bg-white px-2 py-1 rounded shadow-sm border border-gray-100 hover:bg-gray-50 transition-all font-bold">FIT</button>
                                 <button onClick={() => setZoom100()} className="text-[10px] bg-white px-2 py-1 rounded shadow-sm border border-gray-100 hover:bg-gray-50 transition-all font-bold ml-0.5">1:1</button>
                             </div>

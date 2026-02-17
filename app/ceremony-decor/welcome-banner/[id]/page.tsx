@@ -33,11 +33,9 @@ export default async function BannerDetail({
   return (
     <div className="min-h-screen bg-rose-50 p-10">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
-        <Image
+        <img
           src={selectedDesign.image_path}
           alt={selectedDesign.name}
-          width={800}
-          height={320}
           className="w-full h-80 object-cover rounded-lg"
         />
 

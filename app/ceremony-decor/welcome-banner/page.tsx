@@ -75,11 +75,9 @@ export default function WelcomeBanner() {
               key={design.id}
               className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition"
             >
-              <Image
+              <img
                 src={design.image_path}
                 alt={design.name}
-                width={400}
-                height={250}
                 className="w-full h-56 object-cover"
               />
 

@@ -1,6 +1,9 @@
 import mysql from 'mysql2/promise';
 import path from 'path';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
 
 async function syncTemplates() {
@@ -21,12 +24,42 @@ async function syncTemplates() {
 
         // 2. Define the 5 templates based on the current public/templates files
         const templates = [
-            { name: 'Rose Gold Floral', desc: 'Soft pink floral themed traditional welcome banner with rose gold accents.', psd: '/templates/design-1.psd', img: '/templates/design1.jpg' },
-            { name: 'Winter Watercolor', desc: 'Elegant winter wedding banner with deep blue watercolor and greenery.', psd: '/templates/design-2.psd', img: '/templates/design2.jpg' },
-            { name: 'Winter Photo Invit', desc: 'Modern winter wedding invitation featuring blue accents and a center photo placeholder.', psd: '/templates/design-3.psd', img: '/templates/design3.jpg' },
-            { name: 'Romantic Hearts', desc: 'Peach themed wedding banner with romantic doves, golden bells, and floral corners.', psd: '/templates/design-4.psd', img: '/templates/design4.jpg' },
-            { name: 'Premium Gold Photo', desc: 'Classy gold and white wedding banner with elegant floral outlines and a central photo holder.', psd: '/templates/design-5.psd', img: '/templates/design5.jpg' },
-            { name: 'Artistic Yellow Floral', desc: 'Artistic floral design with large yellow flowers and elegant typography.', psd: '/templates/design-6.psd', img: '/templates/design6.jpg' }
+            {
+                name: 'Rose Gold Floral',
+                desc: 'Soft pink floral welcome banner with elegant rose gold accents, perfect for traditional weddings.',
+                psd: '/templates/design-1.psd',
+                img: '/templates/design-1.jpg'
+            },
+            {
+                name: 'Winter Watercolor',
+                desc: 'Elegant winter wedding banner featuring deep blue watercolor textures and lush greenery.',
+                psd: '/templates/design-2.psd',
+                img: '/templates/design-2.jpg'
+            },
+            {
+                name: 'Winter Photo Invitation',
+                desc: 'Modern winter-themed invitation with cool blue accents and a central photo placeholder.',
+                psd: '/templates/design-3.psd',
+                img: '/templates/design-3.jpg'
+            },
+            {
+                name: 'Romantic Hearts',
+                desc: 'Peach-toned wedding banner adorned with romantic doves, golden bells, and floral corner details.',
+                psd: '/templates/design-4.psd',
+                img: '/templates/design-4.jpg'
+            },
+            {
+                name: 'Premium Gold Photo',
+                desc: 'Luxury gold and white banner with elegant floral outlines and a central photo frame.',
+                psd: '/templates/design-5.psd',
+                img: '/templates/design-5.jpg'
+            },
+            {
+                name: 'Artistic Yellow Floral',
+                desc: 'Artistic floral banner featuring bold yellow blossoms and refined typography.',
+                psd: '/templates/design-6.psd',
+                img: '/templates/design-6.jpg'
+            }
         ];
         // 3. Insert the new records
         for (const t of templates) {

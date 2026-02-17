@@ -12,12 +12,32 @@ interface Template {
 
 export default function WelcomeBanner() {
   const [bannerDesigns, setBannerDesigns] = useState<Template[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/templates')
-      .then(res => res.json())
-      .then(data => setBannerDesigns(data))
-      .catch(err => console.error("Failed to load templates", err));
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch templates');
+        }
+        return res.json();
+      })
+      .then(data => {
+        if (Array.isArray(data)) {
+          setBannerDesigns(data);
+        } else {
+          console.error("Received data is not an array:", data);
+          setError("Failed to load templates: Invalid data format");
+        }
+      })
+      .catch(err => {
+        console.error("Failed to load templates", err);
+        setError("Unable to load designs at the moment. Please try again later.");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   return (
@@ -30,35 +50,55 @@ export default function WelcomeBanner() {
         Choose a design and customize it as you wish ✨
       </p>
 
-      <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        {bannerDesigns.map((design) => (
-          <div
-            key={design.id}
-            className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition"
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-maroon"></div>
+        </div>
+      ) : error ? (
+        <div className="text-center text-red-600 p-8 border-2 border-dashed border-red-200 rounded-xl bg-white max-w-2xl mx-auto">
+          <p className="text-lg font-medium">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-[#C5A022] text-white px-6 py-2 rounded-lg hover:bg-[#B38F1E] transition shadow-sm"
           >
-            <Image
-              src={design.image_path}
-              alt={design.name}
-              width={400}
-              height={250}
-              className="w-full h-56 object-cover"
-            />
+            Try Again
+          </button>
+        </div>
+      ) : bannerDesigns.length === 0 ? (
+        <div className="text-center text-gray-500 py-20">
+          <p className="text-xl">No banner designs found ✨</p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {bannerDesigns.map((design) => (
+            <div
+              key={design.id}
+              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition"
+            >
+              <Image
+                src={design.image_path}
+                alt={design.name}
+                width={400}
+                height={250}
+                className="w-full h-56 object-cover"
+              />
 
-            <div className="p-4 text-center">
-              <h2 className="text-xl font-semibold text-gray-700 mb-4">
-                {design.name}
-              </h2>
+              <div className="p-4 text-center">
+                <h2 className="text-xl font-semibold text-gray-700 mb-4">
+                  {design.name}
+                </h2>
 
-              <Link
-                href={`/ceremony-decor/welcome-banner/${design.id}`}
-                className="inline-block bg-maroon text-white px-6 py-2 rounded-lg hover:opacity-90 transition"
-              >
-                Customize
-              </Link>
+                <Link
+                  href={`/ceremony-decor/welcome-banner/${design.id}`}
+                  className="inline-block bg-[#C5A022] text-white px-6 py-2 rounded-lg hover:bg-[#B38F1E] transition shadow-sm"
+                >
+                  Customize
+                </Link>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

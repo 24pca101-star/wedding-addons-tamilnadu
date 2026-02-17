@@ -6,13 +6,17 @@ import * as fabric from "fabric";
  * @param psd The parsed PSD object from ag-psd
  * @param canvas The Fabric canvas instance
  */
+
 export const loadPsdToCanvas = async (psd: Psd, canvas: fabric.Canvas) => {
     if (!psd.children) return { width: 0, height: 0 };
 
-    // Clear existing canvas
-    canvas.clear();
-    canvas.setDimensions({ width: psd.width, height: psd.height });
-    canvas.backgroundColor = "white"; // Revert to white background, render components on top
+    // Clear and set dimensions only if context is valid (prevents TypeError)
+    // @ts-expect-error: contextContainer is not in types but exists in fabric.js
+    if ((canvas as any).contextContainer) {
+        canvas.clear();
+        canvas.setDimensions({ width: psd.width, height: psd.height });
+        canvas.backgroundColor = "white"; // Revert to white background, render components on top
+    }
 
     // Render ALL layers to maintain 100% fidelity (Canva style)
     const layers = [...psd.children].reverse();

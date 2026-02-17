@@ -474,14 +474,25 @@ export default function Editor({ templateUrl }: EditorProps) {
         if (!canvas) return;
 
         const autoSaveTimer = setInterval(async () => {
-            const currentJson = JSON.stringify(canvas.toJSON());
+            // contextContainer is not in types but exists in fabric.js
+            if (!("contextContainer" in canvas)) return;
+            let currentJson = "";
+            try {
+                currentJson = JSON.stringify(canvas.toJSON());
+            } catch {
+                return;
+            }
             if (currentJson === lastSavedJson) return;
 
             try {
                 // Determine a name (could be derived from template or user)
                 const name = "AutoSaved_" + new Date().toLocaleTimeString();
-                const previewImage = canvas.toDataURL({ format: "png", multiplier: 0.2 });
-
+                let previewImage = "";
+                try {
+                    previewImage = canvas.toDataURL({ format: "png", multiplier: 0.2 });
+                } catch {
+                    return;
+                }
                 await fetch('/api/save-design', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

@@ -14,7 +14,12 @@ const pool = mysql.createPool({
     database: process.env.MYSQL_DATABASE,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    // Increase max allowed packet size for large canvas data
+    enableKeepAlive: true,
+    init: async (conn) => {
+        await conn.query("SET SESSION max_allowed_packet = 1024 * 1024 * 16"); // 16 MB
+    }
 });
 
 export default pool;

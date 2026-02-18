@@ -102,7 +102,8 @@ export default function Layout({ children }: LayoutProps) {
           src="/logodesign.png" 
           alt="Wedding Add-Ons Logo"
           width={150}     
-          height={50}
+          height={60}
+          style={{ width: 'auto', height: '50px' }}
         />
       </div>
     </Link>

@@ -24,30 +24,60 @@ export default function Editor({ templateUrl }: EditorProps) {
     const [canvas, setCanvas] = useState<fabric.Canvas | null>(null);
     const [selectedObject, setSelectedObject] = useState<fabric.Object | null>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+    const [loadingError, setLoadingError] = useState<string | null>(null);
+    const [debugInfo, setDebugInfo] = useState<string>("");
+    const [canvasObjects, setCanvasObjects] = useState<number>(0);
+    const [isLoading, setIsLoading] = useState(true);
+    const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 800 });
     const [history, setHistory] = useState<string[]>([]);
     const [historyIndex, setHistoryIndex] = useState(-1);
 
-    // Initialize Fabric Canvas
+    // Initialize Fabric Canvas - runs once on mount
     useEffect(() => {
-        if (canvasRef.current && !canvas) {
-            const newCanvas = new fabric.Canvas(canvasRef.current, {
-                width: 800,
-                height: 600,
-                backgroundColor: "#ffffff",
-            });
-            setCanvas(newCanvas);
-
-            // Event listeners
-            newCanvas.on("selection:created", (e) => setSelectedObject(e.selected ? e.selected[0] : null));
-            newCanvas.on("selection:updated", (e) => setSelectedObject(e.selected ? e.selected[0] : null));
-            newCanvas.on("selection:cleared", () => setSelectedObject(null));
-
-            return () => {
-                newCanvas.dispose();
-            };
+        if (!(canvasRef.current && !canvas)) {
+            return; // Don't reinitialize if already done
         }
-    }, [canvas]);
+
+        let fabricCanvas: fabric.Canvas | null = null;
+
+        try {
+            console.log("Initializing Canvas...");
+            
+            // Fixed dimensions for canvas
+            const width = 1200;
+            const height = 800;
+            
+            // Set canvas HTML element size
+            canvasRef.current.width = width;
+            canvasRef.current.height = height;
+            
+            // Create Fabric canvas
+            fabricCanvas = new fabric.Canvas(canvasRef.current, {
+                width: width,
+                height: height,
+                backgroundColor: "#ffffff",
+                enableRetinaScaling: false,
+            });
+            
+            console.log("✓ Canvas initialized");
+            
+            // Setup event handlers
+            fabricCanvas.on("selection:created", (e) => setSelectedObject(e.selected ? e.selected[0] : null));
+            fabricCanvas.on("selection:updated", (e) => setSelectedObject(e.selected ? e.selected[0] : null));
+            fabricCanvas.on("selection:cleared", () => setSelectedObject(null));
+            
+            // Set canvas in state
+            setCanvas(fabricCanvas);
+        } catch (err) {
+            console.error("Canvas init error:", err);
+            fabricCanvas?.dispose();
+        }
+
+        return () => {
+            console.log("Cleaning up canvas");
+            fabricCanvas?.dispose();
+        };
+    }, []); // Empty dependency - runs only once on mount
 
     // Professional Canvas Guides (Bleed & Safe Area)
     const addGuides = (canvas: fabric.Canvas, width: number, height: number) => {
@@ -166,29 +196,99 @@ export default function Editor({ templateUrl }: EditorProps) {
 
     // Zoom to Fit Logic (using setZoom)
     const zoomToFit = useCallback((targetWidth?: number, targetHeight?: number) => {
-        if (!canvas || !containerRef.current) return;
-        const width = targetWidth || canvasSize.width;
-        const height = targetHeight || canvasSize.height;
-        if (!width || !height) return;
+        if (!canvas) {
+            console.warn("zoomToFit: canvas not ready");
+            return;
+        }
 
-        const padding = 40;
-        const containerWidth = containerRef.current.clientWidth - padding;
-        const containerHeight = containerRef.current.clientHeight - padding;
-        const scale = Math.min(containerWidth / width, containerHeight / height);
+        try {
+            // Get all non-guide objects
+            const allObjects = canvas.getObjects().filter(obj => !(obj as CustomFabricObject).isGuide);
+            
+            if (allObjects.length === 0) {
+                console.log("zoomToFit: No objects to zoom, resetting view");
+                canvas.setZoom(1);
+                canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+                canvas.renderAll();
+                return;
+            }
 
-        canvas.setZoom(scale);
-        canvas.setDimensions({ width: width * scale, height: height * scale });
-        canvas.renderAll();
-    }, [canvas, canvasSize]);
+            console.log(`zoomToFit: Fitting ${allObjects.length} objects`);
+
+            // Calculate bounding box of all objects
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            allObjects.forEach(obj => {
+                const left = obj.left || 0;
+                const top = obj.top || 0;
+                const width = ((obj.width || 100) * (obj.scaleX || 1));
+                const height = ((obj.height || 100) * (obj.scaleY || 1));
+                
+                minX = Math.min(minX, left);
+                minY = Math.min(minY, top);
+                maxX = Math.max(maxX, left + width);
+                maxY = Math.max(maxY, top + height);
+            });
+
+            if (!isFinite(minX)) {
+                console.log("zoomToFit: Invalid bounds, resetting");
+                canvas.setZoom(1);
+                canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+                canvas.renderAll();
+                return;
+            }
+
+            const contentWidth = maxX - minX;
+            const contentHeight = maxY - minY;
+            const viewportWidth = canvas.getWidth();
+            const viewportHeight = canvas.getHeight();
+
+            console.log("Bounds:", { minX: Math.round(minX), minY: Math.round(minY), maxX: Math.round(maxX), maxY: Math.round(maxY) });
+            console.log("Content size:", { width: Math.round(contentWidth), height: Math.round(contentHeight) });
+            console.log("Viewport size:", { width: viewportWidth, height: viewportHeight });
+
+            // Calculate scale to fit content with padding
+            const padding = 40;
+            const scaleX = (viewportWidth - padding) / contentWidth;
+            const scaleY = (viewportHeight - padding) / contentHeight;
+            let scale = Math.min(scaleX, scaleY, 1.0); // Don't zoom beyond 100%
+
+            // Calculate pan to center content
+            const centerX = minX + contentWidth / 2;
+            const centerY = minY + contentHeight / 2;
+            const panX = (viewportWidth / 2) - (centerX * scale);
+            const panY = (viewportHeight / 2) - (centerY * scale);
+
+            console.log("Scale:", scale.toFixed(2), "Pan:", { x: Math.round(panX), y: Math.round(panY) });
+
+            canvas.setZoom(scale);
+            canvas.setViewportTransform([scale, 0, 0, scale, panX, panY]);
+            canvas.renderAll();
+            
+            console.log("✓ Zoom to fit complete");
+        } catch (err) {
+            console.error("✗ zoomToFit error:", err);
+            try {
+                canvas.setZoom(1);
+                canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+                canvas.renderAll();
+            } catch (e) {
+                console.error("Fallback also failed");
+            }
+        }
+    }, [canvas]);
 
     const setZoom100 = (targetWidth?: number, targetHeight?: number) => {
-        if (!canvas) return;
-        const width = targetWidth || canvasSize.width;
-        const height = targetHeight || canvasSize.height;
+        if (!canvas || !(canvas as any).contextContainer) return;
+        try {
+            const width = targetWidth || canvasSize.width;
+            const height = targetHeight || canvasSize.height;
 
-        canvas.setZoom(1);
-        canvas.setDimensions({ width, height });
-        canvas.renderAll();
+            canvas.setZoom(1);
+            canvas.setDimensions({ width, height });
+            canvas.renderAll();
+        } catch (err) {
+            console.warn("setZoom100 error (skipping):", err);
+        }
     };
 
     // Auto-resize Observer
@@ -206,45 +306,244 @@ export default function Editor({ templateUrl }: EditorProps) {
     // Handle File Upload
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file || !canvas) return;
+        if (!file || !canvas || !(canvas as any).contextContainer) return;
 
-        const arrayBuffer = await file.arrayBuffer();
-        // @ts-expect-error: ag-psd types may not match fabric.js usage
-        const psd = readPsd(arrayBuffer, { useImageData: true, useCanvas: true });
+        try {
+            const arrayBuffer = await file.arrayBuffer();
+            console.log("Loading PSD from file:", file.name);
 
-        await document.fonts.ready;
-        const dims = await loadPsdToCanvas(psd, canvas);
-        setCanvasSize(dims);
-        addGuides(canvas, dims.width, dims.height);
-        setupCanvasEvents(canvas);
-        zoomToFit(dims.width, dims.height); // Start at fit zoom (Canva style)
+            try {
+                console.log("📖 Parsing PSD structure...");
+                let psd = readPsd(arrayBuffer, { skipCompositeImageData: true, skipLayerImageData: true });
+                console.log("✓ PSD structure parsed");
+                
+                // Try to load image data
+                try {
+                    console.log("🖼️ Loading image data...");
+                    psd = readPsd(arrayBuffer, { skipCompositeImageData: false, skipLayerImageData: false });
+                    console.log("✓ Image data loaded");
+                } catch (imgErr) {
+                    console.warn("⚠️ Could not load image data, continuing with metadata");
+                }
+
+                await document.fonts.ready;
+                const dims = await loadPsdToCanvas(psd, canvas);
+                setCanvasSize(dims);
+                addGuides(canvas, dims.width, dims.height);
+                setupCanvasEvents(canvas);
+                zoomToFit(dims.width, dims.height);
+            } catch (parseError) {
+                console.error("PSD parsing error:", parseError);
+                // Fallback: use metadata-only version
+                console.warn("Using metadata-only PSD version...");
+                const psd = readPsd(arrayBuffer, { skipCompositeImageData: true, skipLayerImageData: true });
+
+                const width = psd.width || 1200;
+                const height = psd.height || 800;
+
+                if ((canvas as any).contextContainer) {
+                    canvas.clear();
+                    canvas.setDimensions({ width, height });
+                    setCanvasSize({ width, height });
+                    addGuides(canvas, width, height);
+                    setupCanvasEvents(canvas);
+                    canvas.renderAll();
+                    canvas.setZoom(1);
+                    alert("PSD loaded in metadata mode. Visual elements may be limited.");
+                }
+            }
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            console.error("Error loading PSD file:", errorMsg);
+            alert(`Failed to load PSD file: ${errorMsg}`);
+        }
     };
 
-    // Load Template from URL
+    // Load Template from URL (uses JPG preview images)
     useEffect(() => {
+        setIsLoading(true);
+        setLoadingError(null);
+        console.log("Template loading effect triggered");
+        console.log("templateUrl:", templateUrl);
+        console.log("canvas exists:", !!canvas);
+        
         const loadTemplate = async () => {
-            if (templateUrl && canvas) {
+            if (!templateUrl) {
+                console.log("No templateUrl provided");
+                setIsLoading(false);
+                return;
+            }
+            
+            if (!canvas) {
+                console.log("Canvas not ready yet");
+                return;
+            }
+            
+            console.log("✓ Both templateUrl and canvas available, loading...");
+            setDebugInfo("Starting template load...");
+            try {
+                console.log("Loading template from:", templateUrl);
+                setDebugInfo("Extracting template name...");
+                
+                // Extract template name (e.g., "design-1" from "/templates/design-1.psd")
+                const templateName = templateUrl.split('/').pop()?.replace('.psd', '') || 'design-1';
+                const jpgPreviewUrl = `/templates/${templateName}.jpg`;
+                
+                console.log("Template name:", templateName);
+                console.log("JPG preview URL:", jpgPreviewUrl);
+                setDebugInfo(`Template: ${templateName}, Loading JPG: ${jpgPreviewUrl}`);
+                
+                // Test: Draw a background rectangle to verify rendering
+                setDebugInfo("Drawing test rectangle...");
+                const bgRect = new fabric.Rect({
+                    left: 0,
+                    top: 0,
+                    width: 1200,
+                    height: 800,
+                    fill: '#f0f0f0',
+                    selectable: false,
+                    evented: false,
+                });
+                canvas.add(bgRect);
+                canvas.sendObjectToBack(bgRect);
+                canvas.renderAll();
+                setCanvasObjects(canvas.getObjects().length);
+                console.log("✓ Background rectangle drawn (test)");
+                setDebugInfo("Rectangle drawn, loading image...");
+                console.log("📸 Loading preview image from:", jpgPreviewUrl);
+                
                 try {
-                    const response = await fetch(templateUrl);
-                    if (!response.ok) throw new Error("Failed to load template");
-                    const arrayBuffer = await response.arrayBuffer();
-                    // @ts-expect-error: ag-psd types may not match fabric.js usage
-                    const psd = readPsd(arrayBuffer, { useImageData: true, useCanvas: true });
-
-                    await document.fonts.ready;
-                    const dims = await loadPsdToCanvas(psd, canvas);
-                    setCanvasSize(dims);
-                    addGuides(canvas, dims.width, dims.height);
-                    setupCanvasEvents(canvas);
-                    zoomToFit(dims.width, dims.height); // Start at fit zoom (Canva style)
-                } catch (error) {
-                    console.error("Error loading template:", error);
-                    alert("Failed to load template configuration.");
+                    // Fetch the image as a blob
+                    const response = await fetch(jpgPreviewUrl);
+                    if (!response.ok) throw new Error(`Failed to fetch image: ${response.statusText}`);
+                    
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Create image element
+                    const imgElement = new Image();
+                    imgElement.crossOrigin = "Anonymous";
+                    imgElement.onload = () => {
+                        try {
+                            setDebugInfo("Image element loaded, creating Fabric image...");
+                            const fabricImg = new fabric.Image(imgElement, {
+                                left: 0,
+                                top: 0,
+                                selectable: false,
+                                evented: false,
+                            });
+                            
+                            const imgWidth = fabricImg.width || 1200;
+                            const imgHeight = fabricImg.height || 800;
+                            
+                            canvas.setDimensions({ width: imgWidth, height: imgHeight });
+                            setDebugInfo(`Canvas set to ${imgWidth}x${imgHeight}`);
+                            
+                            canvas.add(fabricImg);
+                            canvas.sendObjectToBack(fabricImg);
+                            setDebugInfo("Image added, rendering...");
+                            
+                            canvas.renderAll();
+                            setCanvasObjects(canvas.getObjects().length);
+                            setDebugInfo(`SUCCESS! Objects: ${canvas.getObjects().length}`);
+                            
+                            setCanvasSize({ width: imgWidth, height: imgHeight });
+                            addGuides(canvas, imgWidth, imgHeight);
+                            setupCanvasEvents(canvas);
+                            
+                            URL.revokeObjectURL(url);
+                        } catch (err) {
+                            setDebugInfo(`ERROR: ${err}`);
+                            console.error("Error in image onload:", err);
+                        }
+                    };
+                    
+                    imgElement.onerror = () => {
+                        setDebugInfo(`ERROR: Failed to load image element`);
+                        console.error("Failed to load image element");
+                    };
+                    
+                    imgElement.src = url;
+                } catch (imgErr) {
+                    setDebugInfo(`ERROR: ${imgErr}`);
+                    console.error("Error loading image:", imgErr);
                 }
+                
+                // Now load PSD metadata for text layers
+                try {
+                    console.log("📖 Loading PSD metadata for text extraction...");
+                    const psdResponse = await fetch(templateUrl);
+                    if (!psdResponse.ok) {
+                        throw new Error(`HTTP ${psdResponse.status}: Failed to load PSD`);
+                    }
+                    
+                    const arrayBuffer = await psdResponse.arrayBuffer();
+                    const psd = readPsd(arrayBuffer, { skipCompositeImageData: true, skipLayerImageData: true });
+                    
+                    console.log("✓ PSD metadata parsed");
+                    console.log("PSD layers:", psd.children?.length || 0);
+                    
+                    // Extract and render text layers from PSD metadata
+                    if (psd.children && psd.width && psd.height) {
+                        const extractTextLayers = (layers: any[], depth = 0) => {
+                            if (depth > 20) return;
+                            for (const layer of layers) {
+                                try {
+                                    if (!layer.hidden && layer.text && layer.text.text) {
+                                        console.log("Adding text layer:", layer.text.text.substring(0, 30));
+                                        const textObj = new fabric.IText(layer.text.text, {
+                                            left: (layer.left || 0),
+                                            top: (layer.top || 0),
+                                            fontSize: layer.text.style?.fontSize || 24,
+                                            fill: "#000000",
+                                            fontFamily: "Arial, sans-serif",
+                                        } as any);
+                                        canvas.add(textObj);
+                                    }
+                                    if (layer.children && layer.children.length > 0) {
+                                        extractTextLayers(layer.children, depth + 1);
+                                    }
+                                } catch (layerErr) {
+                                    console.warn(`Skipping text layer:`, layerErr);
+                                }
+                            }
+                        };
+                        extractTextLayers(psd.children);
+                    }
+                    
+                    console.log("✓ Text layers loaded");
+                } catch (psdErr) {
+                    console.warn("⚠️ Could not extract PSD text layers (optional):", psdErr instanceof Error ? psdErr.message : String(psdErr));
+                    // This is not critical - image is already loaded
+                }
+
+                setTimeout(() => {
+                    console.log("Finalizing canvas setup...");
+                    console.log("Canvas objects:", canvas.getObjects().length);
+                    zoomToFit(canvas.getWidth() || 1200, canvas.getHeight() || 800);
+                    canvas.renderAll();
+                    setIsLoading(false);
+                }, 100);
+                
+            } catch (error) {
+                const errorMsg = error instanceof Error ? error.message : String(error);
+                console.error("Template loading error:", errorMsg);
+                setLoadingError(errorMsg);
+                alert(`Failed to load template: ${errorMsg}`);
+                
+                // Fallback: create empty canvas
+                canvas.clear();
+                canvas.setDimensions({ width: 1200, height: 800 });
+                addGuides(canvas, 1200, 800);
+                setupCanvasEvents(canvas);
+                canvas.renderAll();
+                setCanvasSize({ width: 1200, height: 800 });
+                
+                setIsLoading(false);
             }
         };
         loadTemplate();
-    }, [templateUrl, canvas, zoomToFit]);
+    }, [templateUrl, canvas]);
 
 
     // Add Text
@@ -385,19 +684,23 @@ export default function Editor({ templateUrl }: EditorProps) {
         if (!name) return;
 
         const canvasJson = canvas.toJSON();
-        const previewImage = canvas.toDataURL({ format: "png", multiplier: 0.5 / canvas.getZoom() });
 
         try {
             const response = await fetch('/api/save-design', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, canvas_json: canvasJson, preview_image: previewImage }),
+                body: JSON.stringify({ 
+                    name, 
+                    canvas_json: canvasJson,
+                    template_url: templateUrl
+                }),
             });
 
+            const data = await response.json();
             if (response.ok) {
-                alert("Design saved successfully!");
+                alert(`✅ Design saved! (ID: ${data.id}, Size: ${data.message})`);
             } else {
-                alert("Failed to save design.");
+                alert(`❌ Failed: ${data.error}`);
             }
         } catch (error) {
             console.error("Error saving design:", error);
@@ -485,21 +788,23 @@ export default function Editor({ templateUrl }: EditorProps) {
             if (currentJson === lastSavedJson) return;
 
             try {
-                // Determine a name (could be derived from template or user)
                 const name = "AutoSaved_" + new Date().toLocaleTimeString();
-                let previewImage = "";
-                try {
-                    previewImage = canvas.toDataURL({ format: "png", multiplier: 0.2 });
-                } catch {
-                    return;
-                }
-                await fetch('/api/save-design', {
+                const response = await fetch('/api/save-design', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, canvas_json: canvas.toJSON(), preview_image: previewImage }),
+                    body: JSON.stringify({ 
+                        name, 
+                        canvas_json: canvas.toJSON(),
+                        template_url: templateUrl
+                    }),
                 });
-                setLastSavedJson(currentJson);
-                console.log("Auto-save complete");
+                
+                if (response.ok) {
+                    setLastSavedJson(currentJson);
+                    console.log("✅ Auto-save complete");
+                } else {
+                    console.warn("Auto-save failed:", await response.json());
+                }
             } catch (err) {
                 console.error("Auto-save failed:", err);
             }
@@ -509,8 +814,26 @@ export default function Editor({ templateUrl }: EditorProps) {
     }, [canvas, lastSavedJson]);
 
     return (
-        <div className="flex h-screen bg-gray-100 overflow-hidden font-inter">
-            {/* Sidebar Tools */}
+        <div className="flex h-screen bg-gray-100 overflow-hidden font-inter flex-col">
+            {/* Debug Info */}
+            {debugInfo && (
+                <div className="bg-purple-100 text-purple-900 px-4 py-2 text-sm border-b border-purple-300">
+                    DEBUG: {debugInfo} | Objects: {canvasObjects}
+                </div>
+            )}
+            {/* Error Banner */}
+            {loadingError && (
+                <div className="bg-red-500 text-white px-4 py-3 flex justify-between items-center">
+                    <span>Error loading template: {loadingError}</span>
+                    <button onClick={() => setLoadingError(null)} className="text-white hover:text-gray-200">✕</button>
+                </div>
+            )}
+            {isLoading && templateUrl && (
+                <div className="bg-blue-500 text-white px-4 py-2 text-center">
+                    Loading PSD template...
+                </div>
+            )}
+            <div className="flex flex-1 overflow-hidden">
             <aside className={`
                 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
                 fixed md:relative z-40 w-80 h-full bg-white shadow-xl transition-transform duration-300
@@ -749,15 +1072,22 @@ export default function Editor({ templateUrl }: EditorProps) {
 
                 <div
                     ref={containerRef}
-                    className="flex-1 overflow-auto p-12 flex justify-center items-center relative"
+                    className="flex-1 overflow-auto flex justify-start items-start p-4 relative"
                     style={{
                         backgroundImage: `radial-gradient(#d1d5db 1px, transparent 1px)`,
                         backgroundSize: '20px 20px'
                     }}
                 >
-                    <div className="relative shadow-[0_30px_60px_rgba(0,0,0,0.3)] bg-white rounded-sm overflow-hidden">
-                        <canvas ref={canvasRef} />
-                    </div>
+                    <canvas
+                        ref={canvasRef}
+                        style={{
+                            display: 'block',
+                            border: '2px solid #999',
+                            backgroundColor: '#fff',
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                            cursor: 'crosshair'
+                        }}
+                    />
                 </div>
 
                 {/* Print Legend */}
@@ -773,6 +1103,7 @@ export default function Editor({ templateUrl }: EditorProps) {
                     <div className="ml-auto font-mono text-rose-500">300 DPI PRODUCTION READY</div>
                 </footer>
             </main>
+            </div>
         </div>
     );
 }

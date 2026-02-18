@@ -33,9 +33,11 @@ export default async function BannerDetail({
   return (
     <div className="min-h-screen bg-rose-50 p-10">
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
-        <img
+        <Image
           src={selectedDesign.image_path}
           alt={selectedDesign.name}
+          width={600}
+          height={400}
           className="w-full h-80 object-cover rounded-lg"
         />
 
@@ -48,7 +50,7 @@ export default async function BannerDetail({
         <div className="mt-8 text-center">
           <Link
             href={`/editor?template=${selectedDesign.template_path}`}
-            className="inline-block bg-[#C5A022] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#B38F1E] transition shadow-sm"
+            className="inline-block bg-pink-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#f709a3] transition shadow-sm"
           >
             Customize Design
           </Link>

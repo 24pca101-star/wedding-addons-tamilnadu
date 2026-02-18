@@ -7,7 +7,8 @@ import { useSearchParams } from "next/navigation";
 
 function EditorWrapper() {
     const searchParams = useSearchParams();
-    const template = searchParams.get("template") || undefined;
+    // Support both ?template= and ?psd= for backward compatibility
+    const template = searchParams.get("template") || searchParams.get("psd") || undefined;
     return <Editor templateUrl={template} />;
 }
 

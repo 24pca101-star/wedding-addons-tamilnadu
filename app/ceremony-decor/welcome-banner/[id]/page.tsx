@@ -49,7 +49,7 @@ export default async function BannerDetail({
 
         <div className="mt-8 text-center">
           <Link
-            href={`/editor?template=${selectedDesign.template_path}`}
+            href={`/customize/${selectedDesign.id}`}
             className="inline-block bg-pink-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#f709a3] transition shadow-sm"
           >
             Customize Design

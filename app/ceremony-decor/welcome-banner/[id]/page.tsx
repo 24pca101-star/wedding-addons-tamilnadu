@@ -1,60 +1,79 @@
-import Image from "next/image";
-import Link from "next/link";
-import pool from "@/lib/db";
-import { RowDataPacket } from "mysql2";
+"use client";
 
-interface Template extends RowDataPacket {
+import { useEffect, useState, useMemo } from "react";
+import { useParams } from "next/navigation";
+import EditorLayout from "@/components/EditorLayout";
+import PsdEditor from "@/components/PsdEditor";
+import Image from "next/image";
+interface TemplateDetails {
   id: number;
   name: string;
   description: string;
+  psd_path: string;
   image_path: string;
-  template_path: string;
 }
 
-export default async function BannerDetail({
-  params,
-}: {
-  params: { id: string | number } | Promise<{ id: string | number }>;
-}) {
-  const resolvedParams = await params;
-  const id = Number(resolvedParams.id);
+export default function WelcomeBannerEditor() {
+  const params = useParams();
+  const id = params?.id;
+  const [template, setTemplate] = useState<TemplateDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fetch from Database
-  const [rows] = await pool.query<Template[]>(
-    'SELECT * FROM templates WHERE id = ?',
-    [id]
-  );
-  const selectedDesign = rows[0];
+ useEffect(() => {
+  if (!id) return;
 
-  if (!selectedDesign) {
-    return <h1 className="text-center mt-10">Design Not Found</h1>;
+  const loadTemplate = async () => {
+    try {
+      const res = await fetch(`/api/template-details/${id}`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setTemplate(data);
+    } catch {
+      setError("Unable to load template details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  loadTemplate();
+}, [id]);
+
+
+  const psdUrl = useMemo(() => template?.psd_path || "", [template]);
+  const jpgUrl = useMemo(() => template?.image_path || "", [template]);
+  const [showEditor, setShowEditor] = useState(false);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div style={{ color: "red" }}>{error}</div>;
+  if (!template) return <div>Template not found.</div>;
+
+  if (showEditor) {
+    return (
+      <EditorLayout>
+        <PsdEditor psdUrl={psdUrl} jpgUrl={jpgUrl} />
+      </EditorLayout>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-rose-50 p-10">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg p-6">
+    <div className="min-h-screen bg-rose-50 flex flex-col items-center justify-center p-10">
+      <div className="bg-white rounded-xl shadow-lg p-8 max-w-xl w-full flex flex-col items-center">
         <Image
-          src={selectedDesign.image_path}
-          alt={selectedDesign.name}
-          width={600}
-          height={400}
-          className="w-full h-80 object-cover rounded-lg"
+          src={jpgUrl}
+          alt={template.name}
+          width={400}
+          height={224}
+          className="w-full max-w-md h-auto object-contain rounded-lg mb-6"
         />
-
-        <h1 className="text-3xl font-bold mt-6 text-maroon">
-          {selectedDesign.name}
-        </h1>
-
-        <p className="mt-4 text-gray-600">{selectedDesign.description}</p>
-
-        <div className="mt-8 text-center">
-          <Link
-            href={`/customize/${selectedDesign.id}`}
-            className="inline-block bg-pink-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#f709a3] transition shadow-sm"
-          >
-            Customize Design
-          </Link>
-        </div>
+        <h1 className="text-3xl font-bold text-maroon mb-2 text-center">{template.name}</h1>
+        <p className="text-gray-600 mb-6 text-center">{template.description}</p>
+        <button
+          className="bg-pink-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#f709a3] transition shadow-sm"
+          onClick={() => setShowEditor(true)}
+        >
+          Start Customization
+        </button>
       </div>
     </div>
   );

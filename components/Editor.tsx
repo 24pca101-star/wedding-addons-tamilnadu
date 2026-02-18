@@ -273,10 +273,22 @@ export default function Editor({ templateUrl }: EditorProps) {
 
             console.log("Scale:", scale.toFixed(2), "Pan:", { x: Math.round(panX), y: Math.round(panY) });
 
-        canvas.setZoom(scale);
-        canvas.setDimensions({ width: width * scale, height: height * scale });
-        canvas.renderAll();
-    }, [canvas, canvasSize]);
+            canvas.setZoom(scale);
+            canvas.setViewportTransform([scale, 0, 0, scale, panX, panY]);
+            canvas.renderAll();
+            
+            console.log("✓ Zoom to fit complete");
+        } catch (err) {
+            console.error("✗ zoomToFit error:", err);
+            try {
+                canvas.setZoom(1);
+                canvas.setViewportTransform([1, 0, 0, 1, 0, 0]);
+                canvas.renderAll();
+            } catch (e) {
+                console.error("Fallback also failed");
+            }
+        }
+    }, [canvas]);
 
     const setZoom100 = (targetWidth?: number, targetHeight?: number) => {
         if (!canvas || !(canvas as any).contextContainer) return;
@@ -284,9 +296,12 @@ export default function Editor({ templateUrl }: EditorProps) {
             const width = targetWidth || canvasSize.width;
             const height = targetHeight || canvasSize.height;
 
-        canvas.setZoom(1);
-        canvas.setDimensions({ width, height });
-        canvas.renderAll();
+            canvas.setZoom(1);
+            canvas.setDimensions({ width, height });
+            canvas.renderAll();
+        } catch (err) {
+            console.warn("setZoom100 error (skipping):", err);
+        }
     };
 
     // Auto-resize Observer
@@ -324,12 +339,37 @@ export default function Editor({ templateUrl }: EditorProps) {
                     console.warn("⚠️ Could not load image data, continuing with metadata");
                 }
 
-        await document.fonts.ready;
-        const dims = await loadPsdToCanvas(psd, canvas);
-        setCanvasSize(dims);
-        addGuides(canvas, dims.width, dims.height);
-        setupCanvasEvents(canvas);
-        zoomToFit(dims.width, dims.height); // Start at fit zoom (Canva style)
+                await document.fonts.ready;
+                const dims = await loadPsdToCanvas(psd, canvas);
+                setCanvasSize(dims);
+                addGuides(canvas, dims.width, dims.height);
+                setupCanvasEvents();
+                zoomToFit(dims.width, dims.height);
+            } catch (parseError) {
+                console.error("PSD parsing error:", parseError);
+                // Fallback: use metadata-only version
+                console.warn("Using metadata-only PSD version...");
+                const psd = readPsd(arrayBuffer, { skipCompositeImageData: true, skipLayerImageData: true });
+
+                const width = psd.width || 1200;
+                const height = psd.height || 800;
+
+                if ((canvas as any).contextContainer) {
+                    canvas.clear();
+                    canvas.setDimensions({ width, height });
+                    setCanvasSize({ width, height });
+                    addGuides(canvas, width, height);
+                    setupCanvasEvents();
+                    canvas.renderAll();
+                    canvas.setZoom(1);
+                    alert("PSD loaded in metadata mode. Visual elements may be limited.");
+                }
+            }
+        } catch (error) {
+            const errorMsg = error instanceof Error ? error.message : String(error);
+            console.error("Error loading PSD file:", errorMsg);
+            alert(`Failed to load PSD file: ${errorMsg}`);
+        }
     };
 
     // Load Template from URL (uses JPG preview images)
@@ -353,7 +393,7 @@ export default function Editor({ templateUrl }: EditorProps) {
                     const dims = await loadPsdToCanvas(psd, canvas);
                     setCanvasSize(dims);
                     addGuides(canvas, dims.width, dims.height);
-                    setupCanvasEvents(canvas);
+                    setupCanvasEvents();
                     zoomToFit(dims.width, dims.height); // Start at fit zoom (Canva style)
                 } catch (error) {
                     console.error("Error loading template:", error);
@@ -904,7 +944,6 @@ export default function Editor({ templateUrl }: EditorProps) {
                     <div className="ml-auto font-mono text-rose-500">300 DPI PRODUCTION READY</div>
                 </footer>
             </main>
-            </div>
         </div>
     );
 }

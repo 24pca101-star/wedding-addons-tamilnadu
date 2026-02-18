@@ -27,7 +27,7 @@ export async function GET(request: Request) {
             hasCompositeCanvas: !!psd.canvas,
             compositeCanvasSize: psd.canvas ? { width: psd.canvas.width, height: psd.canvas.height } : null,
             layerCount: psd.children?.length || 0,
-            layerDetails: psd.children?.map((layer, idx) => ({
+            layerDetails: psd.children?.map((layer: any, idx) => ({
                 index: idx,
                 name: layer.name || `Layer ${idx}`,
                 type: layer.text ? 'text' : (layer.canvas ? 'image' : (layer.children ? 'group' : 'other')),
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
                 hasText: !!layer.text,
                 hasChildren: layer.children?.length || 0,
                 hidden: layer.hidden,
-                dimensions: { w: layer.width, h: layer.height, x: layer.left, y: layer.top }
+                dimensions: { w: layer.width || 0, h: layer.height || 0, x: layer.left || 0, y: layer.top || 0 }
             })) || []
         };
         

@@ -1,79 +1,86 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { useParams } from "next/navigation";
-import EditorLayout from "@/components/EditorLayout";
-import PsdEditor from "@/components/PsdEditor";
-import Image from "next/image";
-interface TemplateDetails {
-  id: number;
-  name: string;
-  description: string;
-  psd_path: string;
-  image_path: string;
-}
+import { useSearchParams, useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import * as fabric from "fabric";
+import EditorCanvas from "@/components/EditorCanvas";
+import Toolbar from "@/components/Toolbar";
+import TextControls from "@/components/TextControls";
 
-export default function WelcomeBannerEditor() {
+type FabricCanvas = fabric.Canvas;
+
+export default function Page() {
   const params = useParams();
-  const id = params?.id;
-  const [template, setTemplate] = useState<TemplateDetails | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
 
- useEffect(() => {
-  if (!id) return;
+  const [canvas, setCanvas] = useState<FabricCanvas | null>(null);
+  const [, setSelectedText] = useState<fabric.Textbox | null>(null);
 
-  const loadTemplate = async () => {
-    try {
-      const res = await fetch(`/api/template-details/${id}`);
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setTemplate(data);
-    } catch {
-      setError("Unable to load template details.");
-    } finally {
-      setLoading(false);
+  let width = 400;
+  let height = 600;
+
+  // ✅ Case 1: route like /5x8
+  if (params.id) {
+    const parts = (params.id as string).split("x");
+    width = Number(parts[0]) * 100;
+    height = Number(parts[1]) * 100;
+  }
+
+  // ✅ Case 2: query ?width=5&height=8
+  const qWidth = searchParams.get("width");
+  const qHeight = searchParams.get("height");
+
+  if (qWidth && qHeight) {
+    width = Number(qWidth) * 100;
+    height = Number(qHeight) * 100;
+  }
+
+  // 🧠 Detect selected text
+  useEffect(() => {
+  if (!canvas) return;
+
+  const updateSelection = () => {
+    const active = canvas.getActiveObject();
+
+    if (active && active.type === "textbox") {
+      setSelectedText(active as fabric.Textbox);
+    } else {
+      setSelectedText(null);
     }
   };
 
-  loadTemplate();
-}, [id]);
+  canvas.on("selection:created", updateSelection);
+  canvas.on("selection:updated", updateSelection);
+  canvas.on("selection:cleared", updateSelection);
+
+  return () => {
+    canvas.off("selection:created", updateSelection);
+    canvas.off("selection:updated", updateSelection);
+    canvas.off("selection:cleared", updateSelection);
+  };
+}, [canvas]);
 
 
-  const psdUrl = useMemo(() => template?.psd_path || "", [template]);
-  const jpgUrl = useMemo(() => template?.image_path || "", [template]);
-  const [showEditor, setShowEditor] = useState(false);
-
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div style={{ color: "red" }}>{error}</div>;
-  if (!template) return <div>Template not found.</div>;
-
-  if (showEditor) {
-    return (
-      <EditorLayout>
-        <PsdEditor psdUrl={psdUrl} jpgUrl={jpgUrl} />
-      </EditorLayout>
-    );
-  }
+  console.log("Canvas Size:", width, height);
 
   return (
-    <div className="min-h-screen bg-rose-50 flex flex-col items-center justify-center p-10">
-      <div className="bg-white rounded-xl shadow-lg p-8 max-w-xl w-full flex flex-col items-center">
-        <Image
-          src={jpgUrl}
-          alt={template.name}
-          width={400}
-          height={224}
-          className="w-full max-w-md h-auto object-contain rounded-lg mb-6"
-        />
-        <h1 className="text-3xl font-bold text-maroon mb-2 text-center">{template.name}</h1>
-        <p className="text-gray-600 mb-6 text-center">{template.description}</p>
-        <button
-          className="bg-pink-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-[#f709a3] transition shadow-sm"
-          onClick={() => setShowEditor(true)}
-        >
-          Start Customization
-        </button>
+    <div className="flex h-screen">
+
+      {/* 🧰 LEFT PANEL */}
+      <div className="w-64 bg-gray-100 p-4 space-y-4 border-r">
+        <h2 className="font-semibold text-lg">Text Settings</h2>
+        <TextControls canvas={canvas} />
+      </div>
+
+      {/* 🎨 MAIN AREA */}
+      <div className="flex-1 flex flex-col items-center justify-start p-6 gap-4">
+
+        {/* 🛠 Toolbar */}
+        <Toolbar canvas={canvas} />
+
+        {/* 🖼 Canvas */}
+        <EditorCanvas width={width} height={height} setCanvas={setCanvas} />
+
       </div>
     </div>
   );

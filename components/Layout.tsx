@@ -3,6 +3,7 @@
 import { ReactNode, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import Navbar from "./Navbar";
 interface SubModule {
   title: string;
   link: string;
@@ -90,102 +91,7 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-pink-50 text-gray-800">
-      {/* ================= NAVBAR ================= */}
-    
-<nav className="fixed top-0 w-full z-20 backdrop-blur-md bg-white/70 shadow-md border-b border-pink-200">
-  <div className="max-w-7xl mx-auto pl-4 pr-8 py-4 flex justify-between items-center">
-    
-
-    <Link href="/">
-      <div className="flex items-center cursor-pointer">
-        <Image
-          src="/logodesign.png" 
-          alt="Wedding Add-Ons Logo"
-          width={150}     
-          height={60}
-          style={{ width: 'auto', height: '50px' }}
-        />
-      </div>
-    </Link>
-
-          <div className="hidden md:flex gap-8 font-medium text-gray-700">
-            {categories.map((cat, index) => (
-              <div key={index} className="relative group">
-                <Link href={cat.link} className="hover:text-pink-600 transition duration-300">
-                  {cat.title}
-                </Link>
-
-                {cat.subModules && (
-                  <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-xl shadow-lg opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-300 z-50">
-                    <ul className="flex flex-col p-4">
-                      {cat.subModules.map((sub, i) => (
-                        <li key={i} className="py-2 hover:bg-pink-50 rounded-lg transition">
-                          <Link href={sub.link} className="text-gray-700 hover:text-pink-700">
-                            {sub.title}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-pink-800 font-bold focus:outline-none text-2xl"
-            >
-              ☰
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile menu dropdown */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden bg-white shadow-lg">
-            <ul className="flex flex-col px-4 py-4 gap-2">
-              {categories.map((cat, index) => (
-                <li key={index}>
-                  <div
-                    onClick={() =>
-                      setMobileDropdown(mobileDropdown === index ? null : index)
-                    }
-                    className="flex justify-between items-center cursor-pointer py-2 px-2 hover:bg-pink-50 rounded-lg"
-                  >
-                    <span className="text-pink-800 font-medium">{cat.title}</span>
-                    {cat.subModules && <span>▸</span>}
-                  </div>
-
-                  {cat.subModules && mobileDropdown === index && (
-                    <ul className="flex flex-col pl-4 mt-1">
-                      {cat.subModules.map((sub, i) => (
-                        <li key={i} className="py-1">
-                          <Link href={sub.link} className="text-gray-700 hover:text-pink-700">
-                            {sub.title}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </nav>
-
-      {/* Page content */}
-      <main className="pt-28">{children}</main>
-
-      {/* Footer */}
-      <footer className="bg-pink-800 text-white text-center py-6 mt-12">
-        <p className="text-sm">
-          © 2026 Wedding Add-Ons Tamil Nadu. Crafted with elegance ✨
-        </p>
-      </footer>
+      <main>{children}</main>
     </div>
   );
 }

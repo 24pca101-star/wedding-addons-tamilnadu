@@ -1,0 +1,335 @@
+"use client";
+
+import { useCallback, useState, useEffect, useRef } from "react";
+import * as fabric from "fabric";
+
+export const useFabricEditor = () => {
+    const [canvas, setCanvas] = useState<fabric.Canvas | null>(null);
+    const canvasRef = useRef<fabric.Canvas | null>(null);
+    const [selectedObject, setSelectedObject] = useState<fabric.Object | null>(null);
+    const [zoom, setZoom] = useState(1);
+
+    // History State
+    const history = useRef<string[]>([]);
+    const historyIndex = useRef(-1);
+    const isReloadingHistory = useRef(false);
+
+    const saveHistory = useCallback(() => {
+        if (!canvas || isReloadingHistory.current) return;
+
+        const json = JSON.stringify(canvas.toJSON());
+
+        // If we are in the middle of history, discard future states
+        if (historyIndex.current < history.current.length - 1) {
+            history.current = history.current.slice(0, historyIndex.current + 1);
+        }
+
+        history.current.push(json);
+        historyIndex.current = history.current.length - 1;
+
+        // Limit history size
+        if (history.current.length > 50) {
+            history.current.shift();
+            historyIndex.current--;
+        }
+    }, [canvas]);
+
+    const undo = useCallback(() => {
+        if (!canvas || historyIndex.current <= 0) return;
+
+        isReloadingHistory.current = true;
+        historyIndex.current--;
+        const json = history.current[historyIndex.current];
+
+        canvas.loadFromJSON(json).then(() => {
+            canvas.renderAll();
+            isReloadingHistory.current = false;
+        });
+    }, [canvas]);
+
+    const redo = useCallback(() => {
+        if (!canvas || historyIndex.current >= history.current.length - 1) return;
+
+        isReloadingHistory.current = true;
+        historyIndex.current++;
+        const json = history.current[historyIndex.current];
+
+        canvas.loadFromJSON(json).then(() => {
+            canvas.renderAll();
+            isReloadingHistory.current = false;
+        });
+    }, [canvas]);
+
+    const resizeCanvas = useCallback((width: number, height: number) => {
+        if (!canvas) return;
+        canvas.setDimensions({ width, height });
+        canvas.renderAll();
+    }, [canvas]);
+
+    const initCanvas = useCallback((el: HTMLCanvasElement, options: any) => {
+        // Defensive check using the ref to prevent double initialization
+        if (canvasRef.current) {
+            console.log("Fabric: Canvas already exists in Ref, skipping initialization.");
+            return canvasRef.current;
+        }
+
+        // Tag check on element itself
+        // @ts-ignore
+        if (el.__fabric_canvas) {
+            console.log("Fabric: Canvas already exists on DOM element, skipping.");
+            // @ts-ignore
+            const existing = el.__fabric_canvas;
+            canvasRef.current = existing;
+            setCanvas(existing);
+            return existing;
+        }
+
+        console.log("Fabric: Creating new Canvas instance");
+        const c = new fabric.Canvas(el, {
+            ...options,
+            preserveObjectStacking: true,
+        });
+
+        // @ts-ignore - tag the element for manual detection
+        el.__fabric_canvas = c;
+
+        // Initial history save
+        const initialJson = JSON.stringify(c.toJSON());
+        history.current = [initialJson];
+        historyIndex.current = 0;
+
+        canvasRef.current = c;
+        setCanvas(c);
+        return c;
+    }, []);
+
+    const addText = useCallback((text: string = "Type here...") => {
+        if (!canvas) return;
+        const textbox = new fabric.Textbox(text, {
+            left: canvas.width! / 2,
+            top: canvas.height! / 2,
+            width: 250,
+            fontSize: 40,
+            fontFamily: "Inter, Arial, sans-serif",
+            fill: "#000000",
+            textAlign: "center",
+            originX: "center",
+            originY: "center",
+        });
+
+        canvas.add(textbox);
+        canvas.setActiveObject(textbox);
+        textbox.enterEditing();
+        textbox.selectAll();
+        canvas.renderAll();
+        saveHistory();
+    }, [canvas, saveHistory]);
+
+    const addRect = useCallback(() => {
+        if (!canvas) return;
+        const rect = new fabric.Rect({
+            left: canvas.width! / 2,
+            top: canvas.height! / 2,
+            fill: "#FF5ACD",
+            width: 150,
+            height: 150,
+            originX: "center",
+            originY: "center",
+        });
+        canvas.add(rect);
+        canvas.setActiveObject(rect);
+        canvas.renderAll();
+        saveHistory();
+    }, [canvas, saveHistory]);
+
+    const deleteSelected = useCallback(() => {
+        if (!canvas) return;
+        const activeObjects = canvas.getActiveObjects();
+        if (activeObjects.length > 0) {
+            canvas.remove(...activeObjects);
+            canvas.discardActiveObject();
+            canvas.renderAll();
+            saveHistory();
+        }
+    }, [canvas, saveHistory]);
+
+    const updateSelection = useCallback(() => {
+        if (!canvas) return;
+        const active = canvas.getActiveObject();
+        setSelectedObject(active || null);
+    }, [canvas]);
+
+    const bringToFront = useCallback(() => {
+        if (!canvas) return;
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+            canvas.bringObjectToFront(activeObject);
+            canvas.renderAll();
+            saveHistory();
+        }
+    }, [canvas, saveHistory]);
+
+    const sendToBack = useCallback(() => {
+        if (!canvas) return;
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+            canvas.sendObjectToBack(activeObject);
+            // Ensure safe area stays at the very bottom if it exists
+            const safeArea = canvas.getObjects().find(obj => (obj as any).isSafeArea);
+            if (safeArea) {
+                canvas.sendObjectToBack(safeArea);
+            }
+            canvas.renderAll();
+            saveHistory();
+        }
+    }, [canvas, saveHistory]);
+
+    const bringForward = useCallback(() => {
+        if (!canvas) return;
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+            canvas.bringObjectForward(activeObject);
+            canvas.renderAll();
+            saveHistory();
+        }
+    }, [canvas, saveHistory]);
+
+    const sendBackward = useCallback(() => {
+        if (!canvas) return;
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+            canvas.sendObjectBackwards(activeObject);
+            // Ensure safe area stays at the very bottom
+            const safeArea = canvas.getObjects().find(obj => (obj as any).isSafeArea);
+            if (safeArea) {
+                canvas.sendObjectToBack(safeArea);
+            }
+            canvas.renderAll();
+            saveHistory();
+        }
+    }, [canvas, saveHistory]);
+
+    const setOpacity = useCallback((value: number) => {
+        if (!canvas) return;
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+            activeObject.set("opacity", value);
+            canvas.renderAll();
+            saveHistory();
+        }
+    }, [canvas, saveHistory]);
+
+    const setFontFamily = useCallback((font: string) => {
+        if (!canvas) return;
+        const activeObject = canvas.getActiveObject();
+        if (activeObject && activeObject.type === "textbox") {
+            (activeObject as fabric.Textbox).set("fontFamily", font);
+            canvas.renderAll();
+            saveHistory();
+        }
+    }, [canvas, saveHistory]);
+
+    const handleZoom = useCallback((value: number) => {
+        if (!canvas) return;
+        const newZoom = Math.min(Math.max(0.1, value), 5);
+        setZoom(newZoom);
+        canvas.setZoom(newZoom);
+    }, [canvas]);
+
+    const addSafeArea = useCallback((targetCanvas?: fabric.Canvas) => {
+        const c = targetCanvas || canvas;
+        if (!c || !canvas) return;
+
+        // Check if safe area already exists
+        const existing = c.getObjects().find(obj => (obj as any).isSafeArea);
+        if (existing) return;
+
+        const margin = 40;
+        const rect = new fabric.Rect({
+            left: margin,
+            top: margin,
+            width: c.width! - margin * 2,
+            height: c.height! - margin * 2,
+            fill: "transparent",
+            stroke: "#FFB6C1",
+            strokeDashArray: [10, 5],
+            selectable: false,
+            evented: false,
+            // @ts-ignore
+            isSafeArea: true,
+        });
+        c.add(rect);
+        canvas.sendObjectToBack(rect);
+        c.renderAll();
+    }, [canvas]);
+
+    const toggleLock = useCallback(() => {
+        if (!canvas) return;
+        const activeObject = canvas.getActiveObject();
+        if (activeObject) {
+            const isLocked = !activeObject.lockMovementX;
+            activeObject.set({
+                lockMovementX: isLocked,
+                lockMovementY: isLocked,
+                lockScalingX: isLocked,
+                lockScalingY: isLocked,
+                lockRotation: isLocked,
+                editable: !isLocked, // For Textbox
+                hasControls: !isLocked,
+            });
+            canvas.renderAll();
+            saveHistory();
+        }
+    }, [canvas, saveHistory]);
+
+    const disposeCanvas = useCallback(() => {
+        if (canvasRef.current) {
+            console.log("Fabric: Disposing canvas instance");
+            canvasRef.current.dispose();
+            canvasRef.current = null;
+            setCanvas(null);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!canvas) return;
+
+        const handleObjectModified = () => saveHistory();
+
+        canvas.on("selection:created", updateSelection);
+        canvas.on("selection:updated", updateSelection);
+        canvas.on("selection:cleared", updateSelection);
+        canvas.on("object:modified", handleObjectModified);
+
+        return () => {
+            canvas.off("selection:created", updateSelection);
+            canvas.off("selection:updated", updateSelection);
+            canvas.off("selection:cleared", updateSelection);
+            canvas.off("object:modified", handleObjectModified);
+        };
+    }, [canvas, updateSelection, saveHistory]);
+
+    return {
+        canvas,
+        setCanvas,
+        initCanvas,
+        addText,
+        addRect,
+        deleteSelected,
+        selectedObject,
+        undo,
+        redo,
+        zoom,
+        handleZoom,
+        addSafeArea,
+        toggleLock,
+        resizeCanvas,
+        disposeCanvas,
+        bringToFront,
+        sendToBack,
+        bringForward,
+        sendBackward,
+        setOpacity,
+        setFontFamily,
+    };
+};

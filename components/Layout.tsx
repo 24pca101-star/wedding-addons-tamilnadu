@@ -3,7 +3,11 @@
 import { ReactNode, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+<<<<<<< HEAD
 import { usePathname } from 'next/navigation';
+=======
+import Navbar from "./Navbar";
+>>>>>>> 446e66de316e12181b197632c5268c5321ad36eb
 interface SubModule {
   title: string;
   link: string;
@@ -96,6 +100,7 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-pink-50 text-gray-800">
+<<<<<<< HEAD
       {/* ================= NAVBAR ================= */}
 
       <nav className="fixed top-0 w-full z-20 backdrop-blur-md bg-white/70 shadow-md border-b border-pink-200">
@@ -194,6 +199,9 @@ export default function Layout({ children }: LayoutProps) {
           </p>
         </footer>
       )}
+=======
+      <main>{children}</main>
+>>>>>>> 446e66de316e12181b197632c5268c5321ad36eb
     </div>
   );
 }

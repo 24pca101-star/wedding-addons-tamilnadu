@@ -1,0 +1,8 @@
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#fdfbf7"/>
+  <path d="M0 20 Q 50 10 100 20 T 200 20" stroke="#f0ede5" fill="transparent" stroke-width="0.5"/>
+  <path d="M0 60 Q 50 50 100 60 T 200 60" stroke="#f0ede5" fill="transparent" stroke-width="0.5"/>
+  <path d="M0 100 Q 50 90 100 100 T 200 100" stroke="#f0ede5" fill="transparent" stroke-width="0.5"/>
+  <path d="M0 140 Q 50 130 100 140 T 200 140" stroke="#f0ede5" fill="transparent" stroke-width="0.5"/>
+  <path d="M0 180 Q 50 170 100 180 T 200 180" stroke="#f0ede5" fill="transparent" stroke-width="0.5"/>
+</svg>

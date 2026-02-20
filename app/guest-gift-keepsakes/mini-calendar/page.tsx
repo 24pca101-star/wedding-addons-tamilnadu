@@ -1,12 +1,22 @@
+'use client';
+
+import React, { useState } from 'react';
+import SizeSelector from '@/components/mini-calendar/SizeSelector';
+import Editor from '@/components/mini-calendar/Editor';
+
 export default function MiniCalendar() {
+  const [selectedSize, setSelectedSize] = useState<any>(null);
+
   return (
-    <div className="min-h-screen p-10">
-      <h1 className="text-3xl font-bold text-maroon">
-        Mini Calendar - சிறிய காலண்டர்
-      </h1>
-      <p className="mt-4">
-        Custom traditional wedding mini calendars.
-      </p>
+    <div className="min-h-screen bg-white">
+      {!selectedSize ? (
+        <SizeSelector onSelect={setSelectedSize} />
+      ) : (
+        <Editor
+          size={selectedSize}
+          onBack={() => setSelectedSize(null)}
+        />
+      )}
     </div>
   );
 }

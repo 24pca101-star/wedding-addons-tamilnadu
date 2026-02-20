@@ -3,6 +3,7 @@
 import { ReactNode, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from 'next/navigation';
 interface SubModule {
   title: string;
   link: string;
@@ -87,26 +88,31 @@ export default function Layout({ children }: LayoutProps) {
 
   const [mobileDropdown, setMobileDropdown] = useState<number | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  const isEditorPage = pathname.includes('directional-sign-boards') ||
+    pathname.includes('welcome-banner') ||
+    pathname.includes('temple-theme-stage-backdrop');
 
   return (
     <div className="min-h-screen bg-pink-50 text-gray-800">
       {/* ================= NAVBAR ================= */}
-    
-<nav className="fixed top-0 w-full z-20 backdrop-blur-md bg-white/70 shadow-md border-b border-pink-200">
-  <div className="max-w-7xl mx-auto pl-4 pr-8 py-4 flex justify-between items-center">
-    
 
-    <Link href="/">
-      <div className="flex items-center cursor-pointer">
-        <Image
-          src="/logodesign.png" 
-          alt="Wedding Add-Ons Logo"
-          width={150}     
-          height={60}
-          style={{ width: 'auto', height: '50px' }}
-        />
-      </div>
-    </Link>
+      <nav className="fixed top-0 w-full z-20 backdrop-blur-md bg-white/70 shadow-md border-b border-pink-200">
+        <div className="max-w-7xl mx-auto pl-4 pr-8 py-4 flex justify-between items-center">
+
+
+          <Link href="/">
+            <div className="flex items-center cursor-pointer">
+              <Image
+                src="/logodesign.png"
+                alt="Wedding Add-Ons Logo"
+                width={150}
+                height={60}
+                style={{ width: 'auto', height: '50px' }}
+              />
+            </div>
+          </Link>
 
           <div className="hidden md:flex gap-8 font-medium text-gray-700">
             {categories.map((cat, index) => (
@@ -181,11 +187,13 @@ export default function Layout({ children }: LayoutProps) {
       <main className="pt-28">{children}</main>
 
       {/* Footer */}
-      <footer className="bg-pink-800 text-white text-center py-6 mt-12">
-        <p className="text-sm">
-          © 2026 Wedding Add-Ons Tamil Nadu. Crafted with elegance ✨
-        </p>
-      </footer>
+      {!isEditorPage && (
+        <footer className="bg-pink-800 text-white text-center py-6 mt-12">
+          <p className="text-sm">
+            © 2026 Wedding Add-Ons Tamil Nadu. Crafted with elegance ✨
+          </p>
+        </footer>
+      )}
     </div>
   );
 }

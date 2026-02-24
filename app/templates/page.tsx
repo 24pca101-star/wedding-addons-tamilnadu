@@ -1,3 +1,5 @@
+"use client";
+
 import TemplateCard from "@/components/TemplateCard";
 
 import { useEffect, useState } from "react";

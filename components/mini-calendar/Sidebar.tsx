@@ -8,6 +8,7 @@ interface SidebarProps {
     onAddText: () => void;
     onAddCalendar: (month: number, year: number) => void;
     onUploadImage: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onUploadPsd: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onColorChange: (color: string) => void;
     onTextureChange: (textureUrl: string) => void;
     onApplyEffect: (effectId: string) => void;
@@ -30,6 +31,7 @@ export default function Sidebar({
     onAddText,
     onAddCalendar,
     onUploadImage,
+    onUploadPsd,
     onColorChange,
     onTextureChange,
     onApplyEffect,
@@ -122,6 +124,12 @@ export default function Sidebar({
                                     <input type="file" onChange={onUploadImage} accept="image/*" className="hidden" />
                                     <div className="w-full py-4 bg-white border-2 border-dashed border-gold/30 text-gold rounded-xl text-[11px] font-black uppercase tracking-widest hover:border-gold hover:bg-gold/5 transition-all flex items-center justify-center gap-3 cursor-pointer">
                                         <span>🖼️</span> UPLOAD PHOTO
+                                    </div>
+                                </label>
+                                <label className="block">
+                                    <input type="file" onChange={onUploadPsd} accept=".psd" className="hidden" />
+                                    <div className="w-full py-4 bg-white border-2 border-dashed border-maroon/30 text-maroon rounded-xl text-[11px] font-black uppercase tracking-widest hover:border-maroon hover:bg-maroon/5 transition-all flex items-center justify-center gap-3 cursor-pointer">
+                                        <span>🎨</span> UPLOAD PSD TEMPLATE
                                     </div>
                                 </label>
                             </div>

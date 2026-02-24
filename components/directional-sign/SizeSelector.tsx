@@ -8,6 +8,8 @@ interface SizeOption {
     dimensions: string;
     ratio: number; // width / height
     description: string;
+    visualLabel: string;
+    widthInFeet: number;
 }
 
 const sizes: SizeOption[] = [
@@ -16,28 +18,36 @@ const sizes: SizeOption[] = [
         name: 'Small (A3 Landscape)',
         dimensions: '16.5 x 11.7 inches / A3',
         ratio: 16.5 / 11.7,
-        description: 'Standard A3 size, perfect for intimate garden paths or indoor directions.'
+        description: 'Standard A3 size, perfect for intimate garden paths or indoor directions.',
+        visualLabel: 'A3',
+        widthInFeet: 1.375 // 16.5 inches
     },
     {
         id: 'medium',
         name: 'Medium (Professional)',
         dimensions: '24x18 inches / 2x1.5 feet',
         ratio: 24 / 18,
-        description: 'The standard choice for most wedding venues.'
+        description: 'The standard choice for most wedding venues.',
+        visualLabel: '2ft × 1.5ft',
+        widthInFeet: 2
     },
     {
         id: 'large',
         name: 'Large (Grand)',
         dimensions: '36x24 inches / 3x2 feet',
         ratio: 36 / 24,
-        description: 'Bold and clear for large outdoor areas or main entrances.'
+        description: 'Bold and clear for large outdoor areas or main entrances.',
+        visualLabel: '3ft × 2ft',
+        widthInFeet: 3
     },
     {
         id: 'extra-large',
         name: 'Event (Panoramic)',
         dimensions: '48x24 inches / 4x2 feet',
         ratio: 48 / 24,
-        description: 'The ultimate wide format for professional wedding garden venues.'
+        description: 'The ultimate wide format for professional wedding garden venues.',
+        visualLabel: '4ft × 2ft',
+        widthInFeet: 4
     }
 ];
 
@@ -65,10 +75,23 @@ export default function SizeSelector({ onSelect }: SizeSelectorProps) {
                     >
                         <div className="absolute top-0 left-0 w-full h-1 bg-gold transition-all duration-300 opacity-0 group-hover:opacity-100" />
 
-                        <div className="w-20 h-20 bg-cream rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                            <span className="text-gold font-serif text-xl font-bold">
-                                {size.name.split(' ')[0]}
-                            </span>
+                        <div className="h-48 w-full flex flex-col items-center justify-center mb-4 group-hover:scale-105 transition-transform">
+                            <div className="relative flex items-center justify-center">
+                                <div
+                                    className="bg-white border-2 border-maroon shadow-md flex items-center justify-center relative transition-all duration-300 group-hover:shadow-lg"
+                                    style={{
+                                        width: `${size.widthInFeet * 60}px`, // 1ft = 60px scale
+                                        aspectRatio: `${size.ratio}`,
+                                        maxWidth: '100%'
+                                    }}
+                                >
+                                    <div className="absolute inset-1 border border-gold/30 pointer-events-none" />
+                                </div>
+                                {/* Label floating below/inside or overlay */}
+                                <span className="absolute text-maroon font-serif font-bold text-sm bg-white/90 px-2 py-1 rounded shadow-sm border border-gold/20 whitespace-nowrap z-10" style={{ bottom: '-2rem' }}>
+                                    {size.visualLabel}
+                                </span>
+                            </div>
                         </div>
 
                         <h3 className="text-2xl font-serif text-gray-800 mb-2">{size.name}</h3>

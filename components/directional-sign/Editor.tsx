@@ -6,6 +6,7 @@ import { jsPDF } from 'jspdf';
 import Sidebar from './Sidebar';
 import Toolbar from './Toolbar';
 import { TEMPLATES, MOTIFS } from '@/lib/customizer-presets';
+import { parsePsdToFabric } from '@/utils/psdParser';
 
 interface EditorProps {
     size: {
@@ -252,6 +253,24 @@ export default function Editor({ size, onBack }: EditorProps) {
         reader.readAsDataURL(file);
     };
 
+    const handleUploadPsd = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        const canvas = canvasRef.current;
+        if (!file || !canvas) return;
+
+        try {
+            const objects = await parsePsdToFabric(file);
+            objects.forEach((obj) => {
+                canvas.add(obj);
+            });
+            canvas.renderAll();
+            saveHistoryLocal(canvas);
+        } catch (error) {
+            console.error("PSD Parsing Error:", error);
+            alert("Failed to parse PSD file. Please make sure it's a valid PSD.");
+        }
+    };
+
     const addArrow = (direction: 'left' | 'right' | 'up' | 'down') => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -459,7 +478,9 @@ export default function Editor({ size, onBack }: EditorProps) {
             <div className="flex flex-1 overflow-hidden">
                 {!isPreview && (
                     <Sidebar
-                        onAddText={addText} onUploadImage={uploadImage} onAddArrow={addArrow}
+                        onAddText={addText} onUploadImage={uploadImage}
+                        onUploadPsd={handleUploadPsd}
+                        onAddArrow={addArrow}
                         onLoadTemplate={loadTemplate}
                         onColorChange={(c) => {
                             if (canvasRef.current) {

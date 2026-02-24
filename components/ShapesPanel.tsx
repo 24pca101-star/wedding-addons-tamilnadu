@@ -27,8 +27,8 @@ export default function ShapesPanel({ canvas }: Props) {
             fill: "#FF5ACD",
             width: 100,
             height: 100,
-            originX: "center",
-            originY: "center",
+            originX: "center" as const,
+            originY: "center" as const,
         };
 
         switch (type) {

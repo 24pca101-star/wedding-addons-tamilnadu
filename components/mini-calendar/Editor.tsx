@@ -6,6 +6,7 @@ import { jsPDF } from 'jspdf';
 import Sidebar from './Sidebar';
 import Toolbar from '../directional-sign/Toolbar';
 import { MONTHS } from '@/lib/calendar-presets';
+import { parsePsdToFabric } from '@/utils/psdParser';
 
 interface CalendarSize {
     id: string;
@@ -299,6 +300,24 @@ export default function Editor({ size, onBack }: EditorProps) {
         }
     };
 
+    const handleUploadPsd = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        const canvas = canvasRef.current;
+        if (!file || !canvas) return;
+
+        try {
+            const objects = await parsePsdToFabric(file);
+            objects.forEach((obj) => {
+                canvas.add(obj);
+            });
+            canvas.renderAll();
+            saveHistory(canvas);
+        } catch (error) {
+            console.error("PSD Parsing Error:", error);
+            alert("Failed to parse PSD file. Please make sure it's a valid PSD.");
+        }
+    };
+
     const saveAsPdf = () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -340,6 +359,7 @@ export default function Editor({ size, onBack }: EditorProps) {
                     onAddText={addText}
                     onAddCalendar={addCalendarGrid}
                     onUploadImage={() => { }}
+                    onUploadPsd={handleUploadPsd}
                     onColorChange={(c) => { canvasRef.current?.set({ backgroundColor: c }); canvasRef.current?.renderAll(); }}
                     onTextureChange={() => { }}
                     onApplyEffect={() => { }}

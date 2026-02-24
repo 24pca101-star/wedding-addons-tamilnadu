@@ -1,22 +1,8 @@
 "use client";
 
-import { ReactNode, useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import Navbar from "./Navbar";
+import { ReactNode } from "react";
 import { usePathname } from 'next/navigation';
-
-interface SubModule {
-  title: string;
-  link: string;
-}
-
-interface Category {
-  title: string;
-  description: string;
-  link: string;
-  subModules?: SubModule[];
-}
+import Navbar from "./Navbar";
 
 interface LayoutProps {
   children: ReactNode;
@@ -34,7 +20,6 @@ export default function Layout({ children }: LayoutProps) {
       <Navbar />
       <main className={isEditorPage ? "" : "pt-28"}>{children}</main>
 
-      {/* Footer */}
       {!isEditorPage && (
         <footer className="bg-pink-800 text-white text-center py-6 mt-12">
           <p className="text-sm">

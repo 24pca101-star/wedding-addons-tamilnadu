@@ -48,9 +48,10 @@ const templates = [
 
 ];
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const id = Number(params.id);
-  const template = templates.find((t) => t.id === id);
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const templateId = Number(id);
+  const template = templates.find((t) => t.id === templateId);
   if (!template) {
     return NextResponse.json({ error: "Template not found" }, { status: 404 });
   }

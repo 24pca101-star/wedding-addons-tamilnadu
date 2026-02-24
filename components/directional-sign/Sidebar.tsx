@@ -6,6 +6,7 @@ import { BACKGROUND_PRESETS, TEMPLATES, MOTIFS } from '@/lib/customizer-presets'
 interface SidebarProps {
     onAddText: () => void;
     onUploadImage: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onUploadPsd: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onAddArrow: (direction: 'left' | 'right' | 'up' | 'down') => void;
     onLoadTemplate: (templateId: string) => void;
     onColorChange: (color: string) => void;
@@ -36,6 +37,7 @@ interface SidebarProps {
 export default function Sidebar({
     onAddText,
     onUploadImage,
+    onUploadPsd,
     onAddArrow,
     onLoadTemplate,
     onColorChange,
@@ -137,7 +139,14 @@ export default function Sidebar({
                             <input type="file" onChange={onUploadImage} accept="image/*" className="hidden" />
                             <div className="w-full py-2.5 bg-white border-2 border-gold/20 text-maroon font-black text-[10px] uppercase tracking-widest rounded-xl shadow-sm hover:bg-gold/5 cursor-pointer transition-all flex items-center justify-center gap-2 active:translate-y-0.5">
                                 <span>🖼️</span>
-                                <span>ADD IMAGE</span>
+                                <span>IMAGE</span>
+                            </div>
+                        </label>
+                        <label className="flex-1">
+                            <input type="file" onChange={onUploadPsd} accept=".psd" className="hidden" />
+                            <div className="w-full py-2.5 bg-white border-2 border-dashed border-maroon/30 text-maroon font-black text-[10px] uppercase tracking-widest rounded-xl shadow-sm hover:bg-maroon/5 cursor-pointer transition-all flex items-center justify-center gap-2 active:translate-y-0.5">
+                                <span>🎨</span>
+                                <span>PSD</span>
                             </div>
                         </label>
                         <button

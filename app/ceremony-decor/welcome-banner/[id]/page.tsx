@@ -3,13 +3,13 @@
 import { useSearchParams, useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import * as fabric from "fabric";
-import EditorCanvas from "@/components/EditorCanvas";
-import Sidebar from "@/components/Sidebar";
-import Toolbar from "@/components/Toolbar";
-import TextPanel from "@/components/TextPanel";
-import ElementsPanel from "@/components/ElementsPanel";
-import ShapesPanel from "@/components/ShapesPanel";
-import UploadsPanel from "@/components/UploadPanel";
+import EditorCanvas from "@/components/welcome-banner/EditorCanvas";
+import Sidebar from "@/components/welcome-banner/Sidebar";
+import Toolbar from "@/components/welcome-banner/Toolbar";
+import TextPanel from "@/components/welcome-banner/TextPanel";
+import ElementsPanel from "@/components/welcome-banner/ElementsPanel";
+import ShapesPanel from "@/components/welcome-banner/ShapesPanel";
+import UploadsPanel from "@/components/welcome-banner/UploadPanel";
 import { useFabricEditor } from "@/hooks/useFabricEditor";
 import { exportAsPNG, exportAsPDF } from "@/utils/export";
 

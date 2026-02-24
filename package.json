@@ -9,17 +9,11 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@types/fabric": "^5.3.11",
     "ag-psd": "^30.1.0",
     "dotenv": "^17.3.1",
-<<<<<<< HEAD
-    "fabric": "^7.1.0",
-    "jspdf": "^4.1.0",
-=======
     "fabric": "^7.2.0",
     "jspdf": "^4.1.0",
     "lucide-react": "^0.574.0",
->>>>>>> 446e66de316e12181b197632c5268c5321ad36eb
     "mysql2": "^3.17.1",
     "next": "16.1.6",
     "react": "19.2.3",

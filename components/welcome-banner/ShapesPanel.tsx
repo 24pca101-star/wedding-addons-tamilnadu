@@ -27,8 +27,8 @@ export default function ShapesPanel({ canvas }: Props) {
             fill: "#FF5ACD",
             width: 100,
             height: 100,
-            originX: "center",
-            originY: "center",
+            originX: "center" as const,
+            originY: "center" as const,
         };
 
         switch (type) {
@@ -44,14 +44,40 @@ export default function ShapesPanel({ canvas }: Props) {
             case "triangle":
                 shape = new fabric.Triangle(baseOptions);
                 break;
+            case "hexagon":
+                shape = new fabric.Polygon([
+                    { x: 50, y: 0 },
+                    { x: 100, y: 25 },
+                    { x: 100, y: 75 },
+                    { x: 50, y: 100 },
+                    { x: 0, y: 75 },
+                    { x: 0, y: 25 }
+                ], baseOptions);
+                break;
+            case "star":
+                shape = new fabric.Polygon([
+                    { x: 50, y: 0 },
+                    { x: 63, y: 38 },
+                    { x: 100, y: 38 },
+                    { x: 69, y: 59 },
+                    { x: 82, y: 100 },
+                    { x: 50, y: 75 },
+                    { x: 18, y: 100 },
+                    { x: 31, y: 59 },
+                    { x: 0, y: 38 },
+                    { x: 37, y: 38 }
+                ], baseOptions);
+                break;
+            case "diamond":
+                shape = new fabric.Polygon([
+                    { x: 50, y: 0 },
+                    { x: 100, y: 50 },
+                    { x: 50, y: 100 },
+                    { x: 0, y: 50 }
+                ], baseOptions);
+                break;
             default:
-                // For star/hexagon, we'd use paths or polygons. 
-                // For now, let's just add a colorful rect with rounded corners
-                shape = new fabric.Rect({
-                    ...baseOptions,
-                    rx: 20,
-                    ry: 20,
-                });
+                shape = new fabric.Rect(baseOptions);
         }
 
         canvas.add(shape);

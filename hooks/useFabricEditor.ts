@@ -14,6 +14,10 @@ export const useFabricEditor = () => {
     const historyIndex = useRef(-1);
     const isReloadingHistory = useRef(false);
 
+    // Tracks whether the canvas instance is still alive (not disposed).
+    // Used to guard async callbacks that could resolve after dispose().
+    const isAlive = useRef(false);
+
     const saveHistory = useCallback(() => {
         if (!canvas || isReloadingHistory.current) return;
 
@@ -42,6 +46,11 @@ export const useFabricEditor = () => {
         const json = history.current[historyIndex.current];
 
         canvas.loadFromJSON(json).then(() => {
+            // Guard: canvas may have been disposed while the Promise was in-flight.
+            if (!isAlive.current || !canvas.lowerCanvasEl) {
+                isReloadingHistory.current = false;
+                return;
+            }
             canvas.renderAll();
             isReloadingHistory.current = false;
         });
@@ -55,6 +64,11 @@ export const useFabricEditor = () => {
         const json = history.current[historyIndex.current];
 
         canvas.loadFromJSON(json).then(() => {
+            // Guard: canvas may have been disposed while the Promise was in-flight.
+            if (!isAlive.current || !canvas.lowerCanvasEl) {
+                isReloadingHistory.current = false;
+                return;
+            }
             canvas.renderAll();
             isReloadingHistory.current = false;
         });
@@ -62,6 +76,9 @@ export const useFabricEditor = () => {
 
     const resizeCanvas = useCallback((width: number, height: number) => {
         if (!canvas) return;
+        // Guard against calling setDimensions on a disposed canvas.
+        // After dispose(), fabric tears down the internal lower/upper canvas elements.
+        if (!canvas.lowerCanvasEl) return;
         canvas.setDimensions({ width, height });
         canvas.renderAll();
     }, [canvas]);
@@ -74,10 +91,10 @@ export const useFabricEditor = () => {
         }
 
         // Tag check on element itself
-        // @ts-ignore
+        // @ts-expect-error - Custom property __fabric_canvas for manual detection
         if (el.__fabric_canvas) {
             console.log("Fabric: Canvas already exists on DOM element, skipping.");
-            // @ts-ignore
+            // @ts-expect-error - Custom property __fabric_canvas
             const existing = el.__fabric_canvas;
             canvasRef.current = existing;
             setCanvas(existing);
@@ -90,7 +107,7 @@ export const useFabricEditor = () => {
             preserveObjectStacking: true,
         });
 
-        // @ts-ignore - tag the element for manual detection
+        // @ts-expect-error - Custom property __fabric_canvas for manual detection
         el.__fabric_canvas = c;
 
         // Initial history save
@@ -98,6 +115,7 @@ export const useFabricEditor = () => {
         history.current = [initialJson];
         historyIndex.current = 0;
 
+        isAlive.current = true;
         canvasRef.current = c;
         setCanvas(c);
         return c;
@@ -175,8 +193,8 @@ export const useFabricEditor = () => {
         if (activeObject) {
             canvas.sendObjectToBack(activeObject);
             // Ensure safe area stays at the very bottom if it exists
-            const safeArea = canvas.getObjects().find(obj => (obj as any).isSafeArea);
-            if (safeArea) {
+            const safeArea = canvas.getObjects().find((obj: any) => (obj as any).isSafeArea);
+            if (safeArea && safeArea !== activeObject) {
                 canvas.sendObjectToBack(safeArea);
             }
             canvas.renderAll();
@@ -200,8 +218,8 @@ export const useFabricEditor = () => {
         if (activeObject) {
             canvas.sendObjectBackwards(activeObject);
             // Ensure safe area stays at the very bottom
-            const safeArea = canvas.getObjects().find(obj => (obj as any).isSafeArea);
-            if (safeArea) {
+            const safeArea = canvas.getObjects().find((obj) => (obj as any).isSafeArea);
+            if (safeArea && safeArea !== activeObject) {
                 canvas.sendObjectToBack(safeArea);
             }
             canvas.renderAll();
@@ -238,10 +256,10 @@ export const useFabricEditor = () => {
 
     const addSafeArea = useCallback((targetCanvas?: fabric.Canvas) => {
         const c = targetCanvas || canvas;
-        if (!c || !canvas) return;
+        if (!c) return;
 
         // Check if safe area already exists
-        const existing = c.getObjects().find(obj => (obj as any).isSafeArea);
+        const existing = c.getObjects().find((obj: any) => (obj as any).isSafeArea);
         if (existing) return;
 
         const margin = 40;
@@ -255,11 +273,11 @@ export const useFabricEditor = () => {
             strokeDashArray: [10, 5],
             selectable: false,
             evented: false,
-            // @ts-ignore
+
             isSafeArea: true,
         });
         c.add(rect);
-        canvas.sendObjectToBack(rect);
+        c.sendObjectToBack(rect);
         c.renderAll();
     }, [canvas]);
 
@@ -285,6 +303,8 @@ export const useFabricEditor = () => {
     const disposeCanvas = useCallback(() => {
         if (canvasRef.current) {
             console.log("Fabric: Disposing canvas instance");
+            // Mark dead first so any in-flight async callbacks (e.g. undo/redo) bail out.
+            isAlive.current = false;
             canvasRef.current.dispose();
             canvasRef.current = null;
             setCanvas(null);

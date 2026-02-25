@@ -1,0 +1,6 @@
+@PsdEditorApi_HostAddress = http://localhost:5010
+
+GET {{PsdEditorApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

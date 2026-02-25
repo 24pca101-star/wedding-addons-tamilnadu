@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import SizeSelector from '@/components/mini-calendar/SizeSelector';
-import Editor from '@/components/mini-calendar/Editor';
+import SizeSelector from '@/components/guest-gift-keepsakes/mini-calendar/SizeSelector';
+import Editor from '@/components/guest-gift-keepsakes/mini-calendar/Editor';
 
 export default function MiniCalendar() {
   const [selectedSize, setSelectedSize] = useState<any>(null);

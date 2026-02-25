@@ -135,12 +135,23 @@ export const useFabricEditor = () => {
             originY: "center",
         });
 
-        canvas.add(textbox);
-        canvas.setActiveObject(textbox);
-        textbox.enterEditing();
-        textbox.selectAll();
-        canvas.renderAll();
-        saveHistory();
+        if (canvas) {
+            canvas.add(textbox);
+            canvas.setActiveObject(textbox);
+            // Use a small timeout to ensure Fabric internals are ready for editing mode
+            setTimeout(() => {
+                if (textbox.canvas && typeof (textbox.canvas as any).getElement === 'function') {
+                    const el = (textbox.canvas as any).getElement();
+                    if (el) {
+                        textbox.enterEditing();
+                        textbox.selectAll();
+                        textbox.canvas.renderAll();
+                    }
+                }
+            }, 150);
+            canvas.renderAll();
+            saveHistory();
+        }
     }, [canvas, saveHistory]);
 
     const addRect = useCallback(() => {
@@ -329,6 +340,91 @@ export const useFabricEditor = () => {
         };
     }, [canvas, updateSelection, saveHistory]);
 
+    const loadPsdTemplate = useCallback(async (filename: string, targetCanvas?: fabric.Canvas) => {
+        const activeCanvas = targetCanvas || canvas;
+        if (!activeCanvas) return;
+
+        try {
+            // 1. Fetch metadata from Node.js service
+            const response = await fetch(`http://localhost:5001/parse/${filename}`);
+            if (!response.ok) throw new Error("Metadata fetch failed");
+            const metadata = await response.json();
+
+            // 2. Set background image from preview (use .png extension for URL)
+            const previewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
+            const img = await fabric.FabricImage.fromURL(previewUrl, {
+                crossOrigin: 'anonymous'
+            });
+
+            // Adjust canvas size to match PSD - Ensure canvas element is ready
+            const applyLayout = () => {
+                try {
+                    const hasInternalCanvas = activeCanvas && (activeCanvas as any).elements && (activeCanvas as any).elements.canvas;
+                    const el = hasInternalCanvas ? (activeCanvas as any).getElement() : null;
+
+                    if (el) {
+                        activeCanvas.setDimensions({ width: metadata.width, height: metadata.height });
+
+                        img.set({
+                            scaleX: metadata.width / img.width!,
+                            scaleY: metadata.height / img.height!,
+                            originX: 'left',
+                            originY: 'top'
+                        });
+
+                        activeCanvas.backgroundImage = img;
+
+                        const container = el.parentElement;
+                        if (container) {
+                            const padding = 80;
+                            const availableWidth = container.clientWidth - padding;
+                            const availableHeight = container.clientHeight - padding;
+
+                            if (availableWidth > 0 && availableHeight > 0) {
+                                const scaleX = availableWidth / metadata.width;
+                                const scaleY = availableHeight / metadata.height;
+                                const finalScale = Math.min(scaleX, scaleY, 1);
+
+                                activeCanvas.setZoom(finalScale);
+                                setZoom(finalScale);
+                            }
+                        }
+
+                        activeCanvas.requestRenderAll();
+                    } else {
+                        throw new Error("Canvas element not yet ready");
+                    }
+                } catch (e) {
+                    console.warn("Canvas element not fully ready, retrying in 100ms...");
+                    setTimeout(applyLayout, 100);
+                }
+            };
+            applyLayout();
+
+            // 3. Recreate editable layers (text for now)
+            metadata.layers.forEach((layer: any) => {
+                if (layer.type === 'text' && layer.text) {
+                    const text = new fabric.Textbox(layer.text.value, {
+                        left: layer.left,
+                        top: layer.top,
+                        width: layer.width,
+                        fontSize: layer.text.size,
+                        fontFamily: layer.text.font || "Inter, Arial, sans-serif",
+                        fill: `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${layer.text.color[3] / 255})`,
+                        textAlign: layer.text.alignment,
+                        psdLayerName: layer.name
+                    });
+                    activeCanvas.add(text);
+                }
+            });
+
+            activeCanvas.renderAll();
+            saveHistory();
+        } catch (error) {
+            console.error("Failed to load PSD template:", error);
+        }
+    }, [canvas, saveHistory]);
+
     return {
         canvas,
         setCanvas,
@@ -351,5 +447,6 @@ export const useFabricEditor = () => {
         sendBackward,
         setOpacity,
         setFontFamily,
+        loadPsdTemplate,
     };
 };

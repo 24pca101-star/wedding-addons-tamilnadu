@@ -3,15 +3,16 @@
 import { useSearchParams, useParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import * as fabric from "fabric";
-import EditorCanvas from "@/components/welcome-banner/EditorCanvas";
-import Sidebar from "@/components/welcome-banner/Sidebar";
-import Toolbar from "@/components/welcome-banner/Toolbar";
-import TextPanel from "@/components/welcome-banner/TextPanel";
-import ElementsPanel from "@/components/welcome-banner/ElementsPanel";
-import ShapesPanel from "@/components/welcome-banner/ShapesPanel";
-import UploadsPanel from "@/components/welcome-banner/UploadPanel";
+import EditorCanvas from "@/components/ceremony-decor/welcome-banner/EditorCanvas";
+import Sidebar from "@/components/ceremony-decor/welcome-banner/Sidebar";
+import Toolbar from "@/components/ceremony-decor/welcome-banner/Toolbar";
+import TextPanel from "@/components/ceremony-decor/welcome-banner/TextPanel";
+import ElementsPanel from "@/components/ceremony-decor/welcome-banner/ElementsPanel";
+import ShapesPanel from "@/components/ceremony-decor/welcome-banner/ShapesPanel";
+import UploadsPanel from "@/components/ceremony-decor/welcome-banner/UploadPanel";
 import { useFabricEditor } from "@/hooks/useFabricEditor";
 import { exportAsPNG, exportAsPDF } from "@/utils/export";
+import { exportViaPsdService } from "@/utils/psdExport";
 
 export default function Page() {
   const params = useParams();
@@ -38,14 +39,16 @@ export default function Page() {
     sendBackward,
     setOpacity,
     setFontFamily,
+    loadPsdTemplate, // Added this
   } = useFabricEditor();
 
   const [activePanel, setActivePanel] = useState<"text" | "elements" | "uploads" | "shapes">("text");
+  const template = searchParams.get("template");
 
   let width = 400;
   let height = 600;
 
-  if (params.id) {
+  if (params.id && params.id !== "editor") { // Check for "editor" as well
     const parts = (params.id as string).split("x");
     const w = Number(parts[0]);
     const h = Number(parts[1]);
@@ -78,7 +81,11 @@ export default function Page() {
       });
 
       if (c) {
-        addSafeArea(c);
+        if (template && template !== "blank") {
+          loadPsdTemplate(template, c);
+        } else {
+          addSafeArea(c);
+        }
       }
 
       return () => {
@@ -86,15 +93,15 @@ export default function Page() {
         disposeCanvas();
       };
     }
-  }, [initCanvas, addSafeArea, disposeCanvas]); // Include dependencies
+  }, [initCanvas, addSafeArea, disposeCanvas, template, loadPsdTemplate, width, height]);
 
-  // 2. Handle Resizing (when params/width/height change)
+  // 2. Handle Resizing (only when not loading a template)
   useEffect(() => {
-    if (canvas) {
+    if (canvas && (!template || template === "blank")) {
       console.log("Updating dimensions:", width, height);
       resizeCanvas(width, height);
     }
-  }, [width, height, canvas, resizeCanvas]);
+  }, [width, height, canvas, resizeCanvas, template]);
 
   // 3. Setup Global Listeners & Cleanup
   useEffect(() => {
@@ -131,8 +138,16 @@ export default function Page() {
     };
   }, [canvas, deleteSelected, undo, redo]);
 
-  const handleDownload = (format: "png" | "pdf") => {
+  const handleDownload = async (format: "png" | "pdf") => {
     if (!canvas) return;
+
+    // If using a PSD template, use the advanced export service
+    if (template && template !== "blank") {
+      const success = await exportViaPsdService(canvas, template, format === "pdf" ? "pdf" : "png");
+      if (success) return;
+      // Fallback to client-side if service fails
+    }
+
     if (format === "png") {
       exportAsPNG(canvas, "wedding-banner.png");
     } else {

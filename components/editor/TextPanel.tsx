@@ -1,22 +1,5 @@
 "use client";
 
-import * as fabric from "fabric";
-
-type Props = {
-    addText: (text?: string) => void;
-    selectedObject: fabric.Object | null;
-    setFontFamily: (font: string) => void;
-};
-
-const FONTS = [
-    { name: "Inter", family: "Inter, sans-serif", type: "Sans" },
-    { name: "Playfair Display", family: "Playfair Display, serif", type: "Serif" },
-    { name: "Great Vibes", family: "Great Vibes, cursive", type: "Script" },
-    { name: "Pacifico", family: "Pacifico, cursive", type: "Script" },
-    { name: "Times New Roman", family: "Times New Roman, serif", type: "Serif" },
-    { name: "Arial", family: "Arial, sans-serif", type: "Sans" },
-];
-
 import { useFabric } from "@/context/FabricContext";
 
 export default function TextPanel() {
@@ -28,6 +11,15 @@ export default function TextPanel() {
         selectedObject.set(prop as any, value);
         selectedObject.canvas?.requestRenderAll();
     };
+
+    const FONTS = [
+        { name: "Inter", family: "Inter, sans-serif", type: "Sans" },
+        { name: "Playfair Display", family: "Playfair Display, serif", type: "Serif" },
+        { name: "Great Vibes", family: "Great Vibes, cursive", type: "Script" },
+        { name: "Pacifico", family: "Pacifico, cursive", type: "Script" },
+        { name: "Times New Roman", family: "Times New Roman, serif", type: "Serif" },
+        { name: "Arial", family: "Arial, sans-serif", type: "Sans" },
+    ];
 
     return (
         <div className="p-6">
@@ -69,7 +61,7 @@ export default function TextPanel() {
                                     <button
                                         key={font.name}
                                         onClick={() => setFontFamily(font.family)}
-                                        className={`w-full text-left p-3 rounded-lg border-2 transition-all hover:border-pink-300 flex items-center justify-between ${(selectedObject as fabric.Textbox).fontFamily === font.family
+                                        className={`w-full text-left p-3 rounded-lg border-2 transition-all hover:border-pink-300 flex items-center justify-between ${(selectedObject as any).fontFamily === font.family
                                             ? "border-pink-500 bg-pink-50"
                                             : "border-gray-50 bg-gray-50"
                                             }`}
@@ -88,7 +80,7 @@ export default function TextPanel() {
                                 <label className="text-xs font-bold text-gray-600">Size</label>
                                 <input
                                     type="number"
-                                    value={(selectedObject as fabric.Textbox).fontSize}
+                                    value={(selectedObject as any).fontSize}
                                     onChange={(e) => updateProperty("fontSize", Number(e.target.value))}
                                     className="w-full bg-gray-50 border-none rounded-lg p-2 text-sm font-bold focus:ring-2 focus:ring-pink-500 outline-none"
                                 />
@@ -98,7 +90,7 @@ export default function TextPanel() {
                                 <div className="flex gap-2">
                                     <input
                                         type="color"
-                                        value={(selectedObject as fabric.Textbox).fill as string}
+                                        value={(selectedObject as any).fill as string}
                                         onChange={(e) => updateProperty("fill", e.target.value)}
                                         className="w-full h-9 p-0 border-none rounded-lg cursor-pointer overflow-hidden"
                                     />

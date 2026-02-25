@@ -3,11 +3,6 @@
 import * as fabric from "fabric";
 import { Upload, Image as ImageIcon, Plus } from "lucide-react";
 import { useState } from "react";
-
-type Props = {
-    canvas: fabric.Canvas | null;
-};
-
 import { useFabric } from "@/context/FabricContext";
 
 export default function UploadPanel() {
@@ -17,7 +12,7 @@ export default function UploadPanel() {
     const handleUpload = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
         let file: File | undefined;
 
-        if ("files" in e.target && e.target.files) {
+        if (e.target && "files" in e.target && e.target.files) {
             file = e.target.files[0];
         } else if ("dataTransfer" in e && e.dataTransfer.files) {
             file = e.dataTransfer.files[0];

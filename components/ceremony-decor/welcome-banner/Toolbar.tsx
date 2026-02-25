@@ -1,34 +1,26 @@
 "use client";
 
 import { Undo2, Redo2, Download, Lock, Unlock, MoveUp, MoveDown, ChevronsUp, ChevronsDown } from "lucide-react";
+import { useFabric } from "@/context/FabricContext";
 
 type Props = {
-  canvas: any;
-  undo: () => void;
-  redo: () => void;
   download: (format: "png" | "pdf") => void;
-  toggleLock: () => void;
-  selectedObject: any;
-  bringToFront: () => void;
-  sendToBack: () => void;
-  bringForward: () => void;
-  sendBackward: () => void;
-  setOpacity: (value: number) => void;
 };
 
-export default function Toolbar({
-  canvas,
-  undo,
-  redo,
-  download,
-  toggleLock,
-  selectedObject,
-  bringToFront,
-  sendToBack,
-  bringForward,
-  sendBackward,
-  setOpacity
-}: Props) {
+export default function Toolbar({ download }: Props) {
+  const {
+    canvas,
+    undo,
+    redo,
+    toggleLock,
+    selectedObject,
+    bringToFront,
+    sendToBack,
+    bringForward,
+    sendBackward,
+    setOpacity
+  } = useFabric();
+
   const isLocked = selectedObject?.lockMovementX;
   const currentOpacity = selectedObject?.opacity ?? 1;
 

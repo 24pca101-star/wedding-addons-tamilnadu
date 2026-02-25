@@ -14,7 +14,9 @@ import { useFabricEditor } from "@/hooks/useFabricEditor";
 import { exportAsPNG, exportAsPDF } from "@/utils/export";
 import { exportViaPsdService } from "@/utils/psdExport";
 
-export default function Page() {
+import { FabricProvider, useFabric } from "@/context/FabricContext";
+
+function EditorContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const canvasElementRef = useRef<HTMLCanvasElement>(null);
@@ -39,8 +41,8 @@ export default function Page() {
     sendBackward,
     setOpacity,
     setFontFamily,
-    loadPsdTemplate, // Added this
-  } = useFabricEditor();
+    loadPsdTemplate,
+  } = useFabric();
 
   const [activePanel, setActivePanel] = useState<"text" | "elements" | "uploads" | "shapes">("text");
   const template = searchParams.get("template");
@@ -48,7 +50,7 @@ export default function Page() {
   let width = 400;
   let height = 600;
 
-  if (params.id && params.id !== "editor") { // Check for "editor" as well
+  if (params.id && params.id !== "editor") {
     const parts = (params.id as string).split("x");
     const w = Number(parts[0]);
     const h = Number(parts[1]);
@@ -70,40 +72,29 @@ export default function Page() {
     }
   }
 
-  // 1. Initial Mount: Setup Canvas
   useEffect(() => {
     if (canvasElementRef.current) {
-      console.log("Fabric Hook: Initialization Check");
+      console.log("Fabric Editor: Initializing Canvas");
       const c = initCanvas(canvasElementRef.current, {
         width,
         height,
         backgroundColor: "#ffffff",
       });
 
-      if (c) {
-        if (template && template !== "blank") {
-          loadPsdTemplate(template, c);
-        } else {
-          addSafeArea(c);
-        }
+      if (c && template && template !== "blank") {
+        loadPsdTemplate(template, c);
+      } else if (c) {
+        addSafeArea(c);
       }
 
       return () => {
-        console.log("Fabric Hook: Disposing");
+        console.log("Fabric Editor: Disposing Canvas");
         disposeCanvas();
       };
     }
-  }, [initCanvas, addSafeArea, disposeCanvas, template, loadPsdTemplate, width, height]);
+  }, [initCanvas, disposeCanvas, template, loadPsdTemplate, width, height, addSafeArea]);
 
-  // 2. Handle Resizing (only when not loading a template)
-  useEffect(() => {
-    if (canvas && (!template || template === "blank")) {
-      console.log("Updating dimensions:", width, height);
-      resizeCanvas(width, height);
-    }
-  }, [width, height, canvas, resizeCanvas, template]);
-
-  // 3. Setup Global Listeners & Cleanup
+  // Handle key listeners
   useEffect(() => {
     if (!canvas) return;
 
@@ -129,23 +120,15 @@ export default function Page() {
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      console.log("Unmounting: Disposing Canvas");
-      window.removeEventListener("keydown", handleKeyDown);
-      // Canvas disposal is handled by initCanvas's defensive check, 
-      // but we should still clear state if needed. 
-      // In Next.js/React, we typically let the hook or a ref handle the shared instance.
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [canvas, deleteSelected, undo, redo]);
 
   const handleDownload = async (format: "png" | "pdf") => {
     if (!canvas) return;
 
-    // If using a PSD template, use the advanced export service
     if (template && template !== "blank") {
       const success = await exportViaPsdService(canvas, template, format === "pdf" ? "pdf" : "png");
       if (success) return;
-      // Fallback to client-side if service fails
     }
 
     if (format === "png") {
@@ -159,34 +142,18 @@ export default function Page() {
     <div className="flex h-[calc(100vh-96px)] bg-gray-50 overflow-hidden font-sans">
       <Sidebar activePanel={activePanel} setActivePanel={setActivePanel} />
 
-      {/* 🧰 PANEL CONTENT */}
       <div className="w-80 bg-white border-r overflow-y-auto overflow-x-hidden shadow-sm z-10">
         {activePanel === "text" && (
-          <TextPanel
-            addText={addText}
-            selectedObject={selectedObject}
-            setFontFamily={setFontFamily}
-          />
+          <TextPanel />
         )}
-        {activePanel === "elements" && <ElementsPanel canvas={canvas} />}
-        {activePanel === "shapes" && <ShapesPanel canvas={canvas} />}
-        {activePanel === "uploads" && <UploadsPanel canvas={canvas} />}
+        {activePanel === "elements" && <ElementsPanel />}
+        {activePanel === "shapes" && <ShapesPanel />}
+        {activePanel === "uploads" && <UploadsPanel />}
       </div>
 
-      {/* 🎨 MAIN WORKSPACE */}
       <div className="flex-1 flex flex-col min-w-0">
         <Toolbar
-          canvas={canvas}
-          undo={undo}
-          redo={redo}
           download={handleDownload}
-          toggleLock={toggleLock}
-          selectedObject={selectedObject}
-          bringToFront={bringToFront}
-          sendToBack={sendToBack}
-          bringForward={bringForward}
-          sendBackward={sendBackward}
-          setOpacity={setOpacity}
         />
 
         <div className="flex-1 relative overflow-hidden flex flex-col">
@@ -196,7 +163,6 @@ export default function Page() {
             canvasRef={canvasElementRef}
           />
 
-          {/* Zoom Controls Overlay */}
           <div className="absolute bottom-6 right-6 flex bg-white shadow-lg rounded-full px-4 py-2 gap-4 items-center border border-gray-100 z-40">
             <button
               onClick={() => handleZoom(zoom - 0.1)}
@@ -214,9 +180,16 @@ export default function Page() {
               +
             </button>
           </div>
-
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <FabricProvider>
+      <EditorContent />
+    </FabricProvider>
   );
 }

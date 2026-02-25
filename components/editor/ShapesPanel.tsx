@@ -2,10 +2,7 @@
 
 import * as fabric from "fabric";
 import { Square, Circle, Triangle, Hexagon, Star, Diamond } from "lucide-react";
-
-type Props = {
-    canvas: fabric.Canvas | null;
-};
+import { useFabric } from "@/context/FabricContext";
 
 const SHAPES = [
     { name: "Rectangle", icon: Square, type: "rect" },
@@ -15,8 +12,6 @@ const SHAPES = [
     { name: "Star", icon: Star, type: "star" },
     { name: "Diamond", icon: Diamond, type: "diamond" },
 ];
-
-import { useFabric } from "@/context/FabricContext";
 
 export default function ShapesPanel() {
     const { canvas } = useFabric();

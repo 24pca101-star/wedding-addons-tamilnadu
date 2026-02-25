@@ -1,32 +1,20 @@
 "use client";
 
 import * as fabric from "fabric";
-import { Heart, Star, Sparkles, Square, Circle, Minus, Flower2, Leaf } from "lucide-react";
-
-type Props = {
-    canvas: fabric.Canvas | null;
-};
-
-const ELEMENTS = [
-    { name: "Heart", icon: Heart, type: "icon" },
-    { name: "Star", icon: Star, type: "icon" },
-    { name: "Sparkle", icon: Sparkles, type: "icon" },
-    { name: "Square", icon: Square, type: "rect" },
-    { name: "Circle", icon: Circle, type: "circle" },
-    { name: "Divider", icon: Minus, type: "line" },
-];
-
-const FLORAL = [
-    { name: "Rose", icon: Flower2, color: "#FF1493" },
-    { name: "Lily", icon: Flower2, color: "#FFD700" },
-    { name: "Leaf", icon: Leaf, color: "#228B22" },
-    { name: "Vine", icon: Leaf, color: "#32CD32" },
-];
-
 import { useFabric } from "@/context/FabricContext";
+import { Star, Square, Circle, Layout, Leaf } from "lucide-react";
 
 export default function ElementsPanel() {
     const { canvas } = useFabric();
+
+    const ELEMENTS = [
+        { name: "Square", icon: Square, type: "rect" },
+        { name: "Circle", icon: Circle, type: "circle" },
+        { name: "Star", icon: Star, type: "star" },
+        { name: "Divider", icon: Layout, type: "line" },
+        { name: "Floral", icon: Leaf, type: "floral", color: "#FF69B4" },
+        { name: "Vine", icon: Leaf, type: "floral", color: "#32CD32" },
+    ];
 
     const addShape = (type: string, options: any = {}) => {
         if (!canvas) return;
@@ -62,8 +50,6 @@ export default function ElementsPanel() {
                 });
                 break;
             case "floral":
-                // Create a stylized floral element using a group or a path
-                // For now, let's just add a colorful circle that represents the floral item
                 shape = new fabric.Circle({
                     radius: 40,
                     fill: color,
@@ -101,34 +87,17 @@ export default function ElementsPanel() {
     return (
         <div className="p-6">
             <h3 className="text-xl font-extrabold text-gray-900 mb-6 font-sans">Elements</h3>
-
-            <div className="grid grid-cols-2 gap-3 mb-8">
-                {ELEMENTS.map((el) => (
+            <div className="grid grid-cols-2 gap-3">
+                {ELEMENTS.map((item) => (
                     <button
-                        key={el.name}
-                        onClick={() => addShape(el.type)}
+                        key={item.name}
+                        onClick={() => addShape(item.type, { color: item.color })}
                         className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl hover:bg-pink-50 transition-all border-2 border-transparent hover:border-pink-200 group"
                     >
-                        <el.icon className="w-8 h-8 mb-2 text-gray-600 group-hover:text-pink-600" />
-                        <span className="text-xs font-bold text-gray-700">{el.name}</span>
+                        <item.icon className="w-8 h-8 mb-2 text-gray-600 group-hover:text-pink-600" />
+                        <span className="text-xs font-bold text-gray-700">{item.name}</span>
                     </button>
                 ))}
-            </div>
-
-            <div className="">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Floral Cliparts</h4>
-                <div className="grid grid-cols-2 gap-3">
-                    {FLORAL.map((flower) => (
-                        <button
-                            key={flower.name}
-                            className="flex flex-col items-center justify-center p-4 bg-gray-50 rounded-xl hover:bg-pink-50 transition-all border-2 border-transparent hover:border-pink-200 group"
-                            onClick={() => addShape("floral", { color: flower.color })}
-                        >
-                            <flower.icon style={{ color: flower.color }} className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform" />
-                            <span className="text-xs font-bold text-gray-700">{flower.name}</span>
-                        </button>
-                    ))}
-                </div>
             </div>
         </div>
     );

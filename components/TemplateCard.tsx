@@ -12,7 +12,7 @@ interface TemplateCardProps {
 export default function TemplateCard({ id, name, previewUrl, category, subcategory }: TemplateCardProps) {
     return (
         <Link
-            href={`/${category}/${subcategory}/editor?template=${id}`}
+            href={`/editor/${category}/${subcategory}?template=${id}`}
             className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100 flex flex-col"
         >
             <div className="relative aspect-[3/4] overflow-hidden bg-gray-50">

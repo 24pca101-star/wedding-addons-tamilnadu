@@ -1,5 +1,4 @@
 import TemplateCard from "@/components/TemplateCard";
-import { Navbar } from "@/components/Navbar";
 
 export default function PsdTemplatesPage({ params }: { params: { category: string } }) {
     // In a real app, fetch these from an API based on params.category

@@ -1,11 +1,77 @@
 {
   "Version": 1,
-  "Hash": "RGQlHHVyOXDojnmsKimVXWMuXCBOEI7K/yf13t1VJ78=",
+  "Hash": "EaPUJftDG3dPqijAHZbSkUfQLRTEne6ayrAbt7o7w6o=",
   "Source": "PsdEditorApi",
   "BasePath": "_content/PsdEditorApi",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
-  "Assets": []
+  "DiscoveryPatterns": [
+    {
+      "Name": "PsdEditorApi\\wwwroot",
+      "Source": "PsdEditorApi",
+      "ContentRoot": "C:\\Users\\gurud\\nextjs_task\\Internship_Project\\wedding-add-ons\\services\\psd-dotnet\\PsdEditorApi\\wwwroot\\",
+      "BasePath": "_content/PsdEditorApi",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\gurud\\nextjs_task\\Internship_Project\\wedding-add-ons\\services\\psd-dotnet\\PsdEditorApi\\wwwroot\\mockups\\tote-bag\\base.png",
+      "SourceId": "PsdEditorApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\gurud\\nextjs_task\\Internship_Project\\wedding-add-ons\\services\\psd-dotnet\\PsdEditorApi\\wwwroot\\",
+      "BasePath": "_content/PsdEditorApi",
+      "RelativePath": "mockups/tote-bag/base.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\mockups\\tote-bag\\base.png"
+    },
+    {
+      "Identity": "C:\\Users\\gurud\\nextjs_task\\Internship_Project\\wedding-add-ons\\services\\psd-dotnet\\PsdEditorApi\\wwwroot\\mockups\\tote-bag\\mask.png",
+      "SourceId": "PsdEditorApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\gurud\\nextjs_task\\Internship_Project\\wedding-add-ons\\services\\psd-dotnet\\PsdEditorApi\\wwwroot\\",
+      "BasePath": "_content/PsdEditorApi",
+      "RelativePath": "mockups/tote-bag/mask.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\mockups\\tote-bag\\mask.png"
+    },
+    {
+      "Identity": "C:\\Users\\gurud\\nextjs_task\\Internship_Project\\wedding-add-ons\\services\\psd-dotnet\\PsdEditorApi\\wwwroot\\mockups\\tote-bag\\shadow.png",
+      "SourceId": "PsdEditorApi",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\gurud\\nextjs_task\\Internship_Project\\wedding-add-ons\\services\\psd-dotnet\\PsdEditorApi\\wwwroot\\",
+      "BasePath": "_content/PsdEditorApi",
+      "RelativePath": "mockups/tote-bag/shadow.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\mockups\\tote-bag\\shadow.png"
+    }
+  ]
 }

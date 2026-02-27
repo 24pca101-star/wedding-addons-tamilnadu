@@ -48,3 +48,5 @@ C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotne
 C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\obj\Debug\net8.0\PsdEditorApi.pdb
 C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\obj\Debug\net8.0\PsdEditorApi.genruntimeconfig.cache
 C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\obj\Debug\net8.0\ref\PsdEditorApi.dll
+C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\bin\Debug\net8.0\PsdEditorApi.staticwebassets.runtime.json
+C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\bin\Debug\net8.0\Aspose.Drawing.Common.dll

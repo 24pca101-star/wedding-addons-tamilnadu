@@ -364,7 +364,7 @@ export const useFabricEditor = () => {
             });
             console.log("Fabric: Preview image loaded successfully");
 
-            const setupTemplate = () => {
+            const setupTemplate = async () => {
                 const el = activeCanvas.lowerCanvasEl;
                 if (!el) {
                     console.warn("Fabric: Canvas element not ready, retrying...");
@@ -372,6 +372,9 @@ export const useFabricEditor = () => {
                     return;
                 }
 
+                // activeCanvas.set({ backgroundImage: img });
+
+                // Set initial dimensions based on metadata
                 activeCanvas.setDimensions({ width: metadata.width, height: metadata.height });
 
                 img.set({
@@ -382,8 +385,6 @@ export const useFabricEditor = () => {
                     selectable: false,
                     evented: false
                 });
-
-                activeCanvas.backgroundImage = img;
 
                 let finalScale = 1;
 
@@ -407,10 +408,14 @@ export const useFabricEditor = () => {
                     }
                 }
 
-                let textLayersAdded = 0;
-                metadata.layers.forEach((layer: any) => {
-                    if (layer.type === 'text' && layer.text) {
-                        try {
+                activeCanvas.renderAll();
+
+                let layersProcessed = 0;
+
+                // Process layers in order (bottom to top usually in metadata)
+                for (const layer of metadata.layers) {
+                    try {
+                        if (layer.type === 'text' && layer.text) {
                             const text = new Textbox(layer.text.value, {
                                 left: layer.left,
                                 top: layer.top,
@@ -424,19 +429,39 @@ export const useFabricEditor = () => {
                                 psdLayerName: layer.name
                             });
                             activeCanvas.add(text);
-                            textLayersAdded++;
-                        } catch (err) {
-                            console.error(`Fabric: Failed to add text layer ${layer.name}`, err);
+                            layersProcessed++;
+                        } else if (layer.type === 'image' && layer.imageUrl) {
+                            // FabricImage.fromURL is async, but we want to maintain order. 
+                            // Actually, adding them as they come is fine if metadata is bottom-to-top.
+                            const imgUrl = `http://localhost:5001${layer.imageUrl}`;
+                            const layerImg = await FabricImage.fromURL(imgUrl, {
+                                crossOrigin: 'anonymous'
+                            });
+
+                            layerImg.set({
+                                left: layer.left,
+                                top: layer.top,
+                                opacity: layer.opacity ?? 1,
+                                visible: layer.visible ?? true,
+                                selectable: true, // Allow moving everything like Canva
+                                psdLayerName: layer.name
+                            });
+
+                            activeCanvas.add(layerImg);
+                            layersProcessed++;
                         }
+                    } catch (err) {
+                        console.error(`Fabric: Failed to process layer ${layer.name}`, err);
                     }
-                });
-                console.log(`Fabric: Added ${textLayersAdded} text layers to canvas`);
+                }
+
+                console.log(`Fabric: Processed ${layersProcessed} layers`);
 
                 activeCanvas.requestRenderAll();
                 setTimeout(() => {
                     saveHistory();
                     console.log("Fabric: PSD template setup complete");
-                }, 200);
+                }, 500);
             };
 
             setupTemplate();

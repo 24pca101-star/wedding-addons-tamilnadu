@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "sSEBQxNTRG8=",
+  "dgSpecHash": "wVNbxver7yY=",
   "success": true,
   "projectFilePath": "C:\\Users\\gurud\\nextjs_task\\Internship_Project\\wedding-add-ons\\services\\psd-dotnet\\PsdEditorApi\\PsdEditorApi.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\gurud\\.nuget\\packages\\aspose.drawing\\23.7.0\\aspose.drawing.23.7.0.nupkg.sha512",
+    "C:\\Users\\gurud\\.nuget\\packages\\aspose.drawing.common\\24.9.0\\aspose.drawing.common.24.9.0.nupkg.sha512",
     "C:\\Users\\gurud\\.nuget\\packages\\aspose.psd\\26.2.2\\aspose.psd.26.2.2.nupkg.sha512",
     "C:\\Users\\gurud\\.nuget\\packages\\microsoft.aspnetcore.openapi\\8.0.24\\microsoft.aspnetcore.openapi.8.0.24.nupkg.sha512",
     "C:\\Users\\gurud\\.nuget\\packages\\microsoft.extensions.apidescription.server\\6.0.5\\microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",

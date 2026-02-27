@@ -43,6 +43,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Aspose.Drawing.Common": {
+              "target": "Package",
+              "version": "[24.9.0, )"
+            },
             "Aspose.PSD": {
               "target": "Package",
               "version": "[26.2.2, )"

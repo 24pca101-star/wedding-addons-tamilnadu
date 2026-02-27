@@ -15,6 +15,19 @@
           }
         }
       },
+      "Aspose.Drawing.Common/24.9.0": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard2.0/Aspose.Drawing.Common.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Aspose.Drawing.Common.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Aspose.PSD/26.2.2": {
         "type": "package",
         "dependencies": {
@@ -288,6 +301,24 @@
         "lib/net20/Aspose.Drawing.xml",
         "lib/netstandard2.0/Aspose.Drawing.dll",
         "lib/netstandard2.0/Aspose.Drawing.xml"
+      ]
+    },
+    "Aspose.Drawing.Common/24.9.0": {
+      "sha512": "lFzGHfN21K6RT9wV9S3tsp46OqTqugTp5tg2ZON4dSgTDz4xfC8HJk44zbcIRCmuHErJeZLkV3wyV+zx4smERA==",
+      "type": "package",
+      "path": "aspose.drawing.common/24.9.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Aspose.Drawing for .NET.Agreements.pdf",
+        "License.txt",
+        "aspose.drawing.common.24.9.0.nupkg.sha512",
+        "aspose.drawing.common.nuspec",
+        "icon.png",
+        "lib/net20/Aspose.Drawing.Common.dll",
+        "lib/net20/Aspose.Drawing.Common.xml",
+        "lib/netstandard2.0/Aspose.Drawing.Common.dll",
+        "lib/netstandard2.0/Aspose.Drawing.Common.xml"
       ]
     },
     "Aspose.PSD/26.2.2": {
@@ -916,6 +947,7 @@
   },
   "projectFileDependencyGroups": {
     "net8.0": [
+      "Aspose.Drawing.Common >= 24.9.0",
       "Aspose.PSD >= 26.2.2",
       "Microsoft.AspNetCore.OpenApi >= 8.0.24",
       "SkiaSharp >= 3.119.2",
@@ -965,6 +997,10 @@
       "net8.0": {
         "targetAlias": "net8.0",
         "dependencies": {
+          "Aspose.Drawing.Common": {
+            "target": "Package",
+            "version": "[24.9.0, )"
+          },
           "Aspose.PSD": {
             "target": "Package",
             "version": "[26.2.2, )"

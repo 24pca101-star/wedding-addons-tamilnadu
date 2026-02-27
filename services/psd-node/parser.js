@@ -12,16 +12,37 @@ initializeCanvas(createCanvas);
  * @param {string} filePath Path to the PSD file.
  * @returns {Promise<Object>} Metadata JSON.
  */
-async function parsePsdMetadata(filePath) {
+async function parsePsdMetadata(filePath, publicDir = '') {
     try {
+        const filename = filePath.split(/[\\/]/).pop();
+        const layerStorageDir = publicDir ? `${publicDir}/storage/layers/${filename}` : '';
+        if (layerStorageDir && !fs.existsSync(layerStorageDir)) {
+            fs.mkdirSync(layerStorageDir, { recursive: true });
+        }
+
         const buffer = fs.readFileSync(filePath);
         const psd = readPsd(buffer, { skipLayerData: false, skipThumbnail: true });
 
         const layers = [];
-        function processLayers(item, parentPath = '') {
+        let layerCounter = 0;
+
+        async function processLayers(item) {
             if (item.children) {
-                item.children.forEach(child => processLayers(child, parentPath + item.name + '/'));
+                for (const child of item.children) {
+                    await processLayers(child);
+                }
             } else {
+                const layerIndex = layerCounter++;
+                let layerImageUrl = null;
+
+                if (item.canvas && layerStorageDir) {
+                    const layerId = `${layerIndex}.png`;
+                    const layerPath = `${layerStorageDir}/${layerId}`;
+                    const pngBuffer = item.canvas.toBuffer('image/png');
+                    await sharp(pngBuffer).toFile(layerPath);
+                    layerImageUrl = `/storage/layers/${filename}/${layerId}`;
+                }
+
                 layers.push({
                     name: item.name,
                     type: item.text ? 'text' : 'image',
@@ -31,6 +52,7 @@ async function parsePsdMetadata(filePath) {
                     height: item.height,
                     opacity: item.opacity,
                     visible: item.visible,
+                    imageUrl: layerImageUrl,
                     text: item.text ? {
                         value: item.text.text,
                         font: item.text.fonts?.[0]?.name,
@@ -43,7 +65,9 @@ async function parsePsdMetadata(filePath) {
         }
 
         if (psd.children) {
-            psd.children.forEach(child => processLayers(child));
+            for (const child of psd.children) {
+                await processLayers(child);
+            }
         }
 
         return {

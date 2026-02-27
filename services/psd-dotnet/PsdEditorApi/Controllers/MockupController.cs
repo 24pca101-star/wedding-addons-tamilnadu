@@ -119,7 +119,9 @@ namespace PsdEditorApi.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Mockup generation failed: {ex.Message}");
+                Console.WriteLine($"ERROR in GenerateMockup: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+                return StatusCode(500, $"Mockup generation failed: {ex.Message} | StackTrace: {ex.StackTrace}");
             }
         }
     }

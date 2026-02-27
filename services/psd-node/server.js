@@ -34,7 +34,8 @@ app.get('/parse/:filename', async (req, res) => {
         const filePath = path.join(TEMPLATE_DIR, req.params.filename);
         if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
 
-        const metadata = await parsePsdMetadata(filePath);
+        const PUBLIC_DIR = path.resolve(process.cwd(), '../../public');
+        const metadata = await parsePsdMetadata(filePath, PUBLIC_DIR);
         res.json(metadata);
     } catch (error) {
         console.error(error);

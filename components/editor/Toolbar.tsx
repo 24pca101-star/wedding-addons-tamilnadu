@@ -5,9 +5,10 @@ import { useFabric } from "@/context/FabricContext";
 
 type Props = {
     download: (format: "png" | "pdf") => void;
+    onShowMockup: () => void;
 };
 
-export default function Toolbar({ download }: Props) {
+export default function Toolbar({ download, onShowMockup }: Props) {
     const {
         canvas,
         undo,
@@ -119,6 +120,14 @@ export default function Toolbar({ download }: Props) {
             </div>
 
             <div className="flex items-center gap-3">
+                <button
+                    onClick={onShowMockup}
+                    className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-lg font-bold text-sm hover:bg-rose-100 transition-all border border-rose-200"
+                >
+                    <span className="text-lg">✨</span>
+                    <span>Mockup View</span>
+                </button>
+
                 <div className="flex bg-gray-100 p-1 rounded-lg">
                     <button
                         onClick={() => download("png")}

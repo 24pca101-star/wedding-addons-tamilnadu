@@ -354,15 +354,20 @@ export const useFabricEditor = () => {
             const response = await fetch(`http://localhost:5001/parse/${filename}`);
             if (!response.ok) throw new Error(`Metadata fetch failed: ${response.status}`);
             const metadata = await response.json();
+            console.log(`Fabric: Metadata received: ${metadata.width}x${metadata.height}, layers: ${metadata.layers.length}`);
 
             const previewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
+            console.log(`Fabric: Loading preview from ${previewUrl}`);
+
             const img = await FabricImage.fromURL(previewUrl, {
                 crossOrigin: 'anonymous'
             });
+            console.log("Fabric: Preview image loaded successfully");
 
             const setupTemplate = () => {
                 const el = activeCanvas.lowerCanvasEl;
                 if (!el) {
+                    console.warn("Fabric: Canvas element not ready, retrying...");
                     if (isAlive.current) setTimeout(setupTemplate, 100);
                     return;
                 }
@@ -373,21 +378,25 @@ export const useFabricEditor = () => {
                     scaleX: metadata.width / img.width!,
                     scaleY: metadata.height / img.height!,
                     originX: 'left',
-                    originY: 'top'
+                    originY: 'top',
+                    selectable: false,
+                    evented: false
                 });
 
                 activeCanvas.backgroundImage = img;
 
+                let finalScale = 1;
+
                 const container = document.getElementById("editor-workspace");
                 if (container) {
-                    const padding = 160; // p-20 is 80px on each side (80 * 2)
+                    const padding = 160;
                     const availableWidth = container.clientWidth - padding;
                     const availableHeight = container.clientHeight - padding;
 
                     if (availableWidth > 0 && availableHeight > 0) {
                         const scaleX = availableWidth / metadata.width;
                         const scaleY = availableHeight / metadata.height;
-                        const finalScale = Math.min(scaleX, scaleY, 1) * 0.9; // 90% to give a little breathing room
+                        finalScale = Math.min(scaleX, scaleY, 1) * 0.9;
 
                         activeCanvas.setDimensions({
                             width: metadata.width * finalScale,
@@ -398,24 +407,36 @@ export const useFabricEditor = () => {
                     }
                 }
 
+                let textLayersAdded = 0;
                 metadata.layers.forEach((layer: any) => {
                     if (layer.type === 'text' && layer.text) {
-                        const text = new Textbox(layer.text.value, {
-                            left: layer.left,
-                            top: layer.top,
-                            width: layer.width,
-                            fontSize: layer.text.size,
-                            fontFamily: layer.text.font || "Inter, Arial, sans-serif",
-                            fill: `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${layer.text.color[3] / 255})`,
-                            textAlign: layer.text.alignment,
-                            psdLayerName: layer.name
-                        });
-                        activeCanvas.add(text);
+                        try {
+                            const text = new Textbox(layer.text.value, {
+                                left: layer.left,
+                                top: layer.top,
+                                width: layer.width,
+                                fontSize: layer.text.size || 24,
+                                fontFamily: layer.text.font || "Inter, Arial, sans-serif",
+                                fill: layer.text.color ? `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${layer.text.color[3] / 255})` : "#000000",
+                                textAlign: layer.text.alignment || "left",
+                                opacity: layer.opacity ?? 1,
+                                visible: layer.visible ?? true,
+                                psdLayerName: layer.name
+                            });
+                            activeCanvas.add(text);
+                            textLayersAdded++;
+                        } catch (err) {
+                            console.error(`Fabric: Failed to add text layer ${layer.name}`, err);
+                        }
                     }
                 });
+                console.log(`Fabric: Added ${textLayersAdded} text layers to canvas`);
 
                 activeCanvas.requestRenderAll();
-                setTimeout(() => saveHistory(), 200);
+                setTimeout(() => {
+                    saveHistory();
+                    console.log("Fabric: PSD template setup complete");
+                }, 200);
             };
 
             setupTemplate();

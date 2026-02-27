@@ -24,7 +24,7 @@ async function parsePsdMetadata(filePath) {
             } else {
                 layers.push({
                     name: item.name,
-                    type: item.type === 'text' ? 'text' : 'image',
+                    type: item.text ? 'text' : 'image',
                     top: item.top,
                     left: item.left,
                     width: item.width,

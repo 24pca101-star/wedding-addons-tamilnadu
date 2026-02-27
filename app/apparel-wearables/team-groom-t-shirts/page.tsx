@@ -1,12 +1,29 @@
+"use client";
+import TemplateCard from "@/components/TemplateCard";
+
 export default function TeamGroomTShirts() {
   return (
-    <div className="min-h-screen p-10">
-      <h1 className="text-3xl font-bold text-maroon">
-        Team Groom T-Shirts - மணமகன் குழு டி-ஷர்ட்
-      </h1>
-      <p className="mt-4">
-        Custom traditional wedding team groom t-shirts.
-      </p>
+    <div className="min-h-screen bg-pink-50/30 pt-32 pb-20 px-6">
+      <div className="max-w-7xl mx-auto text-center">
+        <header className="mb-12">
+          <h1 className="text-4xl font-black text-pink-800 font-serif mb-4 uppercase tracking-tight">
+            Team Groom T-Shirts
+          </h1>
+          <p className="text-gray-600 font-medium max-w-2xl mx-auto">
+            Custom traditional team groom t-shirts. Choose to begin customizing.
+          </p>
+        </header>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          <TemplateCard
+            id="blank"
+            name="Start from Scratch"
+            previewUrl="/assets/blank-canvas.png"
+            category="apparel-wearables"
+            subcategory="team-groom-t-shirts"
+          />
+        </div>
+      </div>
     </div>
   );
 }

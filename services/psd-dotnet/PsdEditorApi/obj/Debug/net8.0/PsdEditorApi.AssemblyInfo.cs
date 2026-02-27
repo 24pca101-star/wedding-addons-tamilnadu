@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("PsdEditorApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+62c8c3e7f27a9e02d9fa99b7b282f5675dc95601")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+90ccb5843421ae4f043987a56859ca73c99544bc")]
 [assembly: System.Reflection.AssemblyProductAttribute("PsdEditorApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("PsdEditorApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

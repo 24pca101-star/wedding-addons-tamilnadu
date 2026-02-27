@@ -13,6 +13,7 @@ import UploadsPanel from "@/components/editor/UploadPanel";
 import { exportAsPNG, exportAsPDF } from "@/utils/export";
 import { exportViaPsdService } from "@/utils/psdExport";
 import { FabricProvider, useFabric } from "@/context/FabricContext";
+import MockupPreview from "@/components/editor/MockupPreview";
 
 import { Suspense } from "react";
 
@@ -45,6 +46,7 @@ function EditorContent() {
     } = useFabric();
 
     const [activePanel, setActivePanel] = useState<"text" | "elements" | "uploads" | "shapes">("text");
+    const [showMockup, setShowMockup] = useState(false);
 
     // In Next.js 15+, useParams() returns a plain object on the client, but we should handle it safely.
     const category = params?.category as string;
@@ -143,13 +145,23 @@ function EditorContent() {
             </div>
 
             <div className="flex-1 flex flex-col min-w-0">
-                <Toolbar download={handleDownload} />
+                <Toolbar
+                    download={handleDownload}
+                    onShowMockup={() => setShowMockup(true)}
+                />
 
                 <div className="flex-1 relative overflow-hidden flex flex-col">
                     <EditorCanvas
                         width={width}
                         height={height}
                         canvasRef={canvasElementRef}
+                    />
+
+                    <MockupPreview
+                        active={showMockup}
+                        onClose={() => setShowMockup(false)}
+                        psdFilename={template || "design-1.psd"}
+                        productType={subcategory || "tote-bag"}
                     />
 
                     <div className="absolute bottom-6 right-6 flex bg-white shadow-lg rounded-full px-4 py-2 gap-4 items-center border border-gray-100 z-40">

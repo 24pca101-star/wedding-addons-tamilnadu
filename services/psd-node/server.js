@@ -77,6 +77,38 @@ app.get('/preview/:filename', async (req, res) => {
     }
 });
 
+const axios = require('axios');
+const sharp = require('sharp');
+
+const DOTNET_SERVICE_URL = process.env.DOTNET_SERVICE_URL || 'http://localhost:5199';
+
+app.post('/generate-mockup', async (req, res) => {
+    try {
+        const response = await axios.post(`${DOTNET_SERVICE_URL}/api/Mockup/generate`, req.body, {
+            responseType: 'arraybuffer'
+        });
+
+        // Use sharp to optimize/resize if requested, or just return as is
+        let imageBuffer = Buffer.from(response.data);
+
+        if (req.query.width || req.query.height) {
+            imageBuffer = await sharp(imageBuffer)
+                .resize(
+                    parseInt(req.query.width) || null,
+                    parseInt(req.query.height) || null,
+                    { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }
+                )
+                .toBuffer();
+        }
+
+        res.set('Content-Type', 'image/png');
+        res.send(imageBuffer);
+    } catch (error) {
+        console.error('Mockup generation proxy failed:', error.message);
+        res.status(500).json({ error: 'Mockup generation failed', details: error.message });
+    }
+});
+
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'psd-service-node' });
 });

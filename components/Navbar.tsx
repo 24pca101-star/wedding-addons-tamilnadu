@@ -146,7 +146,6 @@ export default function Navbar() {
           </div>
         </div>
       </nav>
-
       {/* Mobile menu slidebar (drawer) */}
       <div
         className={`fixed inset-0 z-[100] transition-opacity duration-300 md:hidden ${isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"

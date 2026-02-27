@@ -1,8 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Aspose.PSD;
-using Aspose.PSD.FileFormats.Psd;
-using Aspose.PSD.FileFormats.Psd.Layers;
-using Aspose.PSD.ImageOptions;
+using PsdEditorApi.Services;
 
 namespace PsdEditorApi.Controllers
 {
@@ -11,10 +8,14 @@ namespace PsdEditorApi.Controllers
     public class PsdController : ControllerBase
     {
         private readonly string _templateDir;
+        private readonly IBannerEditorService _editorService;
+        private readonly IAiSuggestionService _aiService;
 
-        public PsdController()
+        public PsdController(IBannerEditorService editorService, IAiSuggestionService aiService)
         {
-            // Walk up from service dir to find the wedding-add-ons root
+            _editorService = editorService;
+            _aiService = aiService;
+
             var dir = new DirectoryInfo(Directory.GetCurrentDirectory());
             while (dir != null && !System.IO.File.Exists(Path.Combine(dir.FullName, "package.json")))
             {
@@ -30,52 +31,16 @@ namespace PsdEditorApi.Controllers
         {
             try
             {
+                if (!filename.EndsWith(".psd", StringComparison.OrdinalIgnoreCase)) filename += ".psd";
                 string filePath = Path.Combine(_templateDir, filename);
-                if (!System.IO.File.Exists(filePath)) return NotFound("PSD template not found");
+                if (!System.IO.File.Exists(filePath)) return NotFound($"PSD template not found: {filename}");
 
-                using (PsdImage image = (PsdImage)Image.Load(filePath))
-                {
-                    var layers = new List<object>();
-                    foreach (var layer in image.Layers)
-                    {
-                        var layerInfo = new Dictionary<string, object?>
-                        {
-                            ["name"] = layer.Name,
-                            ["type"] = layer is TextLayer ? "text" : "image",
-                            ["top"] = layer.Top,
-                            ["left"] = layer.Left,
-                            ["height"] = layer.Height,
-                            ["width"] = layer.Width,
-                            ["opacity"] = layer.Opacity,
-                            ["visible"] = layer.IsVisible
-                        };
-
-                        if (layer is TextLayer textLayer)
-                        {
-                            layerInfo["text"] = GetTextProperties(textLayer);
-                        }
-
-                        layers.Add(layerInfo);
-                    }
-
-                    return Ok(new
-                    {
-                        width = image.Width,
-                        height = image.Height,
-                        layers = layers
-                    });
-                }
+                var metadata = _editorService.GetMetadata(filePath);
+                return Ok(metadata);
             }
             catch (Exception ex)
             {
-                string filePath2 = Path.Combine(_templateDir, filename);
-                return StatusCode(500, new
-                {
-                    error = $"Metadata extraction failed: {ex.Message}",
-                    resolvedPath = filePath2,
-                    fileExists = System.IO.File.Exists(filePath2),
-                    stackTrace = ex.StackTrace?.Substring(0, Math.Min(500, ex.StackTrace?.Length ?? 0))
-                });
+                return StatusCode(500, new { error = $"Metadata extraction failed: {ex.Message}", details = ex.ToString() });
             }
         }
 
@@ -84,16 +49,12 @@ namespace PsdEditorApi.Controllers
         {
             try
             {
+                if (!filename.EndsWith(".psd", StringComparison.OrdinalIgnoreCase)) filename += ".psd";
                 string filePath = Path.Combine(_templateDir, filename);
-                if (!System.IO.File.Exists(filePath)) return NotFound("PSD template not found");
+                if (!System.IO.File.Exists(filePath)) return NotFound($"PSD template not found: {filename}");
 
-                using (PsdImage image = (PsdImage)Image.Load(filePath))
-                {
-                    var ms = new MemoryStream();
-                    image.Save(ms, new PngOptions());
-                    ms.Position = 0;
-                    return File(ms.ToArray(), "image/png");
-                }
+                var bytes = _editorService.GetPreview(filePath);
+                return File(bytes, "image/png");
             }
             catch (Exception ex)
             {
@@ -101,63 +62,90 @@ namespace PsdEditorApi.Controllers
             }
         }
 
+        [HttpGet("split/{filename}")]
+        public IActionResult SplitLayers(string filename)
+        {
+            try
+            {
+                if (!filename.EndsWith(".psd", StringComparison.OrdinalIgnoreCase)) filename += ".psd";
+                string filePath = Path.Combine(_templateDir, filename);
+                if (!System.IO.File.Exists(filePath)) return NotFound($"PSD template not found: {filename}");
+
+                // Output directory for layer images
+                // The original code had a ternary operator to determine previewBaseDir.
+                // The instruction is to adjust the relative path to use three ".." if the package.json search fails,
+                // or to simplify the path resolution.
+                // Based on the provided snippet, it seems the intent is to always use the relative path from current directory.
+                string previewBaseDir = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "public", "storage", "previews");
+
+                // Use a relative URL so the frontend (Next.js) loads images from its own public directory
+                string baseUrl = "/storage/previews"; 
+
+                var metadata = _editorService.SplitLayers(filePath, previewBaseDir, baseUrl);
+                return Ok(metadata);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = $"Layer splitting failed: {ex.Message}", details = ex.ToString() });
+            }
+        }
+
+        [HttpGet("suggestions/{filename}")]
+        public IActionResult GetSuggestions(string filename)
+        {
+            try
+            {
+                string filePath = Path.Combine(_templateDir, filename);
+                if (!System.IO.File.Exists(filePath)) return NotFound("PSD template not found");
+
+                var metadata = _editorService.GetMetadata(filePath);
+                var suggestions = _aiService.GetSuggestions(metadata);
+                return Ok(suggestions);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"AI Analysis failed: {ex.Message}");
+            }
+        }
+
+        [HttpGet("fonts")]
+        public IActionResult GetFonts()
+        {
+            try
+            {
+                var fontsDir = Path.Combine(Directory.GetCurrentDirectory(), "Fonts");
+                var fonts = new List<string>();
+
+                if (Directory.Exists(fontsDir))
+                {
+                    fonts.AddRange(Directory.GetFiles(fontsDir, "*.*")
+                        .Where(f => f.EndsWith(".ttf") || f.EndsWith(".otf"))
+                        .Select(Path.GetFileNameWithoutExtension)!);
+                }
+
+                var systemFonts = new[] { "Arial", "Times New Roman", "Courier New", "Verdana", "Georgia" };
+                fonts.AddRange(systemFonts);
+
+                return Ok(fonts.Distinct().OrderBy(f => f));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Failed to list fonts: {ex.Message}");
+            }
+        }
+
         [HttpGet("health")]
         public IActionResult Health()
         {
             var exists = Directory.Exists(_templateDir);
-            string[] files = exists ? Directory.GetFiles(_templateDir).Select(Path.GetFileName).ToArray()! : Array.Empty<string>();
             return Ok(new
             {
                 status = "ok",
-                service = "psd-dotnet-service",
+                service = "psd-editor-api",
                 templateDir = _templateDir,
-                templateDirExists = exists,
-                cwd = Directory.GetCurrentDirectory(),
-                files = files
+                templateDirExists = Directory.Exists(_templateDir),
+                files = Directory.Exists(_templateDir) ? Directory.GetFiles(_templateDir).Select(Path.GetFileName) : null
             });
-        }
-
-        private object GetTextProperties(TextLayer layer)
-        {
-            try
-            {
-                string fontName = "Arial";
-                double fontSize = 12.0;
-
-                // Use TextData API for rich text info
-                try
-                {
-                    var textData = layer.TextData;
-                    if (textData?.Items != null && textData.Items.Length > 0)
-                    {
-                        var firstItem = textData.Items[0];
-                        if (firstItem.Style != null)
-                        {
-                            fontName = firstItem.Style.FontName ?? "Arial";
-                            fontSize = firstItem.Style.FontSize;
-                        }
-                    }
-                }
-                catch { /* TextData may not be available for all text layers */ }
-
-                return new
-                {
-                    value = layer.Text ?? "",
-                    font = fontName,
-                    size = fontSize,
-                    color = new int[] { 0, 0, 0, 255 }
-                };
-            }
-            catch
-            {
-                return new
-                {
-                    value = layer.Text ?? "",
-                    font = "Arial",
-                    size = 12.0,
-                    color = new int[] { 0, 0, 0, 255 }
-                };
-            }
         }
     }
 }

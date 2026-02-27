@@ -1,38 +1,116 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
-const { readPsd } = require('ag-psd');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs/promises';
+import { existsSync, mkdirSync, readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { readPsd, initializeCanvas } from 'ag-psd';
+import { createCanvas } from 'canvas';
+import dotenv from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
+import opentype from 'opentype.js';
+import axios from 'axios';
+import sharp from 'sharp';
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Initialize ag-psd with node-canvas
+initializeCanvas(createCanvas);
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-process.on('uncaughtException', (err) => {
-    console.error('FATAL: Uncaught Exception:', err);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('FATAL: Unhandled Rejection at:', promise, 'reason:', reason);
-});
-
-app.use(cors());
-app.use(express.json());
-
-const { parsePsdMetadata, generatePreview } = require('./parser');
-
-const TEMPLATE_DIR = path.resolve(process.cwd(), '../../public/storage/templates');
-const PREVIEW_DIR = path.resolve(process.cwd(), '../../public/storage/previews');
+// Directories
+const TEMPLATES_DIR = path.resolve(__dirname, '../../public/storage/templates');
+const PREVIEWS_DIR = path.resolve(__dirname, '../../public/storage/previews');
+console.log('Previews directory:', PREVIEWS_DIR);
+const FONTS_DIR = path.resolve(__dirname, './fonts');
 
 // Ensure directories exist
-[TEMPLATE_DIR, PREVIEW_DIR].forEach(dir => {
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+[TEMPLATES_DIR, PREVIEWS_DIR, FONTS_DIR].forEach(dir => {
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+});
+
+// Font mapping
+const FONT_OBJECTS = {};
+async function loadFonts() {
+    try {
+        const files = await fs.readdir(FONTS_DIR);
+        for (const file of files) {
+            if (file.endsWith('.ttf') || file.endsWith('.otf')) {
+                const buffer = await fs.readFile(path.join(FONTS_DIR, file));
+                const font = opentype.parse(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength));
+                const name = path.basename(file, path.extname(file));
+                FONT_OBJECTS[name] = font;
+                console.log(`🔤 Loaded font: ${name}`);
+            }
+        }
+    } catch (err) {
+        console.warn('⚠️ No fonts found in Fonts directory');
+    }
+}
+await loadFonts();
+
+app.use(cors());
+app.use(express.json({ limit: '50mb' }));
+
+import { parsePsdMetadata, generateCleanPreview } from './parser.js';
+import { getFontMap, generateFontFaceCSS } from './fontLoader.js';
+
+// Logging middleware for debugging
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
+});
+
+// Serve fonts directory statically
+app.use('/fonts', express.static(FONTS_DIR));
+// Serve previews directory statically for layered access
+app.use('/previews', express.static(PREVIEWS_DIR));
+
+app.get('/api/psd/fonts', (req, res) => {
+    try {
+        const fontMap = getFontMap(FONTS_DIR);
+        const protocol = req.protocol;
+        const host = req.get('host');
+        const baseUrl = `${protocol}://${host}`;
+
+        const css = generateFontFaceCSS(fontMap, baseUrl);
+        res.json({
+            fonts: fontMap,
+            css: css
+        });
+    } catch (error) {
+        console.error("Font fetch failed:", error);
+        res.status(500).json({ error: 'Failed to load fonts' });
+    }
+});
+
+app.get('/api/psd/layers/:filename', async (req, res) => {
+    try {
+        const filename = req.params.filename.endsWith('.psd') ? req.params.filename : `${req.params.filename}.psd`;
+        const filePath = path.join(TEMPLATES_DIR, filename);
+        if (!existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+
+        const PUBLIC_DIR = path.resolve(process.cwd(), '../../public');
+        const metadata = await parsePsdMetadata(filePath, PUBLIC_DIR);
+        res.json(metadata);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Parsing failed' });
+    }
 });
 
 app.get('/parse/:filename', async (req, res) => {
     try {
-        const filePath = path.join(TEMPLATE_DIR, req.params.filename);
-        if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+        const filename = req.params.filename.endsWith('.psd') ? req.params.filename : `${req.params.filename}.psd`;
+        const filePath = path.join(TEMPLATES_DIR, filename);
+        if (!existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
 
         const PUBLIC_DIR = path.resolve(process.cwd(), '../../public');
         const metadata = await parsePsdMetadata(filePath, PUBLIC_DIR);
@@ -46,40 +124,38 @@ app.get('/parse/:filename', async (req, res) => {
 app.get('/preview/:filename', async (req, res) => {
     try {
         const filename = req.params.filename;
-        // Always derive PSD name for input and PNG name for output
         const psdFilename = filename.endsWith('.psd') ? filename : filename.replace('.png', '.psd');
         const pngFilename = psdFilename.replace('.psd', '.png');
 
-        const inputPath = path.join(TEMPLATE_DIR, psdFilename);
-        const outputPath = path.join(PREVIEW_DIR, pngFilename);
+        const inputPath = path.join(TEMPLATES_DIR, psdFilename);
+        const outputPath = path.join(PREVIEWS_DIR, pngFilename);
 
-        if (!fs.existsSync(inputPath)) return res.status(404).json({ error: 'PSD File not found' });
+        if (!existsSync(inputPath)) return res.status(404).json({ error: 'PSD File not found' });
 
-        // Only generate if it doesn't exist to save resources
-        if (!fs.existsSync(outputPath)) {
-            try {
-                await generatePreview(inputPath, outputPath);
-                res.sendFile(outputPath);
-            } catch (genError) {
-                console.warn(`Falling back to placeholder for ${filename}:`, genError.message);
-                const fallbackPath = path.resolve(process.cwd(), '../../public/assets/blank-canvas.png');
-                if (fs.existsSync(fallbackPath)) {
-                    res.sendFile(fallbackPath);
-                } else {
-                    res.status(500).json({ error: 'Preview generation and fallback failed' });
-                }
+        let needsGeneration = true;
+        try {
+            const psdStats = await fs.stat(inputPath);
+            const pngStats = await fs.stat(outputPath);
+            if (pngStats.mtime >= psdStats.mtime) {
+                needsGeneration = false;
+                console.log(`🚀 Serving CACHED preview for ${psdFilename}`);
             }
-        } else {
-            res.sendFile(outputPath);
+        } catch (e) {
+            // PNG doesn't exist
         }
+
+        if (needsGeneration) {
+            console.log(`🎨 Generating NEW clean preview for ${psdFilename}`);
+            await generateCleanPreview(inputPath, outputPath);
+        }
+
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.sendFile(outputPath);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Preview route error' });
+        res.status(500).json({ error: 'Preview generation failed' });
     }
 });
-
-const axios = require('axios');
-const sharp = require('sharp');
 
 const DOTNET_SERVICE_URL = process.env.DOTNET_SERVICE_URL || 'http://localhost:5199';
 
@@ -89,7 +165,6 @@ app.post('/generate-mockup', async (req, res) => {
             responseType: 'arraybuffer'
         });
 
-        // Use sharp to optimize/resize if requested, or just return as is
         let imageBuffer = Buffer.from(response.data);
 
         if (req.query.width || req.query.height) {
@@ -115,5 +190,5 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Node.js PSD Service running on http://localhost:${PORT}`);
+    console.log(`🚀 PSD Node Service (ESM) running on http://localhost:${PORT}`);
 });

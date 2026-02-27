@@ -6,6 +6,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// Register Custom Services
+builder.Services.AddScoped<PsdEditorApi.Services.IBannerEditorService, PsdEditorApi.Services.BannerEditorService>();
+builder.Services.AddScoped<PsdEditorApi.Services.IAiSuggestionService, PsdEditorApi.Services.AiSuggestionService>();
+
 // Enable CORS for frontend integration
 builder.Services.AddCors(options =>
 {
@@ -27,7 +31,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 

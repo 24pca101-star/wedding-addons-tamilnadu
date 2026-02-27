@@ -18,6 +18,8 @@ export const useFabricEditor = () => {
     const canvasRef = useRef<Canvas | null>(null);
     const [selectedObject, setSelectedObject] = useState<FabricObject | null>(null);
     const [zoom, setZoom] = useState(1);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [psdMetadata, setPsdMetadata] = useState<any>(null);
 
     // History State
     const history = useRef<string[]>([]);
@@ -28,10 +30,11 @@ export const useFabricEditor = () => {
     const isAlive = useRef(false);
 
     const saveHistory = useCallback(() => {
-        if (!canvas || isReloadingHistory.current) return;
+        const currentCanvas = canvasRef.current;
+        if (!currentCanvas || isReloadingHistory.current) return;
 
         try {
-            const json = JSON.stringify(canvas.toJSON());
+            const json = JSON.stringify(currentCanvas.toJSON());
 
             if (historyIndex.current < history.current.length - 1) {
                 history.current = history.current.slice(0, historyIndex.current + 1);
@@ -47,53 +50,56 @@ export const useFabricEditor = () => {
         } catch (err) {
             console.warn("Fabric: History save failed", err);
         }
-    }, [canvas]);
+    }, []);
 
     const undo = useCallback(() => {
-        if (!canvas || historyIndex.current <= 0) return;
+        const c = canvasRef.current;
+        if (!c || historyIndex.current <= 0) return;
 
         isReloadingHistory.current = true;
         historyIndex.current--;
         const json = history.current[historyIndex.current];
 
-        canvas.loadFromJSON(json).then(() => {
-            if (!isAlive.current || !canvas.lowerCanvasEl) {
+        c.loadFromJSON(json).then(() => {
+            if (!isAlive.current || !c.lowerCanvasEl) {
                 isReloadingHistory.current = false;
                 return;
             }
-            canvas.renderAll();
+            c.renderAll();
             isReloadingHistory.current = false;
         }).catch(err => {
             console.error("Fabric: Undo failed", err);
             isReloadingHistory.current = false;
         });
-    }, [canvas]);
+    }, []);
 
     const redo = useCallback(() => {
-        if (!canvas || historyIndex.current >= history.current.length - 1) return;
+        const c = canvasRef.current;
+        if (!c || historyIndex.current >= history.current.length - 1) return;
 
         isReloadingHistory.current = true;
         historyIndex.current++;
         const json = history.current[historyIndex.current];
 
-        canvas.loadFromJSON(json).then(() => {
-            if (!isAlive.current || !canvas.lowerCanvasEl) {
+        c.loadFromJSON(json).then(() => {
+            if (!isAlive.current || !c.lowerCanvasEl) {
                 isReloadingHistory.current = false;
                 return;
             }
-            canvas.renderAll();
+            c.renderAll();
             isReloadingHistory.current = false;
         }).catch(err => {
             console.error("Fabric: Redo failed", err);
             isReloadingHistory.current = false;
         });
-    }, [canvas]);
+    }, []);
 
     const resizeCanvas = useCallback((width: number, height: number) => {
-        if (!canvas || !canvas.lowerCanvasEl) return;
-        canvas.setDimensions({ width, height });
-        canvas.renderAll();
-    }, [canvas]);
+        const c = canvasRef.current;
+        if (!c || !c.lowerCanvasEl) return;
+        c.setDimensions({ width, height });
+        c.renderAll();
+    }, []);
 
     const initCanvas = useCallback((el: HTMLCanvasElement, options: any) => {
         if (canvasRef.current) return canvasRef.current;
@@ -132,11 +138,12 @@ export const useFabricEditor = () => {
     }, []);
 
     const addText = useCallback((text: string = "Type here...") => {
-        if (!canvas || !isAlive.current) return;
+        const c = canvasRef.current;
+        if (!c || !isAlive.current) return;
 
         const textbox = new Textbox(text, {
-            left: canvas.width! / 2,
-            top: canvas.height! / 2,
+            left: c.width! / 2,
+            top: c.height! / 2,
             width: 250,
             fontSize: 40,
             fontFamily: "Inter, Arial, sans-serif",
@@ -146,10 +153,10 @@ export const useFabricEditor = () => {
             originY: "center",
         });
 
-        canvas.add(textbox);
-        canvas.setActiveObject(textbox);
+        c.add(textbox);
+        c.setActiveObject(textbox);
 
-        const el = canvas.lowerCanvasEl;
+        const el = c.lowerCanvasEl;
         if (el) el.focus();
 
         setTimeout(() => {
@@ -160,121 +167,131 @@ export const useFabricEditor = () => {
             }
         }, 100);
 
-        canvas.requestRenderAll();
+        c.requestRenderAll();
         saveHistory();
-    }, [canvas, saveHistory]);
+    }, [saveHistory]);
 
     const addRect = useCallback(() => {
-        if (!canvas) return;
+        const c = canvasRef.current;
+        if (!c) return;
         const rect = new Rect({
-            left: canvas.width! / 2,
-            top: canvas.height! / 2,
+            left: c.width! / 2,
+            top: c.height! / 2,
             fill: "#FF5ACD",
             width: 150,
             height: 150,
             originX: "center",
             originY: "center",
         });
-        canvas.add(rect);
-        canvas.setActiveObject(rect);
-        canvas.renderAll();
+        c.add(rect);
+        c.setActiveObject(rect);
+        c.renderAll();
         saveHistory();
-    }, [canvas, saveHistory]);
+    }, [saveHistory]);
 
     const deleteSelected = useCallback(() => {
-        if (!canvas) return;
-        const activeObjects = canvas.getActiveObjects();
+        const c = canvasRef.current;
+        if (!c) return;
+        const activeObjects = c.getActiveObjects();
         if (activeObjects.length > 0) {
-            canvas.remove(...activeObjects);
-            canvas.discardActiveObject();
-            canvas.renderAll();
+            c.remove(...activeObjects);
+            c.discardActiveObject();
+            c.renderAll();
             saveHistory();
         }
-    }, [canvas, saveHistory]);
+    }, [saveHistory]);
 
     const updateSelection = useCallback(() => {
-        if (!canvas) return;
-        const active = canvas.getActiveObject();
+        const c = canvasRef.current;
+        if (!c) return;
+        const active = c.getActiveObject();
         setSelectedObject(active || null);
-    }, [canvas]);
+    }, []);
 
     const bringToFront = useCallback(() => {
-        if (!canvas) return;
-        const activeObject = canvas.getActiveObject();
+        const c = canvasRef.current;
+        if (!c) return;
+        const activeObject = c.getActiveObject();
         if (activeObject) {
-            canvas.bringObjectToFront(activeObject);
-            canvas.renderAll();
+            c.bringObjectToFront(activeObject);
+            c.renderAll();
             saveHistory();
         }
-    }, [canvas, saveHistory]);
+    }, [saveHistory]);
 
     const sendToBack = useCallback(() => {
-        if (!canvas) return;
-        const activeObject = canvas.getActiveObject();
+        const c = canvasRef.current;
+        if (!c) return;
+        const activeObject = c.getActiveObject();
         if (activeObject) {
-            canvas.sendObjectToBack(activeObject);
-            const safeArea = canvas.getObjects().find((obj: any) => (obj as any).isSafeArea);
+            c.sendObjectToBack(activeObject);
+            const safeArea = c.getObjects().find((obj: any) => (obj as any).isSafeArea);
             if (safeArea && safeArea !== activeObject) {
-                canvas.sendObjectToBack(safeArea);
+                c.sendObjectToBack(safeArea);
             }
-            canvas.renderAll();
+            c.renderAll();
             saveHistory();
         }
-    }, [canvas, saveHistory]);
+    }, [saveHistory]);
 
     const bringForward = useCallback(() => {
-        if (!canvas) return;
-        const activeObject = canvas.getActiveObject();
+        const c = canvasRef.current;
+        if (!c) return;
+        const activeObject = c.getActiveObject();
         if (activeObject) {
-            canvas.bringObjectForward(activeObject);
-            canvas.renderAll();
+            c.bringObjectForward(activeObject);
+            c.renderAll();
             saveHistory();
         }
-    }, [canvas, saveHistory]);
+    }, [saveHistory]);
 
     const sendBackward = useCallback(() => {
-        if (!canvas) return;
-        const activeObject = canvas.getActiveObject();
+        const c = canvasRef.current;
+        if (!c) return;
+        const activeObject = c.getActiveObject();
         if (activeObject) {
-            canvas.sendObjectBackwards(activeObject);
-            const safeArea = canvas.getObjects().find((obj) => (obj as any).isSafeArea);
+            c.sendObjectBackwards(activeObject);
+            const safeArea = c.getObjects().find((obj: any) => (obj as any).isSafeArea);
             if (safeArea && safeArea !== activeObject) {
-                canvas.sendObjectToBack(safeArea);
+                c.sendObjectToBack(safeArea);
             }
-            canvas.renderAll();
+            c.renderAll();
             saveHistory();
         }
-    }, [canvas, saveHistory]);
+    }, [saveHistory]);
 
     const setOpacity = useCallback((value: number) => {
-        if (!canvas) return;
-        const activeObject = canvas.getActiveObject();
+        const c = canvasRef.current;
+        if (!c) return;
+        const activeObject = c.getActiveObject();
         if (activeObject) {
             activeObject.set("opacity", value);
-            canvas.renderAll();
+            c.renderAll();
             saveHistory();
         }
-    }, [canvas, saveHistory]);
+    }, [saveHistory]);
 
     const setFontFamily = useCallback((font: string) => {
-        if (!canvas) return;
-        const activeObject = canvas.getActiveObject();
+        const c = canvasRef.current;
+        if (!c) return;
+        const activeObject = c.getActiveObject();
         if (activeObject instanceof Textbox) {
             activeObject.set("fontFamily", font);
-            canvas.renderAll();
+            c.renderAll();
             saveHistory();
         }
-    }, [canvas, saveHistory]);
+    }, [saveHistory]);
 
     const handleZoom = useCallback((value: number) => {
-        if (!canvas) return;
+        const c = canvasRef.current;
+        if (!c) return;
         const newZoom = Math.min(Math.max(0.1, value), 5);
         setZoom(newZoom);
-        canvas.setZoom(newZoom);
-    }, [canvas]);
+        c.setZoom(newZoom);
+    }, []);
 
     const addSafeArea = useCallback((targetCanvas?: Canvas) => {
-        const c = targetCanvas || canvas;
+        const c = targetCanvas || canvasRef.current;
         if (!c || !c.lowerCanvasEl) return;
 
         const existing = c.getObjects().find((obj: any) => (obj as any).isSafeArea);
@@ -291,16 +308,18 @@ export const useFabricEditor = () => {
             strokeDashArray: [10, 5],
             selectable: false,
             evented: false,
+            // @ts-expect-error - Custom property
             isSafeArea: true,
         });
         c.add(rect);
         c.sendObjectToBack(rect);
         c.renderAll();
-    }, [canvas]);
+    }, []);
 
     const toggleLock = useCallback(() => {
-        if (!canvas) return;
-        const activeObject = canvas.getActiveObject();
+        const c = canvasRef.current;
+        if (!c) return;
+        const activeObject = c.getActiveObject();
         if (activeObject) {
             const isLocked = !activeObject.lockMovementX;
             activeObject.set({
@@ -309,18 +328,26 @@ export const useFabricEditor = () => {
                 lockScalingX: isLocked,
                 lockScalingY: isLocked,
                 lockRotation: isLocked,
+                // @ts-expect-error - Textbox only
                 editable: !isLocked,
                 hasControls: !isLocked,
             });
-            canvas.renderAll();
+            c.renderAll();
             saveHistory();
         }
-    }, [canvas, saveHistory]);
+    }, [saveHistory]);
 
     const disposeCanvas = useCallback(() => {
         if (canvasRef.current) {
             console.log("Fabric: Disposing canvas");
             isAlive.current = false;
+
+            const el = canvasRef.current.lowerCanvasEl;
+            if (el) {
+                // @ts-expect-error Custom property
+                delete el.__fabric_canvas;
+            }
+
             canvasRef.current.dispose();
             canvasRef.current = null;
             setCanvas(null);
@@ -328,43 +355,71 @@ export const useFabricEditor = () => {
     }, []);
 
     useEffect(() => {
-        if (!canvas) return;
+        const loadPsdFonts = async () => {
+            try {
+                const response = await fetch("http://localhost:5001/api/psd/fonts");
+                if (!response.ok) return;
+                const data = await response.json();
+                if (data.css) {
+                    let styleTag = document.getElementById("psd-fonts-style");
+                    if (!styleTag) {
+                        styleTag = document.createElement("style");
+                        styleTag.id = "psd-fonts-style";
+                        document.head.appendChild(styleTag);
+                    }
+                    styleTag.innerHTML = data.css;
+                    console.log("Fabric: PSD Fonts loaded dynamically");
+                }
+            } catch (err) {
+                console.warn("Fabric: Could not load extra PSD fonts", err);
+            }
+        };
+        loadPsdFonts();
+    }, []);
+
+    useEffect(() => {
+        const c = canvasRef.current;
+        if (!c) return;
 
         const handleObjectModified = () => saveHistory();
 
-        canvas.on("selection:created", updateSelection);
-        canvas.on("selection:updated", updateSelection);
-        canvas.on("selection:cleared", updateSelection);
-        canvas.on("object:modified", handleObjectModified);
+        c.on("selection:created", updateSelection);
+        c.on("selection:updated", updateSelection);
+        c.on("selection:cleared", updateSelection);
+        c.on("object:modified", handleObjectModified);
 
         return () => {
-            canvas.off("selection:created", updateSelection);
-            canvas.off("selection:updated", updateSelection);
-            canvas.off("selection:cleared", updateSelection);
-            canvas.off("object:modified", handleObjectModified);
+            c.off("selection:created", updateSelection);
+            c.off("selection:updated", updateSelection);
+            c.off("selection:cleared", updateSelection);
+            c.off("object:modified", handleObjectModified);
         };
     }, [canvas, updateSelection, saveHistory]);
 
+    const latestLoadId = useRef(0);
+
     const loadPsdTemplate = useCallback(async (filename: string, targetCanvas?: Canvas) => {
-        const activeCanvas = targetCanvas || canvas;
+        const activeCanvas = targetCanvas || canvasRef.current;
         if (!activeCanvas) return;
 
+        const loadId = ++latestLoadId.current;
+
         try {
-            console.log(`Fabric: Loading PSD template ${filename}`);
+            console.log(`Fabric: Loading LAYERED PSD template ${filename} (LoadID: ${loadId})`);
+
             const response = await fetch(`http://localhost:5001/parse/${filename}`);
             if (!response.ok) throw new Error(`Metadata fetch failed: ${response.status}`);
+
+            if (loadId !== latestLoadId.current) return;
+
             const metadata = await response.json();
             console.log(`Fabric: Metadata received: ${metadata.width}x${metadata.height}, layers: ${metadata.layers.length}`);
 
-            const previewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
-            console.log(`Fabric: Loading preview from ${previewUrl}`);
-
-            const img = await FabricImage.fromURL(previewUrl, {
-                crossOrigin: 'anonymous'
-            });
-            console.log("Fabric: Preview image loaded successfully");
+            setPsdMetadata(metadata);
 
             const setupTemplate = async () => {
+                if (loadId !== latestLoadId.current) return;
+
                 const el = activeCanvas.lowerCanvasEl;
                 if (!el) {
                     console.warn("Fabric: Canvas element not ready, retrying...");
@@ -372,83 +427,66 @@ export const useFabricEditor = () => {
                     return;
                 }
 
-                // activeCanvas.set({ backgroundImage: img });
+                activeCanvas.clear();
 
-                // Set initial dimensions based on metadata
-                activeCanvas.setDimensions({ width: metadata.width, height: metadata.height });
-
-                img.set({
-                    scaleX: metadata.width / img.width!,
-                    scaleY: metadata.height / img.height!,
-                    originX: 'left',
-                    originY: 'top',
-                    selectable: false,
-                    evented: false
-                });
-
-                let finalScale = 1;
-
-                const container = document.getElementById("editor-workspace");
-                if (container) {
-                    const padding = 160;
-                    const availableWidth = container.clientWidth - padding;
-                    const availableHeight = container.clientHeight - padding;
-
-                    if (availableWidth > 0 && availableHeight > 0) {
-                        const scaleX = availableWidth / metadata.width;
-                        const scaleY = availableHeight / metadata.height;
-                        finalScale = Math.min(scaleX, scaleY, 1) * 0.9;
-
-                        activeCanvas.setDimensions({
-                            width: metadata.width * finalScale,
-                            height: metadata.height * finalScale
+                // 1. Load Background/Clean Preview first if available
+                const previewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
+                try {
+                    const bgImg = await FabricImage.fromURL(previewUrl, { crossOrigin: 'anonymous' });
+                    if (loadId === latestLoadId.current) {
+                        bgImg.set({
+                            left: 0,
+                            top: 0,
+                            scaleX: metadata.width / bgImg.width!,
+                            scaleY: metadata.height / bgImg.height!,
+                            selectable: false,
+                            evented: false,
+                            // @ts-expect-error - Custom property
+                            isPsdBackground: true
                         });
-                        activeCanvas.setZoom(finalScale);
-                        setZoom(finalScale);
+                        activeCanvas.backgroundImage = bgImg;
                     }
+                } catch (err) {
+                    console.warn("Fabric: Failed to load background", err);
                 }
 
-                activeCanvas.renderAll();
-
+                // 2. Load layers
                 let layersProcessed = 0;
-
-                // Process layers in order (bottom to top usually in metadata)
                 for (const layer of metadata.layers) {
+                    if (loadId !== latestLoadId.current) break;
                     try {
                         if (layer.type === 'text' && layer.text) {
                             const text = new Textbox(layer.text.value, {
                                 left: layer.left,
                                 top: layer.top,
-                                width: layer.width,
+                                width: layer.width || 200,
                                 fontSize: layer.text.size || 24,
                                 fontFamily: layer.text.font || "Inter, Arial, sans-serif",
-                                fill: layer.text.color ? `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${layer.text.color[3] / 255})` : "#000000",
+                                fill: layer.text.color ? `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${(layer.text.color[3] || 255) / 255})` : "#000000",
                                 textAlign: layer.text.alignment || "left",
                                 opacity: layer.opacity ?? 1,
                                 visible: layer.visible ?? true,
+                                // @ts-expect-error - Custom property
                                 psdLayerName: layer.name
                             });
                             activeCanvas.add(text);
                             layersProcessed++;
                         } else if (layer.type === 'image' && layer.imageUrl) {
-                            // FabricImage.fromURL is async, but we want to maintain order. 
-                            // Actually, adding them as they come is fine if metadata is bottom-to-top.
                             const imgUrl = `http://localhost:5001${layer.imageUrl}`;
-                            const layerImg = await FabricImage.fromURL(imgUrl, {
-                                crossOrigin: 'anonymous'
-                            });
-
-                            layerImg.set({
-                                left: layer.left,
-                                top: layer.top,
-                                opacity: layer.opacity ?? 1,
-                                visible: layer.visible ?? true,
-                                selectable: true, // Allow moving everything like Canva
-                                psdLayerName: layer.name
-                            });
-
-                            activeCanvas.add(layerImg);
-                            layersProcessed++;
+                            const layerImg = await FabricImage.fromURL(imgUrl, { crossOrigin: 'anonymous' });
+                            if (loadId === latestLoadId.current) {
+                                layerImg.set({
+                                    left: layer.left,
+                                    top: layer.top,
+                                    opacity: layer.opacity ?? 1,
+                                    visible: layer.visible ?? true,
+                                    selectable: true,
+                                    // @ts-expect-error - Custom property
+                                    psdLayerName: layer.name
+                                });
+                                activeCanvas.add(layerImg);
+                                layersProcessed++;
+                            }
                         }
                     } catch (err) {
                         console.error(`Fabric: Failed to process layer ${layer.name}`, err);
@@ -456,20 +494,20 @@ export const useFabricEditor = () => {
                 }
 
                 console.log(`Fabric: Processed ${layersProcessed} layers`);
-
                 activeCanvas.requestRenderAll();
+
                 setTimeout(() => {
                     saveHistory();
                     console.log("Fabric: PSD template setup complete");
                 }, 500);
             };
 
-            setupTemplate();
+            await setupTemplate();
 
         } catch (error) {
             console.error("Failed to load PSD template:", error);
         }
-    }, [canvas, saveHistory]);
+    }, [saveHistory]);
 
     return {
         canvas,
@@ -494,5 +532,7 @@ export const useFabricEditor = () => {
         setOpacity,
         setFontFamily,
         loadPsdTemplate,
+        previewUrl,
+        psdMetadata
     };
 };

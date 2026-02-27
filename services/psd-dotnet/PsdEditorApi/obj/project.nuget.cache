@@ -1,9 +1,14 @@
 {
   "version": 2,
+<<<<<<< HEAD
   "dgSpecHash": "wVNbxver7yY=",
+=======
+  "dgSpecHash": "Z73MF9tvi07LQvW1DMuwT7QhN14it/V4vQek+G0nS5KkTC5hmbeWJaEyRVf3a2t1CvhX+VQraOa2D9LXU+4llg==",
+>>>>>>> 96dc331da59cc18e016e6d86f9933238149c8e9d
   "success": true,
-  "projectFilePath": "C:\\Users\\gurud\\nextjs_task\\Internship_Project\\wedding-add-ons\\services\\psd-dotnet\\PsdEditorApi\\PsdEditorApi.csproj",
+  "projectFilePath": "D:\\INTERNSHIP_PROJECT\\wedding-addons-tamilnadu\\services\\psd-dotnet\\PsdEditorApi\\PsdEditorApi.csproj",
   "expectedPackageFiles": [
+<<<<<<< HEAD
     "C:\\Users\\gurud\\.nuget\\packages\\aspose.drawing\\23.7.0\\aspose.drawing.23.7.0.nupkg.sha512",
     "C:\\Users\\gurud\\.nuget\\packages\\aspose.drawing.common\\24.9.0\\aspose.drawing.common.24.9.0.nupkg.sha512",
     "C:\\Users\\gurud\\.nuget\\packages\\aspose.psd\\26.2.2\\aspose.psd.26.2.2.nupkg.sha512",
@@ -20,6 +25,23 @@
     "C:\\Users\\gurud\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\6.6.2\\swashbuckle.aspnetcore.swaggergen.6.6.2.nupkg.sha512",
     "C:\\Users\\gurud\\.nuget\\packages\\swashbuckle.aspnetcore.swaggerui\\6.6.2\\swashbuckle.aspnetcore.swaggerui.6.6.2.nupkg.sha512",
     "C:\\Users\\gurud\\.nuget\\packages\\system.drawing.common\\10.0.3\\system.drawing.common.10.0.3.nupkg.sha512"
+=======
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\aspose.drawing\\24.9.0\\aspose.drawing.24.9.0.nupkg.sha512",
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\aspose.psd\\26.2.0\\aspose.psd.26.2.0.nupkg.sha512",
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\microsoft.aspnetcore.openapi\\7.0.10\\microsoft.aspnetcore.openapi.7.0.10.nupkg.sha512",
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\microsoft.extensions.apidescription.server\\6.0.5\\microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\microsoft.openapi\\1.4.3\\microsoft.openapi.1.4.3.nupkg.sha512",
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\microsoft.win32.systemevents\\7.0.0\\microsoft.win32.systemevents.7.0.0.nupkg.sha512",
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512",
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\skiasharp\\2.88.6\\skiasharp.2.88.6.nupkg.sha512",
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\skiasharp.nativeassets.macos\\2.88.6\\skiasharp.nativeassets.macos.2.88.6.nupkg.sha512",
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\skiasharp.nativeassets.win32\\2.88.6\\skiasharp.nativeassets.win32.2.88.6.nupkg.sha512",
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\swashbuckle.aspnetcore\\6.5.0\\swashbuckle.aspnetcore.6.5.0.nupkg.sha512",
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\swashbuckle.aspnetcore.swagger\\6.5.0\\swashbuckle.aspnetcore.swagger.6.5.0.nupkg.sha512",
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\swashbuckle.aspnetcore.swaggergen\\6.5.0\\swashbuckle.aspnetcore.swaggergen.6.5.0.nupkg.sha512",
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\swashbuckle.aspnetcore.swaggerui\\6.5.0\\swashbuckle.aspnetcore.swaggerui.6.5.0.nupkg.sha512",
+    "C:\\Users\\GuruPadma\\.nuget\\packages\\system.drawing.common\\7.0.0\\system.drawing.common.7.0.0.nupkg.sha512"
+>>>>>>> 96dc331da59cc18e016e6d86f9933238149c8e9d
   ],
   "logs": []
 }

@@ -1,14 +1,13 @@
 "use client";
 import TemplateCard from "@/components/TemplateCard";
 
-// Mock data for this specific subcategory
 const TEMPLATES = [
-  { id: 'design-1.psd', name: 'Rose Gold Floral', preview: 'http://localhost:5001/preview/design-1.psd' },
-  { id: 'design-2.psd', name: 'Winter Watercolor', preview: 'http://localhost:5001/preview/design-2.psd' },
-  { id: 'design-3.psd', name: 'Winter Photo Invite', preview: 'http://localhost:5001/preview/design-3.psd' },
-  { id: 'design-4.psd', name: 'Romantic Hearts', preview: 'http://localhost:5001/preview/design-4.psd' },
-  { id: 'design-5.psd', name: 'Premium Gold Photo', preview: 'http://localhost:5001/preview/design-5.psd' },
-  { id: 'design-6.psd', name: 'Artistic Yellow', preview: 'http://localhost:5001/preview/design-6.psd' },
+  { id: 'design-1.psd', name: 'Rose Gold Floral', preview: '/storage/previews/design-1.psd' },
+  { id: 'design-2.psd', name: 'Winter Watercolor', preview: '/storage/previews/design-2.psd' },
+  { id: 'design-3.psd', name: 'Winter Photo Invite', preview: '/storage/previews/design-3.psd' },
+  { id: 'design-4.psd', name: 'Romantic Hearts', preview: '/storage/previews/design-4.psd' },
+  { id: 'design-5.psd', name: 'Premium Gold Photo', preview: '/storage/previews/design-5.psd' },
+  { id: 'design-6.psd', name: 'Artistic Yellow', preview: '/storage/previews/design-6.psd' },
 ];
 
 export default function WelcomeBannerPage() {

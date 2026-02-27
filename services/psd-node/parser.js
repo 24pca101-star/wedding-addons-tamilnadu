@@ -40,8 +40,27 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
         const elements = [];
         let layerCounter = 0;
 
+        /**
+         * Recursively checks if a node or any of its children contains a text layer.
+         */
+        function hasTextLayers(node) {
+            if (node.text != null) return true;
+            if (node.children) {
+                return node.children.some(child => hasTextLayers(child));
+            }
+            return false;
+        }
+
         async function processLayers(item) {
-            if (item.children) {
+            const name = item.name || 'Unnamed Layer';
+            const isGroup = !!item.children;
+            const containsText = hasTextLayers(item);
+
+            // Aggressive Flattening: If it's a group AND it doesn't have any text layers inside, flatten it.
+            const shouldFlatten = isGroup && !containsText;
+
+            if (isGroup && !shouldFlatten) {
+                console.log(`📂 Entering Group (Open): ${name}`);
                 // ag-psd children are ordered TOP to BOTTOM.
                 for (const child of item.children) {
                     await processLayers(child);
@@ -49,21 +68,53 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
             } else {
                 const layerIndex = layerCounter++;
                 let layerImageUrl = null;
+                const isText = (item.text != null);
+                const dims = getLayerDimensions(item);
 
-                // Export image layers
-                if (item.canvas && layerStorageDir) {
+                console.log(`📄 Processing Layer: ${name} [Type: ${isText ? 'Text' : (shouldFlatten ? 'Flattened Group' : 'Image')}] [Visible: ${item.visible !== false}]`);
+
+                // Export image/flattened group layers
+                let canvasToExport = item.canvas;
+
+                // If it's a flattened group, we MUST compose it (ag-psd group nodes rarely have a pre-rendered canvas)
+                if (shouldFlatten) {
+                    console.log(`🛠️ Composing Flattened Group: ${name}`);
+                    const groupCanvas = createCanvas(psd.width, psd.height);
+                    const gCtx = groupCanvas.getContext('2d');
+
+                    function compose(node) {
+                        if (node.children) {
+                            // Bottom to Top for correct layering
+                            for (let i = node.children.length - 1; i >= 0; i--) compose(node.children[i]);
+                        } else if (node.canvas && node.visible !== false) {
+                            gCtx.globalAlpha = node.opacity ?? 1;
+                            gCtx.drawImage(node.canvas, Math.round(node.left || 0), Math.round(node.top || 0));
+                        }
+                    }
+                    compose(item);
+
+                    // Crop to bounding box (if it exists)
+                    if (dims.width > 0 && dims.height > 0) {
+                        const finalCanvas = createCanvas(dims.width, dims.height);
+                        const fCtx = finalCanvas.getContext('2d');
+                        fCtx.drawImage(groupCanvas, -dims.x, -dims.y);
+                        canvasToExport = finalCanvas;
+                    } else {
+                        // Fallback to full PSD canvas if dimensions are weird
+                        canvasToExport = groupCanvas;
+                    }
+                }
+
+                if (canvasToExport && layerStorageDir) {
                     const layerId = `${layerIndex}.png`;
                     const layerPath = `${layerStorageDir}/${layerId}`;
-                    const pngBuffer = item.canvas.toBuffer('image/png');
+                    const pngBuffer = canvasToExport.toBuffer('image/png');
                     await sharp(pngBuffer).toFile(layerPath);
                     layerImageUrl = `/storage/layers/${filename}/${layerId}`;
                 }
 
-                const dims = getLayerDimensions(item);
-                const isText = item.text != null;
-
                 const layer = {
-                    name: item.name,
+                    name: name,
                     type: isText ? 'text' : 'image',
                     top: dims.y,
                     left: dims.x,
@@ -72,6 +123,7 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
                     opacity: item.opacity ?? 1,
                     visible: item.visible !== false,
                     imageUrl: layerImageUrl,
+                    isFlattened: shouldFlatten,
                     text: isText ? {
                         value: item.text.text,
                         font: item.text.fonts?.[0]?.name || 'Inter',
@@ -97,7 +149,8 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
                     color: layer.text?.color,
                     textAlign: layer.text?.alignment,
                     opacity: layer.opacity,
-                    visible: layer.visible
+                    visible: layer.visible,
+                    isFlattened: shouldFlatten
                 });
             }
         }

@@ -104,10 +104,8 @@ export const useFabricEditor = () => {
     const initCanvas = useCallback((el: HTMLCanvasElement, options: any) => {
         if (canvasRef.current) return canvasRef.current;
 
-        // @ts-expect-error - Custom property
-        if (el.__fabric_canvas) {
-            // @ts-expect-error - Custom property
-            const existing = el.__fabric_canvas;
+        if ((el as any).__fabric_canvas) {
+            const existing = (el as any).__fabric_canvas;
             canvasRef.current = existing;
             setCanvas(existing);
             return existing;
@@ -120,8 +118,7 @@ export const useFabricEditor = () => {
                 preserveObjectStacking: true,
             });
 
-            // @ts-expect-error - Custom property
-            el.__fabric_canvas = c;
+            (el as any).__fabric_canvas = c;
 
             const initialJson = JSON.stringify(c.toJSON());
             history.current = [initialJson];
@@ -308,7 +305,6 @@ export const useFabricEditor = () => {
             strokeDashArray: [10, 5],
             selectable: false,
             evented: false,
-            // @ts-expect-error - Custom property
             isSafeArea: true,
         });
         c.add(rect);
@@ -328,7 +324,6 @@ export const useFabricEditor = () => {
                 lockScalingX: isLocked,
                 lockScalingY: isLocked,
                 lockRotation: isLocked,
-                // @ts-expect-error - Textbox only
                 editable: !isLocked,
                 hasControls: !isLocked,
             });
@@ -344,8 +339,7 @@ export const useFabricEditor = () => {
 
             const el = canvasRef.current.lowerCanvasEl;
             if (el) {
-                // @ts-expect-error Custom property
-                delete el.__fabric_canvas;
+                delete (el as any).__fabric_canvas;
             }
 
             canvasRef.current.dispose();
@@ -428,27 +422,15 @@ export const useFabricEditor = () => {
                 }
 
                 activeCanvas.clear();
+                activeCanvas.backgroundColor = 'white';
+                activeCanvas.setDimensions({ width: metadata.width, height: metadata.height });
 
-                // 1. Load Background/Clean Preview first if available
-                const previewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
-                try {
-                    const bgImg = await FabricImage.fromURL(previewUrl, { crossOrigin: 'anonymous' });
-                    if (loadId === latestLoadId.current) {
-                        bgImg.set({
-                            left: 0,
-                            top: 0,
-                            scaleX: metadata.width / bgImg.width!,
-                            scaleY: metadata.height / bgImg.height!,
-                            selectable: false,
-                            evented: false,
-                            // @ts-expect-error - Custom property
-                            isPsdBackground: true
-                        });
-                        activeCanvas.backgroundImage = bgImg;
-                    }
-                } catch (err) {
-                    console.warn("Fabric: Failed to load background", err);
-                }
+                // 1. Maintain preview state but avoid stationary background ghosting
+                const templatePreviewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
+                setPreviewUrl(templatePreviewUrl);
+
+                // We no longer set activeCanvas.backgroundImage here to avoid duplication
+                // with the movable layers loaded in step 2.
 
                 // 2. Load layers
                 let layersProcessed = 0;
@@ -466,7 +448,6 @@ export const useFabricEditor = () => {
                                 textAlign: layer.text.alignment || "left",
                                 opacity: layer.opacity ?? 1,
                                 visible: layer.visible ?? true,
-                                // @ts-expect-error - Custom property
                                 psdLayerName: layer.name
                             });
                             activeCanvas.add(text);
@@ -481,7 +462,6 @@ export const useFabricEditor = () => {
                                     opacity: layer.opacity ?? 1,
                                     visible: layer.visible ?? true,
                                     selectable: true,
-                                    // @ts-expect-error - Custom property
                                     psdLayerName: layer.name
                                 });
                                 activeCanvas.add(layerImg);

@@ -70,7 +70,12 @@ app.use((req, res, next) => {
 
 // Serve fonts directory statically
 app.use('/fonts', express.static(FONTS_DIR));
-// Serve previews directory statically for layered access
+
+// Serve storage directory (previews, layers)
+const STORAGE_DIR = path.resolve(__dirname, '../../public/storage');
+app.use('/storage', express.static(STORAGE_DIR));
+
+// Keep /previews for backward compatibility if needed, or remove if everything uses /storage
 app.use('/previews', express.static(PREVIEWS_DIR));
 
 app.get('/api/psd/fonts', (req, res) => {

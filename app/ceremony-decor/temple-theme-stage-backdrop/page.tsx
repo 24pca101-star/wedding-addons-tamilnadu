@@ -1,16 +1,16 @@
 "use client";
 import TemplateCard from "@/components/TemplateCard";
 
-export default function TempleThemeStageBackDrop() {
+export default function TempleThemeStageBackdrop() {
   return (
-    <div className="min-h-screen bg-gray-50 pt-32 pb-20 px-6">
+    <div className="min-h-screen bg-pink-50/30 pt-32 pb-20 px-6">
       <div className="max-w-7xl mx-auto text-center">
         <header className="mb-12">
-          <h1 className="text-4xl font-black text-gray-900 mb-4 uppercase tracking-tight">
+          <h1 className="text-4xl font-black text-pink-800 font-serif mb-4 uppercase tracking-tight">
             Temple Theme Stage Backdrop
           </h1>
-          <p className="text-gray-500 font-medium max-w-2xl mx-auto">
-            Select a traditional temple-themed backdrop PSD template to customize for your stage.
+          <p className="text-gray-600 font-medium max-w-2xl mx-auto">
+            Custom traditional temple theme stage backdrops. Choose to begin customizing.
           </p>
         </header>
 
@@ -19,14 +19,6 @@ export default function TempleThemeStageBackDrop() {
             id="blank"
             name="Start from Scratch"
             previewUrl="/assets/blank-canvas.png"
-            category="ceremony-decor"
-            subcategory="temple-theme-stage-backdrop"
-          />
-          {/* Template placeholders - system is ready for .psd files here */}
-          <TemplateCard
-            id="temple-1.psd"
-            name="Gopuram Gold"
-            previewUrl="http://localhost:5001/preview/temple-1.png"
             category="ceremony-decor"
             subcategory="temple-theme-stage-backdrop"
           />

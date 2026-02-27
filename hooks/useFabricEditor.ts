@@ -399,13 +399,25 @@ export const useFabricEditor = () => {
             if (loadId !== latestLoadId.current) return;
 
             const metadata = await response.json();
+            console.log(`Fabric: Metadata received: ${metadata.width}x${metadata.height}, layers: ${metadata.layers.length}`);
 
+<<<<<<< HEAD
             const setupTemplate = async () => {
                 // If another load started, abort
                 if (loadId !== latestLoadId.current) return;
+=======
+            const previewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
+            console.log(`Fabric: Loading preview from ${previewUrl}`);
+
+            const img = await FabricImage.fromURL(previewUrl, {
+                crossOrigin: 'anonymous'
+            });
+            console.log("Fabric: Preview image loaded successfully");
+>>>>>>> 022a1ea95d5e718c5808b2d21ea4cee5331e4891
 
                 const el = activeCanvas.lowerCanvasEl;
                 if (!el) {
+                    console.warn("Fabric: Canvas element not ready, retrying...");
                     if (isAlive.current) setTimeout(setupTemplate, 100);
                     return;
                 }
@@ -413,12 +425,28 @@ export const useFabricEditor = () => {
                 // IMPORTANT: Clear the canvas before loading a new template
                 activeCanvas.clear();
 
+<<<<<<< HEAD
                 const baseWidth = 1500; // Increased base width for better initial resolution
                 const normalizationScale = baseWidth / metadata.width;
                 const normalizedWidth = Math.round(metadata.width * normalizationScale);
                 const normalizedHeight = Math.round(metadata.height * normalizationScale);
+=======
+                img.set({
+                    scaleX: metadata.width / img.width!,
+                    scaleY: metadata.height / img.height!,
+                    originX: 'left',
+                    originY: 'top',
+                    selectable: false,
+                    evented: false
+                });
+
+                activeCanvas.backgroundImage = img;
+>>>>>>> 022a1ea95d5e718c5808b2d21ea4cee5331e4891
+
+                let finalScale = 1;
 
                 const container = document.getElementById("editor-workspace");
+<<<<<<< HEAD
                 let availableWidth = container ? container.clientWidth - 100 : 1200;
                 let availableHeight = container ? container.clientHeight - 100 : 800;
 
@@ -426,6 +454,17 @@ export const useFabricEditor = () => {
                 const scaleY = availableHeight / normalizedHeight;
                 // Use a more generous fit scale
                 const finalScale = Math.min(scaleX, scaleY, 1) * 0.95;
+=======
+                if (container) {
+                    const padding = 160;
+                    const availableWidth = container.clientWidth - padding;
+                    const availableHeight = container.clientHeight - padding;
+
+                    if (availableWidth > 0 && availableHeight > 0) {
+                        const scaleX = availableWidth / metadata.width;
+                        const scaleY = availableHeight / metadata.height;
+                        finalScale = Math.min(scaleX, scaleY, 1) * 0.9;
+>>>>>>> 022a1ea95d5e718c5808b2d21ea4cee5331e4891
 
                 activeCanvas.setDimensions({
                     width: normalizedWidth,
@@ -463,6 +502,7 @@ export const useFabricEditor = () => {
                     }
                 }
 
+<<<<<<< HEAD
                 // 2. Iterate ONLY text layers for interactive overlays
                 const textLayers = (metadata.layers || []).filter((l: any) => l.type === 'text');
                 console.log(`Fabric: Reconstructing ${textLayers.length} text overlays...`);
@@ -493,6 +533,38 @@ export const useFabricEditor = () => {
 
                 activeCanvas.requestRenderAll();
                 saveHistory();
+=======
+                let textLayersAdded = 0;
+                metadata.layers.forEach((layer: any) => {
+                    if (layer.type === 'text' && layer.text) {
+                        try {
+                            const text = new Textbox(layer.text.value, {
+                                left: layer.left,
+                                top: layer.top,
+                                width: layer.width,
+                                fontSize: layer.text.size || 24,
+                                fontFamily: layer.text.font || "Inter, Arial, sans-serif",
+                                fill: layer.text.color ? `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${layer.text.color[3] / 255})` : "#000000",
+                                textAlign: layer.text.alignment || "left",
+                                opacity: layer.opacity ?? 1,
+                                visible: layer.visible ?? true,
+                                psdLayerName: layer.name
+                            });
+                            activeCanvas.add(text);
+                            textLayersAdded++;
+                        } catch (err) {
+                            console.error(`Fabric: Failed to add text layer ${layer.name}`, err);
+                        }
+                    }
+                });
+                console.log(`Fabric: Added ${textLayersAdded} text layers to canvas`);
+
+                activeCanvas.requestRenderAll();
+                setTimeout(() => {
+                    saveHistory();
+                    console.log("Fabric: PSD template setup complete");
+                }, 200);
+>>>>>>> 022a1ea95d5e718c5808b2d21ea4cee5331e4891
             };
 
             setupTemplate();

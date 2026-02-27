@@ -46,21 +46,14 @@ export async function parsePsdMetadata(filePath) {
 
                 const layer = {
                     name: item.name,
-                    type: isText ? 'text' : 'image',
-                    top: dims.y,
-                    left: dims.x,
-                    width: dims.width,
-                    height: dims.height,
-                    opacity: item.opacity ?? 1,
-                    visible: isVisible
-                };
-
-                if (isText) {
-                    const style = item.text.style || {};
-                    const rawFontName = style.font?.name || 'Arial';
-                    const cleanFontName = rawFontName.replace(/\s+/g, '');
-
-                    layer.text = {
+                    type: item.type === 'text' ? 'text' : 'image',
+                    top: item.top,
+                    left: item.left,
+                    width: item.width,
+                    height: item.height,
+                    opacity: item.opacity,
+                    visible: item.visible,
+                    text: item.text ? {
                         value: item.text.text,
                         font: cleanFontName,
                         size: style.fontSize || 24,

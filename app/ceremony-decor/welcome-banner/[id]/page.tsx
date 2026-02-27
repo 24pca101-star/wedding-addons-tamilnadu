@@ -41,6 +41,8 @@ function EditorContent() {
     sendBackward,
     setOpacity,
     setFontFamily,
+    previewUrl,
+    psdMetadata,
     loadPsdTemplate,
   } = useFabric();
 
@@ -158,9 +160,11 @@ function EditorContent() {
 
         <div className="flex-1 relative overflow-hidden flex flex-col">
           <EditorCanvas
-            width={width}
-            height={height}
+            width={psdMetadata?.width || width}
+            height={psdMetadata?.height || height}
             canvasRef={canvasElementRef}
+            previewUrl={previewUrl}
+            zoom={zoom}
           />
 
           <div className="absolute bottom-6 right-6 flex bg-white shadow-lg rounded-full px-4 py-2 gap-4 items-center border border-gray-100 z-40">

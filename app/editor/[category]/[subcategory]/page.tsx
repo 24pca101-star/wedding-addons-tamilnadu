@@ -42,6 +42,8 @@ function EditorContent() {
         setOpacity,
         setFontFamily,
         loadPsdTemplate,
+        previewUrl,
+        psdMetadata,
     } = useFabric();
 
     const [activePanel, setActivePanel] = useState<"text" | "elements" | "uploads" | "shapes">("text");
@@ -51,18 +53,17 @@ function EditorContent() {
     const subcategory = params?.subcategory as string;
     const template = searchParams.get("template");
 
-    // Detect dimensions from subcategory or template
-    // Default for now, could be improved with a config map
-    let width = 400;
-    let height = 600;
+    // Dynamic dimensions from metadata if available, else canvas, else default
+    const canvasWidth = psdMetadata?.width || canvas?.width || 400;
+    const canvasHeight = psdMetadata?.height || canvas?.height || 600;
 
     useEffect(() => {
         if (canvasElementRef.current && category && subcategory) {
             console.log(`Universal Editor: Initializing Canvas for ${category}/${subcategory}`);
             const c = initCanvas(canvasElementRef.current, {
-                width: width,
-                height: height,
-                backgroundColor: "#ffffff",
+                width: canvasWidth,
+                height: canvasHeight,
+                backgroundColor: "transparent",
             });
 
             if (c && template && template !== "blank") {
@@ -76,7 +77,7 @@ function EditorContent() {
                 disposeCanvas();
             };
         }
-    }, [initCanvas, disposeCanvas, template, loadPsdTemplate, width, height, addSafeArea, category, subcategory]);
+    }, [initCanvas, disposeCanvas, template, loadPsdTemplate, addSafeArea, category, subcategory]);
 
     // Handle key listeners
     useEffect(() => {
@@ -118,7 +119,7 @@ function EditorContent() {
         if (format === "png") {
             exportAsPNG(canvas, `${subcategory || "design"}.png`);
         } else {
-            exportAsPDF(canvas, width, height, `${subcategory || "design"}.pdf`);
+            exportAsPDF(canvas, canvasWidth, canvasHeight, `${subcategory || "design"}.pdf`);
         }
     };
 
@@ -147,9 +148,11 @@ function EditorContent() {
 
                 <div className="flex-1 relative overflow-hidden flex flex-col">
                     <EditorCanvas
-                        width={width}
-                        height={height}
+                        width={canvasWidth}
+                        height={canvasHeight}
                         canvasRef={canvasElementRef}
+                        previewUrl={previewUrl}
+                        zoom={zoom}
                     />
 
                     <div className="absolute bottom-6 right-6 flex bg-white shadow-lg rounded-full px-4 py-2 gap-4 items-center border border-gray-100 z-40">

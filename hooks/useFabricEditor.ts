@@ -18,6 +18,8 @@ export const useFabricEditor = () => {
     const canvasRef = useRef<Canvas | null>(null);
     const [selectedObject, setSelectedObject] = useState<FabricObject | null>(null);
     const [zoom, setZoom] = useState(1);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [psdMetadata, setPsdMetadata] = useState<any>(null);
 
     // History State
     const history = useRef<string[]>([]);
@@ -28,10 +30,11 @@ export const useFabricEditor = () => {
     const isAlive = useRef(false);
 
     const saveHistory = useCallback(() => {
-        if (!canvas || isReloadingHistory.current) return;
+        const currentCanvas = canvasRef.current;
+        if (!currentCanvas || isReloadingHistory.current) return;
 
         try {
-            const json = JSON.stringify(canvas.toJSON());
+            const json = JSON.stringify(currentCanvas.toJSON());
 
             if (historyIndex.current < history.current.length - 1) {
                 history.current = history.current.slice(0, historyIndex.current + 1);
@@ -47,7 +50,7 @@ export const useFabricEditor = () => {
         } catch (err) {
             console.warn("Fabric: History save failed", err);
         }
-    }, [canvas]);
+    }, []);
 
     const undo = useCallback(() => {
         if (!canvas || historyIndex.current <= 0) return;
@@ -270,11 +273,10 @@ export const useFabricEditor = () => {
         if (!canvas) return;
         const newZoom = Math.min(Math.max(0.1, value), 5);
         setZoom(newZoom);
-        canvas.setZoom(newZoom);
     }, [canvas]);
 
     const addSafeArea = useCallback((targetCanvas?: Canvas) => {
-        const c = targetCanvas || canvas;
+        const c = targetCanvas || canvasRef.current;
         if (!c || !c.lowerCanvasEl) return;
 
         const existing = c.getObjects().find((obj: any) => (obj as any).isSafeArea);
@@ -296,7 +298,7 @@ export const useFabricEditor = () => {
         c.add(rect);
         c.sendObjectToBack(rect);
         c.renderAll();
-    }, [canvas]);
+    }, []);
 
     const toggleLock = useCallback(() => {
         if (!canvas) return;
@@ -321,10 +323,42 @@ export const useFabricEditor = () => {
         if (canvasRef.current) {
             console.log("Fabric: Disposing canvas");
             isAlive.current = false;
+
+            // Clean up the DOM element reference so we don't reuse a destroyed canvas
+            const el = canvasRef.current.lowerCanvasEl;
+            if (el) {
+                // @ts-expect-error Custom property
+                delete el.__fabric_canvas;
+            }
+
             canvasRef.current.dispose();
             canvasRef.current = null;
-            setCanvas(null);
+            // Intentionally not calling setCanvas(null) to avoid React dependency loop
         }
+    }, []);
+
+    useEffect(() => {
+        // Load fonts from the PSD service
+        const loadPsdFonts = async () => {
+            try {
+                const response = await fetch("http://localhost:5001/api/psd/fonts");
+                if (!response.ok) return;
+                const data = await response.json();
+                if (data.css) {
+                    let styleTag = document.getElementById("psd-fonts-style");
+                    if (!styleTag) {
+                        styleTag = document.createElement("style");
+                        styleTag.id = "psd-fonts-style";
+                        document.head.appendChild(styleTag);
+                    }
+                    styleTag.innerHTML = data.css;
+                    console.log("Fabric: PSD Fonts loaded dynamically");
+                }
+            } catch (err) {
+                console.warn("Fabric: Could not load extra PSD fonts", err);
+            }
+        };
+        loadPsdFonts();
     }, []);
 
     useEffect(() => {
@@ -345,77 +379,120 @@ export const useFabricEditor = () => {
         };
     }, [canvas, updateSelection, saveHistory]);
 
+    // Track loading to prevent race conditions
+    const latestLoadId = useRef(0);
+
     const loadPsdTemplate = useCallback(async (filename: string, targetCanvas?: Canvas) => {
-        const activeCanvas = targetCanvas || canvas;
+        const activeCanvas = targetCanvas || canvasRef.current;
         if (!activeCanvas) return;
 
+        const loadId = ++latestLoadId.current;
+
         try {
-            console.log(`Fabric: Loading PSD template ${filename}`);
-            const response = await fetch(`http://localhost:5001/parse/${filename}`);
-            if (!response.ok) throw new Error(`Metadata fetch failed: ${response.status}`);
+            console.log(`Fabric: Loading LAYERED PSD template ${filename} (LoadID: ${loadId})`);
+
+            // Fetch from .NET service split endpoint
+            const response = await fetch(`http://localhost:5199/api/Psd/split/${filename}`);
+            if (!response.ok) throw new Error(`Metadata split fetch failed: ${response.status}`);
+
+            // If another load started, abort this one
+            if (loadId !== latestLoadId.current) return;
+
             const metadata = await response.json();
 
-            const previewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
-            const img = await FabricImage.fromURL(previewUrl, {
-                crossOrigin: 'anonymous'
-            });
+            const setupTemplate = async () => {
+                // If another load started, abort
+                if (loadId !== latestLoadId.current) return;
 
-            const setupTemplate = () => {
                 const el = activeCanvas.lowerCanvasEl;
                 if (!el) {
                     if (isAlive.current) setTimeout(setupTemplate, 100);
                     return;
                 }
 
-                activeCanvas.setDimensions({ width: metadata.width, height: metadata.height });
+                // IMPORTANT: Clear the canvas before loading a new template
+                activeCanvas.clear();
 
-                img.set({
-                    scaleX: metadata.width / img.width!,
-                    scaleY: metadata.height / img.height!,
-                    originX: 'left',
-                    originY: 'top'
-                });
-
-                activeCanvas.backgroundImage = img;
+                const baseWidth = 1500; // Increased base width for better initial resolution
+                const normalizationScale = baseWidth / metadata.width;
+                const normalizedWidth = Math.round(metadata.width * normalizationScale);
+                const normalizedHeight = Math.round(metadata.height * normalizationScale);
 
                 const container = document.getElementById("editor-workspace");
-                if (container) {
-                    const padding = 160; // p-20 is 80px on each side (80 * 2)
-                    const availableWidth = container.clientWidth - padding;
-                    const availableHeight = container.clientHeight - padding;
+                let availableWidth = container ? container.clientWidth - 100 : 1200;
+                let availableHeight = container ? container.clientHeight - 100 : 800;
 
-                    if (availableWidth > 0 && availableHeight > 0) {
-                        const scaleX = availableWidth / metadata.width;
-                        const scaleY = availableHeight / metadata.height;
-                        const finalScale = Math.min(scaleX, scaleY, 1) * 0.9; // 90% to give a little breathing room
+                const scaleX = availableWidth / normalizedWidth;
+                const scaleY = availableHeight / normalizedHeight;
+                // Use a more generous fit scale
+                const finalScale = Math.min(scaleX, scaleY, 1) * 0.95;
 
-                        activeCanvas.setDimensions({
-                            width: metadata.width * finalScale,
-                            height: metadata.height * finalScale
-                        });
-                        activeCanvas.setZoom(finalScale);
-                        setZoom(finalScale);
+                activeCanvas.setDimensions({
+                    width: normalizedWidth,
+                    height: normalizedHeight
+                });
+
+                setPsdMetadata({
+                    ...metadata,
+                    width: normalizedWidth,
+                    height: normalizedHeight
+                });
+
+                // 1. RECONSTRUCT DESIGN: Load "Clean Background" first
+                if (metadata.backgroundUrl) {
+                    try {
+                        const bgImg = await FabricImage.fromURL(metadata.backgroundUrl, { crossOrigin: 'anonymous' });
+                        if (loadId === latestLoadId.current) {
+                            // Scale background to fit normalized canvas
+                            bgImg.set({
+                                scaleX: normalizedWidth / bgImg.width!,
+                                scaleY: normalizedHeight / bgImg.height!,
+                                originX: 'left',
+                                originY: 'top',
+                                left: 0,
+                                top: 0,
+                                selectable: false,
+                                evented: false,
+                                // @ts-expect-error - Custom property
+                                isPsdBackground: true
+                            });
+                            activeCanvas.backgroundImage = bgImg;
+                        }
+                    } catch (err) {
+                        console.warn('Fabric: Failed to load background image', err);
                     }
                 }
 
-                metadata.layers.forEach((layer: any) => {
-                    if (layer.type === 'text' && layer.text) {
-                        const text = new Textbox(layer.text.value, {
-                            left: layer.left,
-                            top: layer.top,
-                            width: layer.width,
-                            fontSize: layer.text.size,
-                            fontFamily: layer.text.font || "Inter, Arial, sans-serif",
-                            fill: `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${layer.text.color[3] / 255})`,
-                            textAlign: layer.text.alignment,
-                            psdLayerName: layer.name
-                        });
-                        activeCanvas.add(text);
-                    }
-                });
+                // 2. Iterate ONLY text layers for interactive overlays
+                const textLayers = (metadata.layers || []).filter((l: any) => l.type === 'text');
+                console.log(`Fabric: Reconstructing ${textLayers.length} text overlays...`);
+
+                for (const layer of textLayers) {
+                    if (loadId !== latestLoadId.current) break;
+                    if (!layer.visible || !layer.text) continue;
+
+                    const text = new Textbox(layer.text.value, {
+                        left: layer.left * normalizationScale,
+                        top: layer.top * normalizationScale,
+                        width: (layer.width > 0 ? layer.width : 200) * normalizationScale,
+                        fontSize: (layer.text.size || 40) * normalizationScale,
+                        fontFamily: layer.text.font || "Inter, Arial, sans-serif",
+                        fill: `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${(layer.text.color[3] || 255) / 255})`,
+                        textAlign: 'left',
+                        opacity: layer.opacity / 255,
+                        selectable: true,
+                        evented: true,
+                        editable: true,
+                        // @ts-expect-error - Custom property
+                        isPsdLayer: true,
+                        // @ts-expect-error - Custom property
+                        psdLayerName: layer.name
+                    });
+                    activeCanvas.add(text);
+                }
 
                 activeCanvas.requestRenderAll();
-                setTimeout(() => saveHistory(), 200);
+                saveHistory();
             };
 
             setupTemplate();
@@ -423,7 +500,7 @@ export const useFabricEditor = () => {
         } catch (error) {
             console.error("Failed to load PSD template:", error);
         }
-    }, [canvas, saveHistory]);
+    }, [saveHistory]);
 
     return {
         canvas,
@@ -448,5 +525,7 @@ export const useFabricEditor = () => {
         setOpacity,
         setFontFamily,
         loadPsdTemplate,
+        previewUrl,
+        psdMetadata
     };
 };

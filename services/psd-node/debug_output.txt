@@ -1,0 +1,10 @@
+﻿Parsing D:\INTERNSHIP_PROJECT\wedding-addons-tamilnadu\public\storage\templates\design-2.psd...
+Dimensions: 3556x2000
+Elements: 19
+Text Element 13: "06 . 07 . 2023" at (642, 1591), size: 37.5, width: 684
+Text Element 14: "875 LANTERN LANE
+NORTHVILLE. MI 48167" at (642, 1729), size: 94.45388, width: 664
+Text Element 15: "Katie" at (1185, 934), size: 206.65242, width: 1102
+Text Element 16: "&" at (2104, 653), size: 206.65242, width: 370
+Text Element 17: "Jack" at (1022, 498), size: 206.65242, width: 1046
+Text Element 18: "YOU ARE INVITED TO" at (1755, 331), size: 71.70943, width: 1159

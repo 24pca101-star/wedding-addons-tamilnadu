@@ -44,6 +44,37 @@ namespace PsdEditorApi.Controllers
             }
         }
 
+        [HttpPost("convertToRgb")]
+        public IActionResult ConvertToRgb([FromQuery] string filename)
+        {
+            try
+            {
+                if (!filename.EndsWith(".psd", StringComparison.OrdinalIgnoreCase)) filename += ".psd";
+                string filePath = Path.Combine(_templateDir, filename);
+                if (!System.IO.File.Exists(filePath)) return NotFound("PSD not found");
+
+                string outputPath = filePath.Replace(".psd", "_rgb.psd");
+                
+                using (Aspose.PSD.FileFormats.Psd.PsdImage image = (Aspose.PSD.FileFormats.Psd.PsdImage)Aspose.PSD.Image.Load(filePath))
+                {
+                    if (image.ColorMode == Aspose.PSD.FileFormats.Psd.ColorModes.Cmyk)
+                    {
+                        var options = new Aspose.PSD.ImageOptions.PsdOptions()
+                        {
+                            ColorMode = Aspose.PSD.FileFormats.Psd.ColorModes.Rgb
+                        };
+                        image.Save(outputPath, options);
+                        return Ok(new { converted = true, path = outputPath });
+                    }
+                }
+                return Ok(new { converted = false, message = "Already RGB or not CMYK" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Conversion failed: {ex.Message}");
+            }
+        }
+
         [HttpGet("preview/{filename}")]
         public IActionResult GetPreview(string filename)
         {

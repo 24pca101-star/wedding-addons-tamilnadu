@@ -1,10 +1,5 @@
 import * as fabric from "fabric";
-
-interface LayerEdit {
-    layerName: string;
-    type: "text" | "image";
-    newValue: string;
-}
+import { getCanvasEdits, LayerEdit } from "./canvasEdits";
 
 interface ExportRequest {
     filename: string;
@@ -23,22 +18,7 @@ export async function exportViaPsdService(
     psdFilename: string,
     format: "pdf" | "png" | "psd" = "pdf"
 ) {
-    const objects = canvas.getObjects();
-    const edits: LayerEdit[] = [];
-
-    objects.forEach((obj: any) => {
-        // Only include objects that mapped from a PSD layer
-        if (obj.psdLayerName) {
-            if (obj.type === "textbox") {
-                edits.push({
-                    layerName: obj.psdLayerName,
-                    type: "text",
-                    newValue: obj.text
-                });
-            }
-            // Future: handle image placements/swaps
-        }
-    });
+    const edits = getCanvasEdits(canvas);
 
     const request: ExportRequest = {
         filename: psdFilename,

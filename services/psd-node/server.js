@@ -162,6 +162,66 @@ app.get('/preview/:filename', async (req, res) => {
     }
 });
 
+app.get('/api/psd/templates', async (req, res) => {
+    try {
+        const files = await fs.readdir(TEMPLATES_DIR);
+        const psds = files.filter(f => f.endsWith('.psd') && !f.endsWith('_rgb.psd'));
+        const templates = psds.map(f => ({
+            id: f,
+            name: f.replace('.psd', '').replace(/-/g, ' '),
+            filename: f,
+            preview: `/storage/previews/${f.replace('.psd', '.png')}`
+        }));
+        res.json(templates);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to list templates' });
+    }
+});
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, TEMPLATES_DIR),
+    filename: (req, file, cb) => cb(null, file.originalname)
+});
+const upload = multer({ storage });
+
+app.post('/api/psd/upload', upload.single('psd'), async (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    try {
+        const inputPath = req.file.path;
+        const outputPath = path.join(PREVIEWS_DIR, req.file.originalname.replace('.psd', '.png'));
+
+        // Ensure preview is generated
+        await generateCleanPreview(inputPath, outputPath);
+
+        res.json({
+            success: true,
+            filename: req.file.originalname,
+            previewUrl: `/storage/previews/${req.file.originalname.replace('.psd', '.png')}`
+        });
+    } catch (error) {
+        console.error('Upload failed:', error);
+        res.status(500).json({ error: 'Upload or preview generation failed' });
+    }
+});
+
+app.delete('/api/psd/:filename', async (req, res) => {
+    try {
+        const filename = req.params.filename;
+        const psdPath = path.join(TEMPLATES_DIR, filename);
+        const pngPath = path.join(PREVIEWS_DIR, filename.replace('.psd', '.png'));
+        const rgbPath = path.join(TEMPLATES_DIR, filename.replace('.psd', '_rgb.psd'));
+
+        if (existsSync(psdPath)) await fs.unlink(psdPath);
+        if (existsSync(pngPath)) await fs.unlink(pngPath);
+        if (existsSync(rgbPath)) await fs.unlink(rgbPath);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Deletion failed:', error);
+        res.status(500).json({ error: 'Deletion failed' });
+    }
+});
+
 const DOTNET_SERVICE_URL = process.env.DOTNET_SERVICE_URL || 'http://localhost:5199';
 
 app.post('/generate-mockup', async (req, res) => {

@@ -1,15 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Canvas } from "fabric";
+import { getCanvasEdits } from "@/utils/canvasEdits";
 
 interface MockupPreviewProps {
     psdFilename: string;
     productType: string;
     active: boolean;
+    canvas: Canvas | null;
     onClose: () => void;
 }
 
-export default function MockupPreview({ psdFilename, productType, active, onClose }: MockupPreviewProps) {
+export default function MockupPreview({ psdFilename, productType, active, canvas, onClose }: MockupPreviewProps) {
     const [mockupUrl, setMockupUrl] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
@@ -23,6 +26,7 @@ export default function MockupPreview({ psdFilename, productType, active, onClos
                 body: JSON.stringify({
                     psdFilename,
                     productType,
+                    edits: canvas ? getCanvasEdits(canvas) : [],
                 })
             });
 

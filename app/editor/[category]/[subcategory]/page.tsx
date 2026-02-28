@@ -165,6 +165,7 @@ function EditorContent() {
                         onClose={() => setShowMockup(false)}
                         psdFilename={template || "design-1.psd"}
                         productType={subcategory || "tote-bag"}
+                        canvas={canvas}
                     />
 
                     <div className="absolute bottom-6 right-6 flex bg-white shadow-lg rounded-full px-4 py-2 gap-4 items-center border border-gray-100 z-40">

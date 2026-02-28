@@ -122,7 +122,7 @@ export default function Toolbar({ download, onShowMockup }: Props) {
             <div className="flex items-center gap-3">
                 <button
                     onClick={onShowMockup}
-                    className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-lg font-bold text-sm hover:bg-rose-100 transition-all border border-rose-200"
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-pink-600 to-rose-500 text-white rounded-lg font-bold text-sm hover:from-pink-700 hover:to-rose-600 transition-all shadow-md hover:shadow-lg active:scale-95 border-none"
                 >
                     <span className="text-lg">✨</span>
                     <span>Mockup View</span>

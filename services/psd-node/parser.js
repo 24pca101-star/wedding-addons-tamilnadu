@@ -2,6 +2,7 @@ import fs from 'fs';
 import { readPsd, initializeCanvas } from 'ag-psd';
 import sharp from 'sharp';
 import { createCanvas } from 'canvas';
+import axios from 'axios';
 
 // Initialize with node-canvas
 initializeCanvas(createCanvas);
@@ -22,6 +23,43 @@ function getLayerDimensions(layer) {
 }
 
 /**
+ * Helper to load a PSD with CMYK fallback
+ */
+async function loadPsdWithFallback(filePath, options = {}) {
+    const filename = filePath.split(/[\\/]/).pop();
+    const buffer = fs.readFileSync(filePath);
+
+    try {
+        return readPsd(buffer, options);
+    } catch (e) {
+        if (e.message.includes('Color mode not supported: CMYK')) {
+            console.log(`⚠️ CMYK PSD Detected: ${filename}. Attempting .NET conversion to RGB...`);
+            try {
+                const baseUrl = process.env.DOTNET_SERVICE_URL || 'http://localhost:5199';
+                const convResponse = await axios.post(`${baseUrl}/api/Psd/convertToRgb?filename=${filename}`);
+                if (convResponse.status === 200) {
+                    const rgbPsdPath = filePath.replace('.psd', '_rgb.psd');
+                    const rgbBuffer = fs.readFileSync(rgbPsdPath);
+                    const psd = readPsd(rgbBuffer, options);
+                    console.log(`✅ Successfully loaded converted RGB PSD: ${filename}`);
+                    return psd;
+                } else {
+                    throw new Error(`CMYK conversion service failed: ${convResponse.statusText}`);
+                }
+            } catch (convError) {
+                console.error(`❌ CMYK Fallback Failed for ${filename}:`, convError.message);
+                if (convError.response) {
+                    console.error(`Response Data:`, convError.response.data);
+                }
+                throw e; // Rethrow original CMYK error if fallback fails
+            }
+        } else {
+            throw e;
+        }
+    }
+}
+
+/**
  * Parses a PSD file and extracts layer metadata, exporting image layers as PNGs.
  */
 export async function parsePsdMetadata(filePath, publicDir = '') {
@@ -32,9 +70,7 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
             fs.mkdirSync(layerStorageDir, { recursive: true });
         }
 
-        const buffer = fs.readFileSync(filePath);
-        // Important: Read WITH image data so we can export layers
-        const psd = readPsd(buffer, { skipLayerImageData: false, skipThumbnail: true });
+        const psd = await loadPsdWithFallback(filePath, { skipLayerImageData: false, skipThumbnail: true });
 
         const layers = [];
         const elements = [];
@@ -56,8 +92,19 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
             const isGroup = !!item.children;
             const containsText = hasTextLayers(item);
 
-            // Aggressive Flattening: If it's a group AND it doesn't have any text layers inside, flatten it.
-            const shouldFlatten = isGroup && !containsText;
+            const isTextLayer = (item.text != null);
+            const textValue = item.text?.value || '';
+
+            // Filter out Aspose watermarks
+            if (name.includes('Aspose') || name.includes('Evaluation') ||
+                textValue.includes('Aspose') || textValue.includes('Evaluation only')) {
+                console.log(`🚫 Skipping Watermark Layer: ${name}`);
+                return;
+            }
+
+            // Disable auto-flattening to allow access to all layers within folders as requested.
+            // Only flatten if the layer is not a group.
+            const shouldFlatten = false;
 
             if (isGroup && !shouldFlatten) {
                 console.log(`📂 Entering Group (Open): ${name}`);
@@ -180,8 +227,7 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
  */
 export async function generateCleanPreview(filePath, outputPath) {
     try {
-        const buffer = fs.readFileSync(filePath);
-        const psd = readPsd(buffer);
+        const psd = await loadPsdWithFallback(filePath);
 
         const mainCanvas = createCanvas(psd.width, psd.height);
         const ctx = mainCanvas.getContext('2d');

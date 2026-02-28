@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspose.Drawing" Version="24.9.0" />
     <PackageReference Include="Aspose.PSD" Version="26.2.2" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.24" />
     <PackageReference Include="SkiaSharp" Version="3.119.2" />

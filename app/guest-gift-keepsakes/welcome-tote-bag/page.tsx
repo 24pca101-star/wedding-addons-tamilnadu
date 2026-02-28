@@ -22,34 +22,16 @@ export default function WelcomeToteBag() {
             category="guest-gift-keepsakes"
             subcategory="welcome-tote-bag"
           />
-          <TemplateCard
-            id="design-1.psd"
-            name="Royal Invitation"
-            previewUrl="/storage/previews/design-1.png"
-            category="guest-gift-keepsakes"
-            subcategory="welcome-tote-bag"
-          />
-          <TemplateCard
-            id="design-2.psd"
-            name="Floral Elegance"
-            previewUrl="/storage/previews/design-2.png"
-            category="guest-gift-keepsakes"
-            subcategory="welcome-tote-bag"
-          />
-          <TemplateCard
-            id="design-5.psd"
-            name="Modern Simple"
-            previewUrl="/storage/previews/design-5.png"
-            category="guest-gift-keepsakes"
-            subcategory="welcome-tote-bag"
-          />
-          <TemplateCard
-            id="design-6.psd"
-            name="Traditional Gold"
-            previewUrl="/storage/previews/design-6.png"
-            category="guest-gift-keepsakes"
-            subcategory="welcome-tote-bag"
-          />
+          {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+            <TemplateCard
+              key={i}
+              id={`design-${i}.psd`}
+              name={`Design ${i}`}
+              previewUrl={`/storage/previews/design-${i}.png`}
+              category="guest-gift-keepsakes"
+              subcategory="welcome-tote-bag"
+            />
+          ))}
         </div>
       </div>
     </div>

@@ -12,7 +12,7 @@ type Props = {
 
 export default function EditorCanvas({ width, height, canvasRef, previewUrl, zoom = 1 }: Props) {
     return (
-        <div id="editor-workspace" className="flex-1 flex items-center justify-center bg-[#f0f2f5] overflow-auto p-20 min-h-0 custom-scrollbar">
+        <div id="editor-workspace" className="flex-1 flex items-center justify-center bg-[#f8f9fa] overflow-auto p-10 min-h-0 custom-scrollbar relative">
             <div
                 className="relative shadow-[0_8px_30px_rgb(0,0,0,0.12)] bg-white transition-all duration-300 ease-in-out"
                 style={{

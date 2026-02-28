@@ -420,6 +420,7 @@ export const useFabricEditor = () => {
                 }
 
                 activeCanvas.clear();
+<<<<<<< HEAD
 
                 const baseWidth = 1500; // Increased base width for better initial resolution
                 const normalizationScale = baseWidth / metadata.width;
@@ -458,15 +459,88 @@ export const useFabricEditor = () => {
                                 isPsdBackground: true
                             });
                             activeCanvas.backgroundImage = bgImg;
+=======
+                activeCanvas.backgroundColor = 'white';
+
+                // --- 1. Calculate Target Scale (Fit to Content) ---
+                const workspace = document.getElementById('editor-workspace');
+                let targetScale = 1;
+                if (workspace) {
+                    const padding = 60; // Padding around canvas
+                    const availableWidth = workspace.clientWidth - padding;
+                    const availableHeight = workspace.clientHeight - padding;
+
+                    const scaleX = availableWidth / metadata.width;
+                    const scaleY = availableHeight / metadata.height;
+                    targetScale = Math.min(scaleX, scaleY, 1); // Scale down to fit, but don't scale up
+                }
+
+                const scaledWidth = Math.round(metadata.width * targetScale);
+                const scaledHeight = Math.round(metadata.height * targetScale);
+
+                activeCanvas.setDimensions({ width: scaledWidth, height: scaledHeight });
+                handleZoom(1); // Keep zoom at 100%
+
+                // 2. Maintain preview state but avoid stationary background ghosting
+                const templatePreviewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
+                setPreviewUrl(templatePreviewUrl);
+
+                // 3. Load layers with scaling
+                let layersProcessed = 0;
+                for (const layer of metadata.layers) {
+                    if (loadId !== latestLoadId.current) break;
+                    try {
+                        const scaledLeft = layer.left * targetScale;
+                        const scaledTop = layer.top * targetScale;
+                        const scaledLayerWidth = (layer.width || 200) * targetScale;
+
+                        if (layer.type === 'text' && layer.text) {
+                            const text = new Textbox(layer.text.value, {
+                                left: scaledLeft,
+                                top: scaledTop,
+                                width: scaledLayerWidth,
+                                fontSize: (layer.text.size || 24) * targetScale,
+                                fontFamily: layer.text.font || "Inter, Arial, sans-serif",
+                                fill: layer.text.color ? `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${(layer.text.color[3] || 255) / 255})` : "#000000",
+                                textAlign: layer.text.alignment || "left",
+                                opacity: layer.opacity ?? 1,
+                                visible: layer.visible ?? true,
+                                psdLayerName: layer.name
+                            });
+                            activeCanvas.add(text);
+                            layersProcessed++;
+                        } else if (layer.type === 'image' && layer.imageUrl) {
+                            const imgUrl = `http://localhost:5001${layer.imageUrl}`;
+                            const layerImg = await FabricImage.fromURL(imgUrl, { crossOrigin: 'anonymous' });
+                            if (loadId === latestLoadId.current) {
+                                layerImg.set({
+                                    left: scaledLeft,
+                                    top: scaledTop,
+                                    scaleX: targetScale,
+                                    scaleY: targetScale,
+                                    opacity: layer.opacity ?? 1,
+                                    visible: layer.visible ?? true,
+                                    selectable: true,
+                                    psdLayerName: layer.name
+                                });
+                                activeCanvas.add(layerImg);
+                                layersProcessed++;
+                            }
+>>>>>>> c51d973 (mockup button)
                         }
                     } catch (err) {
                         console.warn('Fabric: Failed to load background image', err);
                     }
                 }
 
+<<<<<<< HEAD
                 // 2. Iterate ONLY text layers for interactive overlays
                 const textLayers = (metadata.layers || []).filter((l: any) => l.type === 'text');
                 console.log(`Fabric: Reconstructing ${textLayers.length} text overlays...`);
+=======
+                console.log(`Fabric: Processed ${layersProcessed} layers at ${Math.round(targetScale * 100)}% scale`);
+                activeCanvas.requestRenderAll();
+>>>>>>> c51d973 (mockup button)
 
                 for (const layer of textLayers) {
                     if (loadId !== latestLoadId.current) break;

@@ -29,8 +29,13 @@ namespace PsdEditorApi.Controllers
         {
             try
             {
+                System.IO.File.AppendAllText("export_log.txt", $"[{DateTime.Now}] Export requested for {request.Filename}\n");
                 string filePath = Path.Combine(_templateDir, request.Filename);
-                if (!System.IO.File.Exists(filePath)) return NotFound("PSD template not found");
+                if (!System.IO.File.Exists(filePath)) 
+                {
+                    System.IO.File.AppendAllText("export_log.txt", $"[{DateTime.Now}] File not found: {filePath}\n");
+                    return NotFound("PSD template not found");
+                }
 
                 var options = new ExportOptions
                 {
@@ -54,10 +59,12 @@ namespace PsdEditorApi.Controllers
                 string contentType = request.Format?.ToLower() == "pdf" ? "application/pdf" : "image/png";
                 string downloadName = $"export.{ (request.Format?.ToLower() == "pdf" ? "pdf" : "png") }";
 
+                System.IO.File.AppendAllText("export_log.txt", $"[{DateTime.Now}] Export successful for {request.Filename}\n");
                 return File(bytes, contentType, downloadName);
             }
             catch (Exception ex)
             {
+                System.IO.File.AppendAllText("export_log.txt", $"[{DateTime.Now}] Export failed for {request.Filename}: {ex.Message}\n{ex.StackTrace}\n");
                 return StatusCode(500, $"Export failed: {ex.Message}");
             }
         }

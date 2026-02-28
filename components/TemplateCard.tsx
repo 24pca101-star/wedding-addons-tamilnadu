@@ -7,9 +7,10 @@ interface TemplateCardProps {
     previewUrl: string;
     category: string;
     subcategory: string;
+    onDelete?: (id: string) => void;
 }
 
-export default function TemplateCard({ id, name, previewUrl, category, subcategory }: TemplateCardProps) {
+export default function TemplateCard({ id, name, previewUrl, category, subcategory, onDelete }: TemplateCardProps) {
     return (
         <Link
             href={`/editor/${category}/${subcategory}?template=${id}`}
@@ -28,8 +29,25 @@ export default function TemplateCard({ id, name, previewUrl, category, subcatego
                     <h3 className="text-sm font-bold text-gray-800 truncate">{name}</h3>
                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{subcategory}</p>
                 </div>
-                <div className="ml-4 flex-shrink-0 w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center text-pink-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-xl">→</span>
+                <div className="flex items-center gap-2">
+                    {onDelete && (
+                        <button
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (confirm(`Are you sure you want to delete ${name}?`)) {
+                                    onDelete(id);
+                                }
+                            }}
+                            className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors"
+                            title="Delete Template"
+                        >
+                            <span className="text-lg">×</span>
+                        </button>
+                    )}
+                    <div className="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center text-pink-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-xl">→</span>
+                    </div>
                 </div>
             </div>
         </Link>

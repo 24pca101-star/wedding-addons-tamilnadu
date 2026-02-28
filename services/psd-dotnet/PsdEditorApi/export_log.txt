@@ -1,0 +1,48 @@
+[28-02-2026 12:21:09] Export requested for design-1.psd
+[28-02-2026 12:21:09] Export failed for design-1.psd: Could not load file or assembly 'Aspose.Drawing, Version=24.9.0.0, Culture=neutral, PublicKeyToken=716fcc553a201e56'. The system cannot find the file specified.
+   at Aspose.PSD.Image.(StreamContainer , LoadOptions )
+   at Aspose.PSD.Image.Load(String filePath)
+   at PsdEditorApi.Services.BannerEditorService.Export(String filePath, ExportOptions options) in C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\Services\BannerEditorService.cs:line 144
+   at PsdEditorApi.Controllers.ExportController.Export(ExportRequest request) in C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\Controllers\ExportController.cs:line 57
+[28-02-2026 12:25:02] Export requested for design-1.psd
+[28-02-2026 12:25:06] Export successful for design-1.psd
+[28-02-2026 13:15:23] Export requested for design-1.psd
+[28-02-2026 13:15:24] Export failed for design-1.psd: Update text is supported only in licensed mode
+   at v.(Exception )
+   at v.(Object )
+   at v.(v ,  )
+   at v.(Boolean )
+--- End of stack trace from previous location ---
+   at v.(Exception )
+   at v.(Object )
+   at v.(Object , UInt32 )
+   at v.(Boolean )
+   at v.(Object[] , Type[] , Type[] , Object[] )
+   at v.(Stream , String , Object[] )
+   at .UpdateText(String , Point , Single , Color )
+   at Aspose.PSD.FileFormats.Psd.Layers.TextLayer.UpdateText(String text)
+   at PsdEditorApi.Services.BannerEditorService.Export(String filePath, ExportOptions options) in C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\Services\BannerEditorService.cs:line 163
+   at PsdEditorApi.Controllers.ExportController.Export(ExportRequest request) in C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\Controllers\ExportController.cs:line 57
+[28-02-2026 13:15:35] Export requested for design-1.psd
+[28-02-2026 13:15:35] Export failed for design-1.psd: The process cannot access the file 'C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\export_log.txt' because it is being used by another process.
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.CreateFile(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options)
+   at Microsoft.Win32.SafeHandles.SafeFileHandle.Open(String fullPath, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize, Nullable`1 unixCreateMode)
+   at System.IO.File.OpenHandle(String path, FileMode mode, FileAccess access, FileShare share, FileOptions options, Int64 preallocationSize)
+   at System.IO.File.WriteToFile(String path, FileMode mode, String contents, Encoding encoding)
+   at PsdEditorApi.Controllers.ExportController.Export(ExportRequest request) in C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\Controllers\ExportController.cs:line 32
+[28-02-2026 13:15:36] Export failed for design-1.psd: Update text is supported only in licensed mode
+   at v.(Exception )
+   at v.(Object )
+   at v.(v ,  )
+   at v.(Boolean )
+--- End of stack trace from previous location ---
+   at v.(Exception )
+   at v.(Object )
+   at v.(Object , UInt32 )
+   at v.(Boolean )
+   at v.(Object[] , Type[] , Type[] , Object[] )
+   at v.(Stream , String , Object[] )
+   at .UpdateText(String , Point , Single , Color )
+   at Aspose.PSD.FileFormats.Psd.Layers.TextLayer.UpdateText(String text)
+   at PsdEditorApi.Services.BannerEditorService.Export(String filePath, ExportOptions options) in C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\Services\BannerEditorService.cs:line 163
+   at PsdEditorApi.Controllers.ExportController.Export(ExportRequest request) in C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\Controllers\ExportController.cs:line 57

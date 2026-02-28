@@ -39,13 +39,29 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-"backend/node_modules" 
-"backend/node_modules" 
+# Node
+node_modules/
+backend/node_modules/
+.next/
 
-# .NET
-bin/
-obj/
+# Logs
+*.log
+node_err.log
+node_out.log
+dotnet_err.log
+dotnet_out.log
+build_errors.txt
+
+# .NET build files
+**/bin/
+**/obj/
+
+# Visual Studio
 *.user
 *.suo
 *.userosscache
 *.sln.docstates
+
+# OS files
+.DS_Store
+Thumbs.db

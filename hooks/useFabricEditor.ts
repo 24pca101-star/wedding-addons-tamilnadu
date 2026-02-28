@@ -401,7 +401,7 @@ export const useFabricEditor = () => {
         try {
             console.log(`Fabric: Loading LAYERED PSD template ${filename} (LoadID: ${loadId})`);
 
-            const response = await fetch(`http://localhost:5001/parse/${filename}`);
+            const response = await fetch(`http://localhost:5001/api/psd/layers/${filename}`);
             if (!response.ok) throw new Error(`Metadata fetch failed: ${response.status}`);
 
             if (loadId !== latestLoadId.current) return;
@@ -454,7 +454,6 @@ export const useFabricEditor = () => {
                                 top: 0,
                                 selectable: false,
                                 evented: false,
-                                // @ts-expect-error - Custom property
                                 isPsdBackground: true
                             });
                             activeCanvas.backgroundImage = bgImg;
@@ -484,9 +483,7 @@ export const useFabricEditor = () => {
                         selectable: true,
                         evented: true,
                         editable: true,
-                        // @ts-expect-error - Custom property
                         isPsdLayer: true,
-                        // @ts-expect-error - Custom property
                         psdLayerName: layer.name
                     });
                     activeCanvas.add(text);

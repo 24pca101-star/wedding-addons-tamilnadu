@@ -11,6 +11,8 @@ import { createCanvas } from 'canvas';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import opentype from 'opentype.js';
+import axios from 'axios';
+import sharp from 'sharp';
 
 dotenv.config();
 
@@ -68,14 +70,17 @@ app.use((req, res, next) => {
 
 // Serve fonts directory statically
 app.use('/fonts', express.static(FONTS_DIR));
-// Serve previews directory statically for layered access
+
+// Serve storage directory (previews, layers)
+const STORAGE_DIR = path.resolve(__dirname, '../../public/storage');
+app.use('/storage', express.static(STORAGE_DIR));
+
+// Keep /previews for backward compatibility if needed, or remove if everything uses /storage
 app.use('/previews', express.static(PREVIEWS_DIR));
 
 app.get('/api/psd/fonts', (req, res) => {
     try {
         const fontMap = getFontMap(FONTS_DIR);
-        // Assuming the app runs on the same host or we use a relative URL
-        // But for absolute clarity, we can build the base URL
         const protocol = req.protocol;
         const host = req.get('host');
         const baseUrl = `${protocol}://${host}`;
@@ -97,7 +102,23 @@ app.get('/api/psd/layers/:filename', async (req, res) => {
         const filePath = path.join(TEMPLATES_DIR, filename);
         if (!existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
 
-        const metadata = await parsePsdMetadata(filePath);
+        const PUBLIC_DIR = path.resolve(process.cwd(), '../../public');
+        const metadata = await parsePsdMetadata(filePath, PUBLIC_DIR);
+        res.json(metadata);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Parsing failed' });
+    }
+});
+
+app.get('/parse/:filename', async (req, res) => {
+    try {
+        const filename = req.params.filename.endsWith('.psd') ? req.params.filename : `${req.params.filename}.psd`;
+        const filePath = path.join(TEMPLATES_DIR, filename);
+        if (!existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+
+        const PUBLIC_DIR = path.resolve(process.cwd(), '../../public');
+        const metadata = await parsePsdMetadata(filePath, PUBLIC_DIR);
         res.json(metadata);
     } catch (error) {
         console.error(error);
@@ -116,8 +137,6 @@ app.get('/preview/:filename', async (req, res) => {
 
         if (!existsSync(inputPath)) return res.status(404).json({ error: 'PSD File not found' });
 
-        // INTELLIGENT CACHING:
-        // Check if PNG exists and is newer than PSD
         let needsGeneration = true;
         try {
             const psdStats = await fs.stat(inputPath);
@@ -127,7 +146,7 @@ app.get('/preview/:filename', async (req, res) => {
                 console.log(`🚀 Serving CACHED preview for ${psdFilename}`);
             }
         } catch (e) {
-            // PNG doesn't exist, will generate
+            // PNG doesn't exist
         }
 
         if (needsGeneration) {
@@ -135,7 +154,6 @@ app.get('/preview/:filename', async (req, res) => {
             await generateCleanPreview(inputPath, outputPath);
         }
 
-        // Explicitly set CORS to avoid browser issues
         res.setHeader('Access-Control-Allow-Origin', '*');
         res.sendFile(outputPath);
     } catch (error) {
@@ -143,12 +161,6 @@ app.get('/preview/:filename', async (req, res) => {
         res.status(500).json({ error: 'Preview generation failed' });
     }
 });
-
-<<<<<<< HEAD
-app.get('/health', (req, res) => res.json({ status: 'ok', service: 'psd-service-node' }));
-=======
-const axios = require('axios');
-const sharp = require('sharp');
 
 const DOTNET_SERVICE_URL = process.env.DOTNET_SERVICE_URL || 'http://localhost:5199';
 
@@ -158,7 +170,6 @@ app.post('/generate-mockup', async (req, res) => {
             responseType: 'arraybuffer'
         });
 
-        // Use sharp to optimize/resize if requested, or just return as is
         let imageBuffer = Buffer.from(response.data);
 
         if (req.query.width || req.query.height) {
@@ -182,7 +193,6 @@ app.post('/generate-mockup', async (req, res) => {
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'psd-service-node' });
 });
->>>>>>> 022a1ea95d5e718c5808b2d21ea4cee5331e4891
 
 app.listen(PORT, () => {
     console.log(`🚀 PSD Node Service (ESM) running on http://localhost:${PORT}`);

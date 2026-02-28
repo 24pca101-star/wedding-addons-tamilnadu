@@ -21,51 +21,120 @@ function getLayerDimensions(layer) {
     return { x: left, y: top, width, height };
 }
 
-export async function parsePsdMetadata(filePath) {
+/**
+ * Parses a PSD file and extracts layer metadata, exporting image layers as PNGs.
+ */
+export async function parsePsdMetadata(filePath, publicDir = '') {
     try {
+        const filename = filePath.split(/[\\/]/).pop();
+        const layerStorageDir = publicDir ? `${publicDir}/storage/layers/${filename}` : '';
+        if (layerStorageDir && !fs.existsSync(layerStorageDir)) {
+            fs.mkdirSync(layerStorageDir, { recursive: true });
+        }
+
         const buffer = fs.readFileSync(filePath);
-        // Skip image data for speed, but keep text/metadata
-        const psd = readPsd(buffer, { skipLayerImageData: true, skipThumbnail: true });
+        // Important: Read WITH image data so we can export layers
+        const psd = readPsd(buffer, { skipLayerImageData: false, skipThumbnail: true });
 
         const layers = [];
         const elements = [];
+        let layerCounter = 0;
 
-        // We use the PSD document dimensions as the canonical size
-        const docWidth = psd.width;
-        const docHeight = psd.height;
+        /**
+         * Recursively checks if a node or any of its children contains a text layer.
+         */
+        function hasTextLayers(node) {
+            if (node.text != null) return true;
+            if (node.children) {
+                return node.children.some(child => hasTextLayers(child));
+            }
+            return false;
+        }
 
-        function processLayers(item, parentPath = '', parentVisible = true) {
-            const isVisible = parentVisible && item.visible !== false;
+        async function processLayers(item) {
+            const name = item.name || 'Unnamed Layer';
+            const isGroup = !!item.children;
+            const containsText = hasTextLayers(item);
 
-            if (item.children) {
-                // PSD children are ordered TOP to BOTTOM in ag-psd.
-                item.children.forEach(child => processLayers(child, parentPath + (item.name || 'Group') + '/', isVisible));
+            // Aggressive Flattening: If it's a group AND it doesn't have any text layers inside, flatten it.
+            const shouldFlatten = isGroup && !containsText;
+
+            if (isGroup && !shouldFlatten) {
+                console.log(`📂 Entering Group (Open): ${name}`);
+                // ag-psd children are ordered TOP to BOTTOM.
+                for (const child of item.children) {
+                    await processLayers(child);
+                }
             } else {
+                const layerIndex = layerCounter++;
+                let layerImageUrl = null;
+                const isText = (item.text != null);
                 const dims = getLayerDimensions(item);
-                const isText = item.text != null;
+
+                console.log(`📄 Processing Layer: ${name} [Type: ${isText ? 'Text' : (shouldFlatten ? 'Flattened Group' : 'Image')}] [Visible: ${item.visible !== false}]`);
+
+                // Export image/flattened group layers
+                let canvasToExport = item.canvas;
+
+                // If it's a flattened group, we MUST compose it (ag-psd group nodes rarely have a pre-rendered canvas)
+                if (shouldFlatten) {
+                    console.log(`🛠️ Composing Flattened Group: ${name}`);
+                    const groupCanvas = createCanvas(psd.width, psd.height);
+                    const gCtx = groupCanvas.getContext('2d');
+
+                    function compose(node) {
+                        if (node.children) {
+                            // Bottom to Top for correct layering
+                            for (let i = node.children.length - 1; i >= 0; i--) compose(node.children[i]);
+                        } else if (node.canvas && node.visible !== false) {
+                            gCtx.globalAlpha = node.opacity ?? 1;
+                            gCtx.drawImage(node.canvas, Math.round(node.left || 0), Math.round(node.top || 0));
+                        }
+                    }
+                    compose(item);
+
+                    // Crop to bounding box (if it exists)
+                    if (dims.width > 0 && dims.height > 0) {
+                        const finalCanvas = createCanvas(dims.width, dims.height);
+                        const fCtx = finalCanvas.getContext('2d');
+                        fCtx.drawImage(groupCanvas, -dims.x, -dims.y);
+                        canvasToExport = finalCanvas;
+                    } else {
+                        // Fallback to full PSD canvas if dimensions are weird
+                        canvasToExport = groupCanvas;
+                    }
+                }
+
+                if (canvasToExport && layerStorageDir) {
+                    const layerId = `${layerIndex}.png`;
+                    const layerPath = `${layerStorageDir}/${layerId}`;
+                    const pngBuffer = canvasToExport.toBuffer('image/png');
+                    await sharp(pngBuffer).toFile(layerPath);
+                    layerImageUrl = `/storage/layers/${filename}/${layerId}`;
+                }
 
                 const layer = {
-                    name: item.name,
-                    type: item.type === 'text' ? 'text' : 'image',
-                    top: item.top,
-                    left: item.left,
-                    width: item.width,
-                    height: item.height,
-                    opacity: item.opacity,
-                    visible: item.visible,
-                    text: item.text ? {
+                    name: name,
+                    type: isText ? 'text' : 'image',
+                    top: dims.y,
+                    left: dims.x,
+                    width: dims.width,
+                    height: dims.height,
+                    opacity: item.opacity ?? 1,
+                    visible: item.visible !== false,
+                    imageUrl: layerImageUrl,
+                    isFlattened: shouldFlatten,
+                    text: isText ? {
                         value: item.text.text,
-                        font: cleanFontName,
-                        size: style.fontSize || 24,
-                        color: style.fillColor ?
-                            `rgb(${Math.round(style.fillColor.r)}, ${Math.round(style.fillColor.g)}, ${Math.round(style.fillColor.b)})` :
-                            '#000000',
-                        alignment: style.justification || 'left'
-                    };
-                }
+                        font: item.text.fonts?.[0]?.name || 'Inter',
+                        size: item.text.fonts?.[0]?.size || 24,
+                        color: item.text.colors?.[0] || [0, 0, 0, 255],
+                        alignment: item.text.justification || 'left'
+                    } : null
+                };
                 layers.push(layer);
 
-                // Elements array for modern frontend
+                // Elements array for alternative frontend formats
                 elements.push({
                     id: `psd-${elements.length}`,
                     type: layer.type,
@@ -80,20 +149,23 @@ export async function parsePsdMetadata(filePath) {
                     color: layer.text?.color,
                     textAlign: layer.text?.alignment,
                     opacity: layer.opacity,
-                    visible: layer.visible
+                    visible: layer.visible,
+                    isFlattened: shouldFlatten
                 });
             }
         }
 
         if (psd.children) {
-            psd.children.forEach(child => processLayers(child, '', true));
+            for (const child of psd.children) {
+                await processLayers(child);
+            }
         }
 
         return {
-            width: docWidth,
-            height: docHeight,
-            realWidth: docWidth, // Clip to document
-            realHeight: docHeight,
+            width: psd.width,
+            height: psd.height,
+            realWidth: psd.width,
+            realHeight: psd.height,
             layers,
             elements
         };
@@ -105,18 +177,15 @@ export async function parsePsdMetadata(filePath) {
 
 /**
  * Generates a high-quality "Clean" preview by iterating layers BOTTOM-TO-TOP.
- * This restores the "Yesterday" quality while removing ghosting.
  */
 export async function generateCleanPreview(filePath, outputPath) {
     try {
         const buffer = fs.readFileSync(filePath);
-        // We MUST NOT skip layer data
         const psd = readPsd(buffer);
 
         const mainCanvas = createCanvas(psd.width, psd.height);
         const ctx = mainCanvas.getContext('2d');
 
-        // Start with a clean white background
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, psd.width, psd.height);
 
@@ -126,18 +195,14 @@ export async function generateCleanPreview(filePath, outputPath) {
             const isVisible = parentVisible && item.visible !== false;
 
             if (item.children) {
-                // ag-psd children are TOP to BOTTOM.
-                // To draw correctly, we must iterate REVERSE (BOTTOM to TOP).
+                // To draw correctly, iterate REVERSE (BOTTOM to TOP).
                 for (let i = item.children.length - 1; i >= 0; i--) {
                     drawLayers(item.children[i], isVisible);
                 }
             } else {
                 const isText = (item.text != null);
-
-                // Only draw non-text, visible, image-containing layers
                 if (!isText && isVisible && item.canvas) {
                     ctx.globalAlpha = item.opacity ?? 1;
-                    // Draw at global PSD coordinates
                     ctx.drawImage(item.canvas, Math.round(item.left || 0), Math.round(item.top || 0));
                 }
             }
@@ -149,14 +214,12 @@ export async function generateCleanPreview(filePath, outputPath) {
         const pngBuffer = mainCanvas.toBuffer('image/png');
         await sharp(pngBuffer).toFile(outputPath);
         console.log(`✅ Robust Clean Preview generated at ${outputPath}`);
-
     } catch (error) {
         console.error(`Clean Preview Generation Failed:`, error.message);
         throw error;
     }
 }
 
-// Simple preview
 export async function generatePreview(filePath, outputPath) {
     try {
         const buffer = fs.readFileSync(filePath);
@@ -169,7 +232,6 @@ export async function generatePreview(filePath, outputPath) {
         if (psd.canvas) {
             ctx.drawImage(psd.canvas, 0, 0);
         } else {
-            // Fallback to manual drawing if composite missing
             function drawAll(item) {
                 if (item.children) {
                     for (let i = item.children.length - 1; i >= 0; i--) drawAll(item.children[i]);

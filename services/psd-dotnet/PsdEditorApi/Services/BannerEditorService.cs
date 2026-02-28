@@ -2,8 +2,8 @@ using Aspose.PSD;
 using Aspose.PSD.FileFormats.Psd;
 using Aspose.PSD.FileFormats.Psd.Layers;
 using Aspose.PSD.ImageOptions;
+using Aspose.PSD.ImageLoadOptions;
 using System.IO;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace PsdEditorApi.Services
@@ -76,64 +76,90 @@ namespace PsdEditorApi.Services
 
             using (PsdImage image = (PsdImage)Image.Load(filePath))
             {
+                Console.WriteLine($"[DEBUG] SplitLayers: Processing {image.Layers.Length} layers from {fileName}");
                 var layers = new List<LayerMetadata>();
                 
-                // 1. Traverse layers to extract Text Metadata
-                foreach (var layer in image.Layers)
+                // Traverse layers from bottom to top (Aspose layers are top to bottom, so iterate 0 to Length-1 to add bottom layers first in Fabric)
+                for (int i = 0; i < image.Layers.Length; i++)
                 {
+                    var layer = image.Layers[i];
+                    
+                    // Visibility Check: Skip if the layer itself is hidden
+                    if (!layer.IsVisible) continue;
+                    
+                    // Skip hidden or empty layers
+                    if (layer.Width <= 0 || layer.Height <= 0) continue;
+
+                    // Skip known Aspose evaluation watermark layers or placeholder layers if they clobber the design
+                    if (layer.Name != null && (layer.Name.Contains("Evaluation") || layer.Name.Contains("Aspose"))) continue;
+
+                    // Skip LayerGroup itself because we want the individual layers inside. 
+                    // Aspose's image.Layers is already flat and includes all sub-layers.
+                    if (layer is LayerGroup) continue;
+
+                    var layerInfo = new LayerMetadata
+                    {
+                        Name = layer.Name ?? $"Layer_{i}",
+                        Type = layer is TextLayer ? "text" : "image",
+                        Top = layer.Top,
+                        Left = layer.Left,
+                        Height = layer.Height,
+                        Width = layer.Width,
+                        Opacity = layer.Opacity,
+                        Visible = true // We already filtered out-of-view ones
+                    };
+
                     if (layer is TextLayer textLayer)
                     {
-                        layers.Add(new LayerMetadata
+                        layerInfo.Text = GetTextProperties(textLayer);
+                    }
+                    else if (layerInfo.Visible && layer.Width > 0 && layer.Height > 0)
+                    {
+                        // Export this specific layer as a separate PNG
+                        string layerFileName = $"layer_{i}.png";
+                        string layerFilePath = Path.Combine(psdOutputDir, layerFileName);
+                        
+                        try 
                         {
-                            Name = layer.Name,
-                            Type = "text",
-                            Top = layer.Top,
-                            Left = layer.Left,
-                            Height = layer.Height,
-                            Width = layer.Width,
-                            Opacity = layer.Opacity,
-                            Visible = layer.IsVisible,
-                            Text = GetTextProperties(textLayer)
-                        });
+                            layerInfo.LayerUrl = $"{baseUrl}/{fileName}/{layerFileName}";
+
+                            // CACHING: Only render and save if it doesn't already exist
+                            if (!File.Exists(layerFilePath))
+                            {
+                                // The "Graphics Compositor": explicitly paint each layer onto a tight transparent canvas.
+                                // This ensures complex Photoshop effects and fill layers render perfectly.
+                                using (var tightImg = new PsdImage(layer.Width, layer.Height))
+                                {
+                                    var graphics = new Aspose.PSD.Graphics(tightImg);
+                                    graphics.Clear(Color.Transparent);
+                                    
+                                    // Draw the layer from its internal 0,0 origin to the canvas
+                                    graphics.DrawImage(layer, new Rectangle(0, 0, layer.Width, layer.Height), new Rectangle(0, 0, layer.Width, layer.Height), GraphicsUnit.Pixel);
+
+                                    tightImg.Save(layerFilePath, new PngOptions() 
+                                    { 
+                                        ColorType = Aspose.PSD.FileFormats.Png.PngColorType.TruecolorWithAlpha 
+                                    });
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[ERROR] Failed to export layer {i} ({layer.Name}): {ex.Message}");
+                            layerInfo.Visible = false; 
+                        }
                     }
+
+                    layers.Add(layerInfo);
                 }
 
-                // 2. Generate "Clean" Background Image
-                string bgFileName = "background.png";
-                string bgPath = Path.Combine(psdOutputDir, bgFileName);
-
-                // Hide all text layers before saving the composite preview
-                var textLayerStatuses = new Dictionary<Layer, bool>();
-                foreach (var layer in image.Layers)
-                {
-                    if (layer is TextLayer)
-                    {
-                        textLayerStatuses[layer] = layer.IsVisible;
-                        layer.IsVisible = false;
-                    }
-                }
-
-                try 
-                {
-                    image.Save(bgPath, new PngOptions() 
-                    { 
-                        ColorType = Aspose.PSD.FileFormats.Png.PngColorType.TruecolorWithAlpha 
-                    });
-                }
-                finally 
-                {
-                    // Restore original visibility statuses (not strictly needed but good practice)
-                    foreach (var kvp in textLayerStatuses)
-                    {
-                        kvp.Key.IsVisible = kvp.Value;
-                    }
-                }
+                Console.WriteLine($"[DEBUG] SplitLayers: Returning {layers.Count} layers metadata.");
 
                 return new PsdMetadata
                 {
                     Width = image.Width,
                     Height = image.Height,
-                    BackgroundUrl = $"{baseUrl}/{fileName}/{bgFileName}",
+                    BackgroundUrl = null, // No longer using a single background
                     Layers = layers
                 };
             }

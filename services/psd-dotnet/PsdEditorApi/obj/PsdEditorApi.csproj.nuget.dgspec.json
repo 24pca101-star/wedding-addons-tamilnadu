@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\INTERNSHIP_PROJECT\\wedding-addons-tamilnadu\\services\\psd-dotnet\\PsdEditorApi\\PsdEditorApi.csproj": {}
+    "d:\\INTERNSHIP_PROJECT\\wedding-addons-tamilnadu\\services\\psd-dotnet\\PsdEditorApi\\PsdEditorApi.csproj": {}
   },
   "projects": {
-    "D:\\INTERNSHIP_PROJECT\\wedding-addons-tamilnadu\\services\\psd-dotnet\\PsdEditorApi\\PsdEditorApi.csproj": {
+    "d:\\INTERNSHIP_PROJECT\\wedding-addons-tamilnadu\\services\\psd-dotnet\\PsdEditorApi\\PsdEditorApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\INTERNSHIP_PROJECT\\wedding-addons-tamilnadu\\services\\psd-dotnet\\PsdEditorApi\\PsdEditorApi.csproj",
+        "projectUniqueName": "d:\\INTERNSHIP_PROJECT\\wedding-addons-tamilnadu\\services\\psd-dotnet\\PsdEditorApi\\PsdEditorApi.csproj",
         "projectName": "PsdEditorApi",
-        "projectPath": "D:\\INTERNSHIP_PROJECT\\wedding-addons-tamilnadu\\services\\psd-dotnet\\PsdEditorApi\\PsdEditorApi.csproj",
+        "projectPath": "d:\\INTERNSHIP_PROJECT\\wedding-addons-tamilnadu\\services\\psd-dotnet\\PsdEditorApi\\PsdEditorApi.csproj",
         "packagesPath": "C:\\Users\\GuruPadma\\.nuget\\packages\\",
-        "outputPath": "D:\\INTERNSHIP_PROJECT\\wedding-addons-tamilnadu\\services\\psd-dotnet\\PsdEditorApi\\obj\\",
+        "outputPath": "d:\\INTERNSHIP_PROJECT\\wedding-addons-tamilnadu\\services\\psd-dotnet\\PsdEditorApi\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

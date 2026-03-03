@@ -114,22 +114,25 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
                             });
                             activeCanvas.add(text);
                             layersProcessed++;
-                        } else if (layer.type === 'image' && layer.imageUrl) {
-                            const imgUrl = `http://localhost:5001${layer.imageUrl}`;
-                            const layerImg = await FabricImage.fromURL(imgUrl, { crossOrigin: 'anonymous' });
-                            if (loadId === latestLoadId.current) {
-                                layerImg.set({
-                                    left: scaledLeft,
-                                    top: scaledTop,
-                                    scaleX: targetScale,
-                                    scaleY: targetScale,
-                                    opacity: layer.opacity ?? 1,
-                                    visible: layer.visible ?? true,
-                                    selectable: true,
-                                    psdLayerName: layer.name
-                                });
-                                activeCanvas.add(layerImg);
-                                layersProcessed++;
+                        } else {
+                            const imageUrl = layer.imageUrl || layer.layerUrl || layer.LayerUrl;
+                            if (layer.type === 'image' && imageUrl) {
+                                const imgUrl = imageUrl.startsWith('http') ? imageUrl : `http://localhost:5001${imageUrl}`;
+                                const layerImg = await FabricImage.fromURL(imgUrl, { crossOrigin: 'anonymous' });
+                                if (loadId === latestLoadId.current) {
+                                    layerImg.set({
+                                        left: scaledLeft,
+                                        top: scaledTop,
+                                        scaleX: targetScale,
+                                        scaleY: targetScale,
+                                        opacity: layer.opacity ?? 1,
+                                        visible: layer.visible ?? true,
+                                        selectable: true,
+                                        psdLayerName: layer.name
+                                    });
+                                    activeCanvas.add(layerImg);
+                                    layersProcessed++;
+                                }
                             }
                         }
                     } catch (err) {

@@ -420,46 +420,6 @@ export const useFabricEditor = () => {
                 }
 
                 activeCanvas.clear();
-<<<<<<< HEAD
-
-                const baseWidth = 1500; // Increased base width for better initial resolution
-                const normalizationScale = baseWidth / metadata.width;
-                const normalizedWidth = Math.round(metadata.width * normalizationScale);
-                const normalizedHeight = Math.round(metadata.height * normalizationScale);
-
-                // Setup Canvas Dimensions
-                activeCanvas.setDimensions({
-                    width: normalizedWidth,
-                    height: normalizedHeight
-                });
-
-                setPsdMetadata({
-                    ...metadata,
-                    width: normalizedWidth,
-                    height: normalizedHeight
-                });
-
-                // 1. RECONSTRUCT DESIGN: Load "Clean Background" first
-                if (metadata.backgroundUrl) {
-                    try {
-                        console.log("Fabric: Loading background...", metadata.backgroundUrl);
-                        const bgImg = await FabricImage.fromURL(metadata.backgroundUrl, { crossOrigin: 'anonymous' });
-                        if (loadId === latestLoadId.current) {
-                            // Scale background to fit normalized canvas
-                            bgImg.set({
-                                scaleX: normalizedWidth / bgImg.width!,
-                                scaleY: normalizedHeight / bgImg.height!,
-                                originX: 'left',
-                                originY: 'top',
-                                left: 0,
-                                top: 0,
-                                selectable: false,
-                                evented: false,
-                                // @ts-expect-error - Custom property
-                                isPsdBackground: true
-                            });
-                            activeCanvas.backgroundImage = bgImg;
-=======
                 activeCanvas.backgroundColor = 'white';
 
                 // --- 1. Calculate Target Scale (Fit to Content) ---
@@ -481,7 +441,13 @@ export const useFabricEditor = () => {
                 activeCanvas.setDimensions({ width: scaledWidth, height: scaledHeight });
                 handleZoom(1); // Keep zoom at 100%
 
-                // 2. Maintain preview state but avoid stationary background ghosting
+                setPsdMetadata({
+                    ...metadata,
+                    width: scaledWidth,
+                    height: scaledHeight
+                });
+
+                // 2. Maintain preview state
                 const templatePreviewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
                 setPreviewUrl(templatePreviewUrl);
 
@@ -498,7 +464,7 @@ export const useFabricEditor = () => {
                             const text = new Textbox(layer.text.value, {
                                 left: scaledLeft,
                                 top: scaledTop,
-                                width: scaledLayerWidth,
+                                width: scaledLayerWidth > 0 ? scaledLayerWidth : 200,
                                 fontSize: (layer.text.size || 24) * targetScale,
                                 fontFamily: layer.text.font || "Inter, Arial, sans-serif",
                                 fill: layer.text.color ? `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${(layer.text.color[3] || 255) / 255})` : "#000000",
@@ -526,58 +492,13 @@ export const useFabricEditor = () => {
                                 activeCanvas.add(layerImg);
                                 layersProcessed++;
                             }
->>>>>>> c51d973 (mockup button)
                         }
                     } catch (err) {
-                        console.warn('Fabric: Failed to load background image', err);
+                        console.error(`Fabric: Failed to process layer ${layer.name}`, err);
                     }
                 }
 
-<<<<<<< HEAD
-                // 2. Iterate ONLY text layers for interactive overlays
-                const textLayers = (metadata.layers || []).filter((l: any) => l.type === 'text');
-                console.log(`Fabric: Reconstructing ${textLayers.length} text overlays...`);
-=======
                 console.log(`Fabric: Processed ${layersProcessed} layers at ${Math.round(targetScale * 100)}% scale`);
-                activeCanvas.requestRenderAll();
->>>>>>> c51d973 (mockup button)
-
-                for (const layer of textLayers) {
-                    if (loadId !== latestLoadId.current) break;
-                    if (!layer.visible || !layer.text) continue;
-
-                    const text = new Textbox(layer.text.value, {
-                        left: layer.left * normalizationScale,
-                        top: layer.top * normalizationScale,
-                        width: (layer.width > 0 ? layer.width : 200) * normalizationScale,
-                        fontSize: (layer.text.size || 40) * normalizationScale,
-                        fontFamily: layer.text.font || "Inter, Arial, sans-serif",
-                        fill: `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${(layer.text.color[3] || 255) / 255})`,
-                        textAlign: 'left',
-                        opacity: layer.opacity / 255,
-                        selectable: true,
-                        evented: true,
-                        editable: true,
-                        // @ts-expect-error - Custom property
-                        isPsdLayer: true,
-                        // @ts-expect-error - Custom property
-                        psdLayerName: layer.name
-                    });
-                    activeCanvas.add(text);
-                }
-
-                // Auto-zoom to fit container
-                const container = document.getElementById("editor-workspace");
-                if (container) {
-                    const padding = 100;
-                    const availableWidth = container.clientWidth - padding;
-                    const availableHeight = container.clientHeight - padding;
-                    if (availableWidth > 0 && availableHeight > 0) {
-                        const zoomFit = Math.min(availableWidth / normalizedWidth, availableHeight / normalizedHeight, 1) * 0.95;
-                        handleZoom(zoomFit);
-                    }
-                }
-
                 activeCanvas.requestRenderAll();
                 saveHistory();
                 console.log("Fabric: PSD template setup complete");

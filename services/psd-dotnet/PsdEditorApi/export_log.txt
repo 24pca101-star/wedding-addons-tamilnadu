@@ -46,3 +46,5 @@
    at Aspose.PSD.FileFormats.Psd.Layers.TextLayer.UpdateText(String text)
    at PsdEditorApi.Services.BannerEditorService.Export(String filePath, ExportOptions options) in C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\Services\BannerEditorService.cs:line 163
    at PsdEditorApi.Controllers.ExportController.Export(ExportRequest request) in C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\Controllers\ExportController.cs:line 57
+[28-02-2026 16:33:49] Export requested for design-8.psd
+[28-02-2026 16:33:49] Export successful for design-8.psd

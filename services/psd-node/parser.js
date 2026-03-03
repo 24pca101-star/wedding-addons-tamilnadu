@@ -268,8 +268,7 @@ export async function generateCleanPreview(filePath, outputPath) {
 
 export async function generatePreview(filePath, outputPath) {
     try {
-        const buffer = fs.readFileSync(filePath);
-        const psd = readPsd(buffer);
+        const psd = await loadPsdWithFallback(filePath);
         const mainCanvas = createCanvas(psd.width, psd.height);
         const ctx = mainCanvas.getContext('2d');
         ctx.fillStyle = 'white';

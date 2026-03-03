@@ -153,7 +153,7 @@ namespace PsdEditorApi.Services
                     layers.Add(layerInfo);
                 }
 
-                Console.WriteLine($"[DEBUG] SplitLayers: Returning {layers.Count} layers metadata.");
+                Console.WriteLine($"[DEBUG] SplitLayers: Found {layers.Count} valid layers out of {image.Layers.Length} in {image.Width}x{image.Height} canvas.");
 
                 return new PsdMetadata
                 {
@@ -233,6 +233,8 @@ namespace PsdEditorApi.Services
                 if (textData?.Items != null && textData.Items.Length > 0)
                 {
                     var style = textData.Items[0].Style;
+                    var paragraph = textData.Items[0].Paragraph;
+                    
                     if (style != null)
                     {
                         props.Font = style.FontName ?? "Arial";
@@ -243,9 +245,20 @@ namespace PsdEditorApi.Services
                             props.Color = new[] { (int)c.R, (int)c.G, (int)c.B, (int)c.A };
                         }
                     }
+
+                   props.Alignment = paragraph.Justification switch
+{
+    JustificationMode.Left => "left",
+    JustificationMode.Right => "right",
+    JustificationMode.Center => "center",
+    _ => "left"
+};
                 }
             }
-            catch { }
+            catch (Exception ex) 
+            {
+                Console.WriteLine($"[WARN] Failed to extract all text properties: {ex.Message}");
+            }
 
             return props;
         }
@@ -279,6 +292,8 @@ namespace PsdEditorApi.Services
         public string Font { get; set; } = string.Empty;
         public double Size { get; set; }
         public int[] Color { get; set; } = new int[4];
+        public string Alignment { get; set; } = "left";
+        public double LineHeight { get; set; }
     }
 
     public class ExportOptions

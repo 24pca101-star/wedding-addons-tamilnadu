@@ -73,7 +73,7 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
                 const workspace = document.getElementById('editor-workspace');
                 let targetScale = 1;
                 if (workspace) {
-                    const padding = 60;
+                    const padding = 60; // Padding around canvas
                     const availableWidth = workspace.clientWidth - padding;
                     const availableHeight = workspace.clientHeight - padding;
 
@@ -86,8 +86,10 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
                 const scaledHeight = Math.round(metadata.height * targetScale);
 
                 activeCanvas.setDimensions({ width: scaledWidth, height: scaledHeight });
+                activeCanvas.setZoom(1);
                 handleZoom(1);
 
+                // 2. Load layers with Manual Scaling (Explicit Property Calculation)
                 const templatePreviewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
                 setPreviewUrl(templatePreviewUrl);
 
@@ -108,9 +110,14 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
                                 fontFamily: layer.text.font || "Inter, Arial, sans-serif",
                                 fill: layer.text.color ? `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${(layer.text.color[3] || 255) / 255})` : "#000000",
                                 textAlign: layer.text.alignment || "left",
+                                lineHeight: layer.text.lineHeight > 0 && layer.text.size > 0
+                                    ? layer.text.lineHeight / layer.text.size
+                                    : 1.16,
                                 opacity: layer.opacity ?? 1,
                                 visible: layer.visible ?? true,
-                                psdLayerName: layer.name
+                                psdLayerName: layer.name,
+                                originX: 'left',
+                                originY: 'top'
                             });
                             activeCanvas.add(text);
                             layersProcessed++;
@@ -128,7 +135,9 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
                                         opacity: layer.opacity ?? 1,
                                         visible: layer.visible ?? true,
                                         selectable: true,
-                                        psdLayerName: layer.name
+                                        psdLayerName: layer.name,
+                                        originX: 'left',
+                                        originY: 'top'
                                     });
                                     activeCanvas.add(layerImg);
                                     layersProcessed++;
@@ -136,7 +145,7 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
                             }
                         }
                     } catch (err) {
-                        console.warn('Fabric: Failed to load background layer', err);
+                        console.warn('Fabric: Failed to load layer', err);
                     }
                 }
 

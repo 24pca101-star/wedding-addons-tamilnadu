@@ -35,31 +35,73 @@ namespace PsdEditorApi.Controllers
 
                 // 1. Extract Design using Aspose.PSD
                 byte[] designBuffer;
+                Console.WriteLine($"[DEBUG] GenerateMockup: Loading PSD {request.PsdFilename}");
                 using (PsdImage image = (PsdImage)Image.Load(psdPath))
                 {
                     // Update text layers if provided
-                    if (request.Edits != null)
+                    if (request.Edits != null && request.Edits.Count > 0)
                     {
+                        Console.WriteLine($"[DEBUG] GenerateMockup: Processing {request.Edits.Count} edits");
                         foreach (var edit in request.Edits)
                         {
-                            var layer = image.Layers.FirstOrDefault(l => l.Name.Equals(edit.LayerName, StringComparison.OrdinalIgnoreCase));
-                            if (layer is Aspose.PSD.FileFormats.Psd.Layers.TextLayer textLayer)
-                            {
-                                textLayer.UpdateText(edit.NewValue);
+                            try {
+                                var layer = image.Layers.FirstOrDefault(l => l.Name.Equals(edit.LayerName, StringComparison.OrdinalIgnoreCase));
+                                if (layer == null) {
+                                    Console.WriteLine($"[DEBUG] GenerateMockup: Layer '{edit.LayerName}' not found");
+                                    continue;
+                                }
+
+                                if (layer is Aspose.PSD.FileFormats.Psd.Layers.TextLayer textLayer)
+                                {
+                                    Console.WriteLine($"[DEBUG] GenerateMockup: Updating text layer '{edit.LayerName}' to '{edit.NewValue}'");
+                                    textLayer.UpdateText(edit.NewValue);
+                                } else {
+                                    Console.WriteLine($"[DEBUG] GenerateMockup: Layer '{edit.LayerName}' is not a text layer (Type: {layer.GetType().Name})");
+                                }
+                            } catch (Exception lex) {
+                                if (lex.Message.Contains("licensed mode")) {
+                                    Console.WriteLine($"[WARNING] GenerateMockup: Aspose Licensing - Skipping text update for '{edit.LayerName}'");
+                                } else {
+                                    Console.WriteLine($"[ERROR] GenerateMockup: Failed to update layer '{edit.LayerName}': {lex.Message}");
+                                }
                             }
                         }
                     }
 
                     using (var ms = new MemoryStream())
                     {
+                        Console.WriteLine("[DEBUG] GenerateMockup: Saving design to buffer");
                         image.Save(ms, new PngOptions());
                         designBuffer = ms.ToArray();
                     }
                 }
 
                 // 2. Composite Mockup using SkiaSharp
-                string productDir = Path.Combine(_mockupDir, request.ProductType);
-                string basePath = Path.Combine(productDir, "base.png");
+                string incomingProductType = request.ProductType;
+                string productType = incomingProductType;
+                if (productType == "welcome-tote-bag") productType = "tote-bag";
+                Console.WriteLine($"[DEBUG] GenerateMockup: ProductType: {incomingProductType} -> {productType}");
+
+                string productDir = Path.Combine(_mockupDir, productType);
+                string basePath = Path.Combine(productDir, "white bag.png");
+                Console.WriteLine($"[DEBUG] GenerateMockup: Checking {basePath}");
+
+                if (!System.IO.File.Exists(basePath)) {
+                    Console.WriteLine("[DEBUG] GenerateMockup: white bag.png not found, trying .jpg");
+                    basePath = Path.Combine(productDir, "white bag.jpg");
+                }
+                
+                if (!System.IO.File.Exists(basePath)) {
+                    Console.WriteLine("[DEBUG] GenerateMockup: white bag.jpg not found, trying base.png");
+                    basePath = Path.Combine(productDir, "base.png");
+                }
+
+                if (!System.IO.File.Exists(basePath)) {
+                    basePath = Path.Combine(productDir, "base.jpg");
+                }
+
+                Console.WriteLine($"[DEBUG] GenerateMockup: Resolved BasePath: {basePath}");
+
                 string shadowPath = Path.Combine(productDir, "shadow.png");
                 string maskPath = Path.Combine(productDir, "mask.png");
 

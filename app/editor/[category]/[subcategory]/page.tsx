@@ -10,6 +10,7 @@ import TextPanel from "@/components/editor/TextPanel";
 import ElementsPanel from "@/components/editor/ElementsPanel";
 import ShapesPanel from "@/components/editor/ShapesPanel";
 import UploadsPanel from "@/components/editor/UploadPanel";
+import AIPanel from "@/components/editor/AIPanel";
 import { exportAsPNG, exportAsPDF } from "@/utils/export";
 import { exportViaPsdService } from "@/utils/psdExport";
 import { FabricProvider, useFabric } from "@/context/FabricContext";
@@ -47,7 +48,7 @@ function EditorContent() {
         psdMetadata,
     } = useFabric();
 
-    const [activePanel, setActivePanel] = useState<"text" | "elements" | "uploads" | "shapes">("text");
+    const [activePanel, setActivePanel] = useState<"text" | "elements" | "uploads" | "shapes" | "ai">("text");
     const [showMockup, setShowMockup] = useState(false);
 
     // In Next.js 15+, useParams() returns a plain object on the client, but we should handle it safely.
@@ -143,6 +144,7 @@ function EditorContent() {
                 {activePanel === "elements" && <ElementsPanel />}
                 {activePanel === "shapes" && <ShapesPanel />}
                 {activePanel === "uploads" && <UploadsPanel />}
+                {activePanel === "ai" && <AIPanel />}
             </div>
 
             <div className="flex-1 flex flex-col min-w-0">

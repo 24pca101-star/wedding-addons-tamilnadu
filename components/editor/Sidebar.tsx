@@ -1,15 +1,16 @@
 "use client";
 
-import { Layout, Type, Image, Square, Upload, Home } from "lucide-react";
+import { Layout, Type, Image, Square, Upload, Home, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 type Props = {
-    activePanel: "text" | "elements" | "uploads" | "shapes";
-    setActivePanel: (panel: "text" | "elements" | "uploads" | "shapes") => void;
+    activePanel: "text" | "elements" | "uploads" | "shapes" | "ai";
+    setActivePanel: (panel: "text" | "elements" | "uploads" | "shapes" | "ai") => void;
 };
 
 export default function Sidebar({ activePanel, setActivePanel }: Props) {
     const menuItems = [
+        { id: "ai", icon: Sparkles, label: "AI Assistance" },
         { id: "text", icon: Type, label: "Text" },
         { id: "elements", icon: Layout, label: "Elements" },
         { id: "shapes", icon: Square, label: "Shapes" },
@@ -24,12 +25,12 @@ export default function Sidebar({ activePanel, setActivePanel }: Props) {
                 </div>
             </Link>
 
-            <Link href="/" className="flex flex-col items-center gap-1 text-gray-400 hover:text-white transition-colors mb-4" title="Go to Home">
+            <Link href="/" className="flex flex-col items-center gap-1 text-gray-400 hover:text-white transition-colors" title="Go to Home">
                 <Home size={24} />
                 <span className="text-[10px] font-medium uppercase tracking-tighter">Home</span>
             </Link>
 
-            <div className="h-[1px] w-10 bg-gray-800 mb-2" />
+            <div className="h-[1px] w-10 bg-gray-800" />
 
             {menuItems.map((item) => (
                 <button

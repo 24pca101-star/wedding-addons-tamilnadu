@@ -170,7 +170,7 @@ app.get('/api/psd/templates', async (req, res) => {
             id: f,
             name: f.replace('.psd', '').replace(/-/g, ' '),
             filename: f,
-            preview: `/storage/previews/${f.replace('.psd', '.png')}`
+            preview: `http://localhost:5001/preview/${f.replace('.psd', '.png')}`
         }));
         res.json(templates);
     } catch (error) {
@@ -196,7 +196,7 @@ app.post('/api/psd/upload', upload.single('psd'), async (req, res) => {
         res.json({
             success: true,
             filename: req.file.originalname,
-            previewUrl: `/storage/previews/${req.file.originalname.replace('.psd', '.png')}`
+            previewUrl: `http://localhost:5001/preview/${req.file.originalname.replace('.psd', '.png')}`
         });
     } catch (error) {
         console.error('Upload failed:', error);

@@ -65,3 +65,12 @@ build_errors.txt
 # OS files
 .DS_Store
 Thumbs.dbu
+
+# Local Storage and Generated Assets
+/public/storage/
+
+# Local Debug and Log files
+services/**/*.txt
+services/**/*.log
+*.log
+debug_out*.txt

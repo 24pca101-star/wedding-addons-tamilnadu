@@ -401,7 +401,7 @@ export const useFabricEditor = () => {
         try {
             console.log(`Fabric: Loading LAYERED PSD template ${filename} (LoadID: ${loadId})`);
 
-            const response = await fetch(`http://localhost:5001/parse/${filename}`);
+            const response = await fetch(`http://localhost:5001/api/psd/layers/${filename}`);
             if (!response.ok) throw new Error(`Metadata fetch failed: ${response.status}`);
 
             if (loadId !== latestLoadId.current) return;
@@ -420,92 +420,133 @@ export const useFabricEditor = () => {
                 }
 
                 activeCanvas.clear();
-                activeCanvas.backgroundColor = 'white';
 
-                // --- 1. Calculate Target Scale (Fit to Content) ---
-                const workspace = document.getElementById('editor-workspace');
-                let targetScale = 1;
-                if (workspace) {
-                    const padding = 60; // Padding around canvas
-                    const availableWidth = workspace.clientWidth - padding;
-                    const availableHeight = workspace.clientHeight - padding;
+                const baseWidth = 1500; // Increased base width for better initial resolution
+                const normalizationScale = baseWidth / metadata.width;
+                const normalizedWidth = Math.round(metadata.width * normalizationScale);
+                const normalizedHeight = Math.round(metadata.height * normalizationScale);
 
-                    const scaleX = availableWidth / metadata.width;
-                    const scaleY = availableHeight / metadata.height;
-                    targetScale = Math.min(scaleX, scaleY, 1); // Scale down to fit, but don't scale up
-                }
-
-                const scaledWidth = Math.round(metadata.width * targetScale);
-                const scaledHeight = Math.round(metadata.height * targetScale);
-
-                activeCanvas.setDimensions({ width: scaledWidth, height: scaledHeight });
-                handleZoom(1); // Keep zoom at 100%
+                // Setup Canvas Dimensions
+                activeCanvas.setDimensions({
+                    width: normalizedWidth,
+                    height: normalizedHeight
+                });
 
                 setPsdMetadata({
                     ...metadata,
-                    width: scaledWidth,
-                    height: scaledHeight
+                    width: normalizedWidth,
+                    height: normalizedHeight
                 });
 
-                // 2. Maintain preview state
-                const templatePreviewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
-                setPreviewUrl(templatePreviewUrl);
-
-                // 3. Load layers with scaling
-                let layersProcessed = 0;
-                for (const layer of metadata.layers) {
-                    if (loadId !== latestLoadId.current) break;
+                // 1. RECONSTRUCT DESIGN: Load "Clean Background" first
+                if (metadata.backgroundUrl) {
                     try {
-                        const scaledLeft = layer.left * targetScale;
-                        const scaledTop = layer.top * targetScale;
-                        const scaledLayerWidth = (layer.width || 200) * targetScale;
-
-                        if (layer.type === 'text' && layer.text) {
-                            const text = new Textbox(layer.text.value, {
-                                left: scaledLeft,
-                                top: scaledTop,
-                                width: scaledLayerWidth > 0 ? scaledLayerWidth : 200,
-                                fontSize: (layer.text.size || 24) * targetScale,
-                                fontFamily: layer.text.font || "Inter, Arial, sans-serif",
-                                fill: layer.text.color ? `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${(layer.text.color[3] || 255) / 255})` : "#000000",
-                                textAlign: layer.text.alignment || "left",
-                                opacity: layer.opacity ?? 1,
-                                visible: layer.visible ?? true,
-                                psdLayerName: layer.name
+                        console.log("Fabric: Loading background...", metadata.backgroundUrl);
+                        const bgImg = await FabricImage.fromURL(metadata.backgroundUrl, { crossOrigin: 'anonymous' });
+                        if (loadId === latestLoadId.current) {
+                            // Scale background to fit normalized canvas
+                            bgImg.set({
+                                scaleX: normalizedWidth / bgImg.width!,
+                                scaleY: normalizedHeight / bgImg.height!,
+                                originX: 'left',
+                                originY: 'top',
+                                left: 0,
+                                top: 0,
+                                selectable: false,
+                                evented: false,
+                                isPsdBackground: true
                             });
-                            activeCanvas.add(text);
-                            layersProcessed++;
-                        } else if (layer.type === 'image' && layer.imageUrl) {
-                            const imgUrl = `http://localhost:5001${layer.imageUrl}`;
-                            const layerImg = await FabricImage.fromURL(imgUrl, { crossOrigin: 'anonymous' });
-                            if (loadId === latestLoadId.current) {
-                                layerImg.set({
-                                    left: scaledLeft,
-                                    top: scaledTop,
-                                    scaleX: targetScale,
-                                    scaleY: targetScale,
-                                    opacity: layer.opacity ?? 1,
-                                    visible: layer.visible ?? true,
-                                    selectable: true,
-                                    psdLayerName: layer.name
-                                });
-                                activeCanvas.add(layerImg);
-                                layersProcessed++;
+                            activeCanvas.backgroundImage = bgImg;
+                            activeCanvas.backgroundColor = 'white';
+
+                            // --- 1. Calculate Target Scale (Fit to Content) ---
+                            const workspace = document.getElementById('editor-workspace');
+                            let targetScale = 1;
+                            if (workspace) {
+                                const padding = 60; // Padding around canvas
+                                const availableWidth = workspace.clientWidth - padding;
+                                const availableHeight = workspace.clientHeight - padding;
+
+                                const scaleX = availableWidth / metadata.width;
+                                const scaleY = availableHeight / metadata.height;
+                                targetScale = Math.min(scaleX, scaleY, 1); // Scale down to fit, but don't scale up
                             }
+
+                            const scaledWidth = Math.round(metadata.width * targetScale);
+                            const scaledHeight = Math.round(metadata.height * targetScale);
+
+                            activeCanvas.setDimensions({ width: scaledWidth, height: scaledHeight });
+                            handleZoom(1); // Keep zoom at 100%
+
+                            setPsdMetadata({
+                                ...metadata,
+                                width: scaledWidth,
+                                height: scaledHeight
+                            });
+
+                            // 2. Maintain preview state
+                            const templatePreviewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
+                            setPreviewUrl(templatePreviewUrl);
+
+                            // 3. Load layers with scaling
+                            let layersProcessed = 0;
+                            for (const layer of metadata.layers) {
+                                if (loadId !== latestLoadId.current) break;
+                                try {
+                                    const scaledLeft = layer.left * targetScale;
+                                    const scaledTop = layer.top * targetScale;
+                                    const scaledLayerWidth = (layer.width || 200) * targetScale;
+
+                                    if (layer.type === 'text' && layer.text) {
+                                        const text = new Textbox(layer.text.value, {
+                                            left: scaledLeft,
+                                            top: scaledTop,
+                                            width: scaledLayerWidth > 0 ? scaledLayerWidth : 200,
+                                            fontSize: (layer.text.size || 24) * targetScale,
+                                            fontFamily: layer.text.font || "Inter, Arial, sans-serif",
+                                            fill: layer.text.color ? `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${(layer.text.color[3] || 255) / 255})` : "#000000",
+                                            textAlign: layer.text.alignment || "left",
+                                            opacity: layer.opacity ?? 1,
+                                            visible: layer.visible ?? true,
+                                            psdLayerName: layer.name
+                                        });
+                                        activeCanvas.add(text);
+                                        layersProcessed++;
+                                    } else if (layer.type === 'image' && layer.imageUrl) {
+                                        const imgUrl = `http://localhost:5001${layer.imageUrl}`;
+                                        const layerImg = await FabricImage.fromURL(imgUrl, { crossOrigin: 'anonymous' });
+                                        if (loadId === latestLoadId.current) {
+                                            layerImg.set({
+                                                left: scaledLeft,
+                                                top: scaledTop,
+                                                scaleX: targetScale,
+                                                scaleY: targetScale,
+                                                opacity: layer.opacity ?? 1,
+                                                visible: layer.visible ?? true,
+                                                selectable: true,
+                                                psdLayerName: layer.name
+                                            });
+                                            activeCanvas.add(layerImg);
+                                            layersProcessed++;
+                                        }
+                                    }
+                                } catch (err) {
+                                    console.error(`Fabric: Failed to process layer ${layer.name}`, err);
+                                }
+                            }
+
+                            console.log(`Fabric: Processed ${layersProcessed} layers at ${Math.round(targetScale * 100)}% scale`);
+                            activeCanvas.requestRenderAll();
+                            saveHistory();
+                            console.log("Fabric: PSD template setup complete");
                         }
-                    } catch (err) {
-                        console.error(`Fabric: Failed to process layer ${layer.name}`, err);
+                    } catch (error) {
+                        console.error("Failed inside setupTemplate:", error);
                     }
                 }
-
-                console.log(`Fabric: Processed ${layersProcessed} layers at ${Math.round(targetScale * 100)}% scale`);
-                activeCanvas.requestRenderAll();
-                saveHistory();
-                console.log("Fabric: PSD template setup complete");
             };
 
             await setupTemplate();
-
         } catch (error) {
             console.error("Failed to load PSD template:", error);
         }

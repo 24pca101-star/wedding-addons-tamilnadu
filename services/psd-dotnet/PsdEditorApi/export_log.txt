@@ -46,22 +46,3 @@
    at Aspose.PSD.FileFormats.Psd.Layers.TextLayer.UpdateText(String text)
    at PsdEditorApi.Services.BannerEditorService.Export(String filePath, ExportOptions options) in C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\Services\BannerEditorService.cs:line 163
    at PsdEditorApi.Controllers.ExportController.Export(ExportRequest request) in C:\Users\gurud\nextjs_task\Internship_Project\wedding-add-ons\services\psd-dotnet\PsdEditorApi\Controllers\ExportController.cs:line 57
-[28-02-2026 16:32:07] Export requested for design-6.psd
-[28-02-2026 16:32:07] Export failed for design-6.psd: Update text is supported only in licensed mode
-   at v.(Exception )
-   at v.(Object )
-   at v.(v ,  )
-   at v.()
-   at v.(Boolean )
---- End of stack trace from previous location ---
-   at v.(Exception )
-   at v.(Object )
-   at v.()
-   at v.(Object , UInt32 )
-   at v.(Boolean )
-   at v.(Object[] , Type[] , Type[] , Object[] )
-   at v.(Stream , String , Object[] )
-   at .UpdateText(String , Point , Single , Color )
-   at Aspose.PSD.FileFormats.Psd.Layers.TextLayer.UpdateText(String text)
-   at PsdEditorApi.Services.BannerEditorService.Export(String filePath, ExportOptions options) in D:\INTERNSHIP_PROJECT\wedding-addons-tamilnadu\services\psd-dotnet\PsdEditorApi\Services\BannerEditorService.cs:line 189
-   at PsdEditorApi.Controllers.ExportController.Export(ExportRequest request) in D:\INTERNSHIP_PROJECT\wedding-addons-tamilnadu\services\psd-dotnet\PsdEditorApi\Controllers\ExportController.cs:line 57

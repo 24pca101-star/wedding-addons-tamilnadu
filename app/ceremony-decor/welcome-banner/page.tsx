@@ -10,6 +10,8 @@ const TEMPLATES = [
   { id: 'design-6.psd', name: 'Artistic Yellow', preview: '/storage/previews/design-6.psd' },
   { id: 'design-7.psd', name: 'Modern Elegant', preview: '/storage/previews/design-7.psd' },
   { id: 'design-8.psd', name: 'Traditional Classic', preview: '/storage/previews/design-8.psd' },
+  { id: 'design9.psd', name: 'Royal Wedding Bloom', preview: '/storage/previews/design9.psd' },
+  { id: 'design10.psd', name: 'Royal Garden Bloom', preview: '/storage/previews/design10.psd' },
 ];
 
 export default function WelcomeBannerPage() {

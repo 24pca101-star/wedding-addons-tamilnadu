@@ -12,10 +12,10 @@ export default function UploadPanel() {
     const handleUpload = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
         let file: File | undefined;
 
-        if (e.target && "files" in e.target && e.target.files) {
-            file = e.target.files[0];
-        } else if ("dataTransfer" in e && e.dataTransfer.files) {
-            file = e.dataTransfer.files[0];
+        if (e.target && "files" in e.target && (e.target as HTMLInputElement).files) {
+            file = (e.target as HTMLInputElement).files![0];
+        } else if ("dataTransfer" in e && (e as React.DragEvent).dataTransfer.files) {
+            file = (e as React.DragEvent).dataTransfer.files[0];
         }
 
         if (!file || !canvas) return;
@@ -24,8 +24,25 @@ export default function UploadPanel() {
         reader.onload = (f) => {
             const data = f.target?.result as string;
             fabric.FabricImage.fromURL(data).then((img) => {
-                const scale = Math.min(200 / img.width!, 200 / img.height!);
-                img.scale(scale);
+                // Professional Auto-Mockup Scaling: 
+                // Aim for 70% of the canvas height or width, whichever is smaller
+                const targetSize = Math.min(canvas.width! * 0.7, canvas.height! * 0.7);
+                const scale = Math.min(targetSize / img.width!, targetSize / img.height!);
+
+                img.set({
+                    scaleX: scale,
+                    scaleY: scale,
+                    originX: 'center',
+                    originY: 'center',
+                    // Add a subtle drop shadow to make it look "printed" and premium
+                    shadow: new fabric.Shadow({
+                        color: 'rgba(0,0,0,0.1)',
+                        blur: 10,
+                        offsetX: 0,
+                        offsetY: 4
+                    })
+                });
+
                 canvas.add(img);
                 canvas.centerObject(img);
                 canvas.setActiveObject(img);

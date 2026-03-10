@@ -10,11 +10,14 @@ import TextPanel from "@/components/editor/TextPanel";
 import ElementsPanel from "@/components/editor/ElementsPanel";
 import ShapesPanel from "@/components/editor/ShapesPanel";
 import UploadsPanel from "@/components/editor/UploadPanel";
+import ToteBagUploadPanel from "@/components/editor/ToteBagUploadPanel";
 import AIPanel from "@/components/editor/AIPanel";
+import LayersPanel from "@/components/editor/LayersPanel";
 import { exportAsPNG, exportAsPDF } from "@/utils/export";
 import { exportViaPsdService } from "@/utils/psdExport";
 import { FabricProvider, useFabric } from "@/context/FabricContext";
 import MockupPreview from "@/components/editor/MockupPreview";
+import ObjectToolbar from "@/components/editor/ObjectToolbar";
 
 import { Suspense } from "react";
 
@@ -46,19 +49,32 @@ function EditorContent() {
         loadPsdTemplate,
         previewUrl,
         psdMetadata,
+        mockupMode,
+        setMockupMode
     } = useFabric();
 
-    const [activePanel, setActivePanel] = useState<"text" | "elements" | "uploads" | "shapes" | "ai">("text");
+    const [activePanel, setActivePanel] = useState<"text" | "elements" | "uploads" | "shapes" | "ai" | "layers">("text");
     const [showMockup, setShowMockup] = useState(false);
 
     // In Next.js 15+, useParams() returns a plain object on the client, but we should handle it safely.
     const category = params?.category as string;
     const subcategory = params?.subcategory as string;
     const template = searchParams.get("template");
+    const bagType = searchParams.get("bagType");
 
-    // Dynamic dimensions from metadata if available, else canvas, else default
-    const canvasWidth = psdMetadata?.width || canvas?.width || 400;
-    const canvasHeight = psdMetadata?.height || canvas?.height || 600;
+    const isToteBag = subcategory === 'welcome-tote-bag';
+
+    // Set default panel and mockup state for Tote Bags
+    useEffect(() => {
+        if (isToteBag) {
+            setActivePanel("uploads");
+            setShowMockup(true);
+        }
+    }, [isToteBag]);
+
+    // Standardize dimensions for Tote Bag to ensure it fits the mockup visual perfectly
+    const canvasWidth = isToteBag ? 400 : (canvas?.width || psdMetadata?.width || 400);
+    const canvasHeight = isToteBag ? 500 : (canvas?.height || psdMetadata?.height || 600);
 
     useEffect(() => {
         if (canvasElementRef.current && category && subcategory) {
@@ -71,7 +87,9 @@ function EditorContent() {
 
             if (c && template && template !== "blank") {
                 loadPsdTemplate(template, c);
-            } else if (c) {
+            } else if (c && !isToteBag) {
+                // Only add safe area for non-tote bags by default
+                // Tote bags should start as 'bag-only' as requested
                 addSafeArea(c);
             }
 
@@ -111,11 +129,37 @@ function EditorContent() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [canvas, deleteSelected, undo, redo]);
 
-    const handleDownload = async (format: "png" | "pdf") => {
+    // sync object selectability based on mockup mode (Tote Bag only)
+    useEffect(() => {
+        if (!isToteBag || !canvas) return;
+
+        const isAutomated = mockupMode === 'automated';
+        const objects = canvas.getObjects();
+
+        objects.forEach(obj => {
+            obj.set({
+                selectable: !isAutomated,
+                evented: !isAutomated,
+                hasControls: !isAutomated
+            });
+        });
+
+        if (isAutomated) {
+            canvas.discardActiveObject();
+        }
+        canvas.requestRenderAll();
+    }, [mockupMode, isToteBag, canvas]);
+
+    const handleDownload = async (format: "png" | "pdf", forceDirect: boolean = false) => {
         if (!canvas) return;
 
-        if (template && template !== "blank") {
-            const success = await exportViaPsdService(canvas, template, format === "pdf" ? "pdf" : "png");
+        if (!forceDirect && template && template !== "blank") {
+            const success = await exportViaPsdService(
+                canvas,
+                template,
+                format === "pdf" ? "pdf" : "png",
+                psdMetadata?.width
+            );
             if (success) return;
         }
 
@@ -143,8 +187,9 @@ function EditorContent() {
                 {activePanel === "text" && <TextPanel />}
                 {activePanel === "elements" && <ElementsPanel />}
                 {activePanel === "shapes" && <ShapesPanel />}
-                {activePanel === "uploads" && <UploadsPanel />}
+                {activePanel === "uploads" && (isToteBag ? <ToteBagUploadPanel /> : <UploadsPanel />)}
                 {activePanel === "ai" && <AIPanel />}
+                {activePanel === "layers" && <LayersPanel />}
             </div>
 
             <div className="flex-1 flex flex-col min-w-0">
@@ -153,20 +198,87 @@ function EditorContent() {
                     onShowMockup={() => setShowMockup(true)}
                 />
 
-                <div className="flex-1 relative overflow-hidden flex flex-col">
-                    <EditorCanvas
-                        width={canvasWidth}
-                        height={canvasHeight}
-                        canvasRef={canvasElementRef}
-                        previewUrl={previewUrl}
-                        zoom={zoom}
-                    />
+                <div className={`flex-1 relative overflow-hidden flex flex-col ${isToteBag ? 'bg-white' : ''}`}>
+                    {!isToteBag ? (
+                        <EditorCanvas
+                            width={canvasWidth}
+                            height={canvasHeight}
+                            canvasRef={canvasElementRef}
+                            previewUrl={previewUrl}
+                            zoom={zoom}
+                        />
+                    ) : (
+                        <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+                            {/* Left Side: Interactive 2D Editor */}
+                            <div className={`relative transition-all duration-500 ease-in-out bg-gray-50 flex flex-col group/canvas ${mockupMode === 'automated' ? 'w-full' : 'w-full md:w-1/2 border-r border-gray-200 shadow-xl z-10'}`}>
+                                <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-gray-100 shadow-sm flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">
+                                        {mockupMode === 'automated' ? 'Direct Studio' : 'Interactive Editor'}
+                                    </span>
+                                </div>
+                                <EditorCanvas
+                                    width={canvasWidth}
+                                    height={canvasHeight}
+                                    canvasRef={canvasElementRef}
+                                    previewUrl={previewUrl}
+                                    zoom={zoom}
+                                    bgImage={`/assets/mockups/${bagType || subcategory || "tote-bag"}/white bag.png`}
+                                />
+                                {/* On-Object Toolbar */}
+                                <ObjectToolbar />
+                            </div>
+
+                            {/* Right Side: Real-time 3D Mockup (Only in Manual Mode) */}
+                            <div className={`transition-all duration-500 ease-in-out relative bg-[#f8fafc] ${mockupMode === 'manual' ? 'flex-1 translate-x-0 opacity-100' : 'w-0 translate-x-full opacity-0 overflow-hidden'}`}>
+                                <div className="absolute top-4 left-4 z-20 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-gray-100 shadow-sm flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
+                                    <span className="text-[10px] font-black text-pink-900 uppercase tracking-widest">Live 3D Preview</span>
+                                </div>
+                                <MockupPreview
+                                    active={true}
+                                    onClose={() => { }}
+                                    psdFilename={template || "design-1.psd"}
+                                    productType={bagType || subcategory || "tote-bag"}
+                                    canvas={canvas}
+                                    isIntegrated={true}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Quick Adjustment Controls (Floating buttons) */}
+                    {isToteBag && (
+                        <div className="absolute bottom-6 left-6 flex flex-col bg-white shadow-2xl rounded-2xl p-2 gap-4 border border-gray-100 z-40 animate-in slide-in-from-left duration-500">
+                            <button
+                                onClick={undo}
+                                className="w-10 h-10 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-pink-500 rounded-xl transition-all"
+                                title="Undo"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M9 14 4 9l5-5" />
+                                    <path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11" />
+                                </svg>
+                            </button>
+                            <button
+                                onClick={redo}
+                                className="w-10 h-10 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-pink-500 rounded-xl transition-all"
+                                title="Redo"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="m15 14 5-5-5-5" />
+                                    <path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13" />
+                                </svg>
+                            </button>
+                        </div>
+                    )}
+
 
                     <MockupPreview
                         active={showMockup}
                         onClose={() => setShowMockup(false)}
                         psdFilename={template || "design-1.psd"}
-                        productType={subcategory || "tote-bag"}
+                        productType={bagType || subcategory || "tote-bag"}
                         canvas={canvas}
                     />
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { Canvas, Textbox, Rect } from "fabric";
+import { Canvas, Textbox, Rect, Object as FabricObject } from "fabric";
 
 interface Props {
     canvasRef: React.MutableRefObject<Canvas | null>;
@@ -66,10 +66,10 @@ export const useEditorStyles = ({ canvasRef, saveHistory }: Props) => {
         c.renderAll();
     }, [canvasRef]);
 
-    const toggleLock = useCallback(() => {
+    const toggleLock = useCallback((target?: FabricObject) => {
         const c = canvasRef.current;
         if (!c) return;
-        const activeObject = c.getActiveObject();
+        const activeObject = target || c.getActiveObject();
         if (activeObject) {
             const isLocked = !activeObject.lockMovementX;
             activeObject.set({
@@ -80,7 +80,32 @@ export const useEditorStyles = ({ canvasRef, saveHistory }: Props) => {
                 lockRotation: isLocked,
                 editable: !isLocked,
                 hasControls: !isLocked,
+                selectable: !isLocked, // Also toggle selectability
             });
+            c.renderAll();
+            saveHistory();
+        }
+    }, [canvasRef, saveHistory]);
+
+    const centerObjectH = useCallback(() => {
+        const c = canvasRef.current;
+        if (!c) return;
+        const activeObject = c.getActiveObject();
+        if (activeObject) {
+            c.centerObjectH(activeObject);
+            activeObject.setCoords(); // Required to update the bounding box and controls
+            c.renderAll();
+            saveHistory();
+        }
+    }, [canvasRef, saveHistory]);
+
+    const centerObjectV = useCallback(() => {
+        const c = canvasRef.current;
+        if (!c) return;
+        const activeObject = c.getActiveObject();
+        if (activeObject) {
+            c.centerObjectV(activeObject);
+            activeObject.setCoords();
             c.renderAll();
             saveHistory();
         }
@@ -92,6 +117,8 @@ export const useEditorStyles = ({ canvasRef, saveHistory }: Props) => {
         setOpacity,
         setFontFamily,
         addSafeArea,
-        toggleLock
+        toggleLock,
+        centerObjectH,
+        centerObjectV
     };
 };

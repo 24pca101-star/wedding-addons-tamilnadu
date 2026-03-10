@@ -1,36 +1,73 @@
-"use client";
-import TemplateCard from "@/components/TemplateCard";
+const BAG_TYPES = [
+  { id: 'paper-bag', name: 'Paper Bag Mockup', desc: 'Classic Brown Kraft' },
+  { id: 'luxury-tote', name: 'Luxury Shopping Bag', desc: 'Premium Yellow Matte' },
+  { id: 'carrier-bag', name: 'Carrier Bag Mockup', desc: 'Minimalist White' },
+  { id: 'white-tote', name: 'White Tote Bag', desc: 'Clean Canvas Cotton' },
+  { id: 'floral-gift-bag', name: 'Floral Gift Bag', desc: 'Elegant Pastel with Bow' },
+  { id: 'patterned-bag', name: 'Patterned Shopping Bag', desc: 'Orange Poppy Floral' },
+  { id: 'jute-bag', name: 'Traditional Jute Bag', desc: 'Eco-friendly Pink Trim' },
+  { id: 'gold-handle-bag', name: 'Luxury Gold Handle Bag', desc: 'Golden Loop Handles' },
+];
 
 export default function WelcomeToteBag() {
   return (
-    <div className="min-h-screen bg-pink-50/30 pt-32 pb-20 px-6">
-      <div className="max-w-7xl mx-auto text-center">
-        <header className="mb-12">
-          <h1 className="text-4xl font-black text-pink-800 font-serif mb-4 uppercase tracking-tight">
+    <div className="min-h-screen bg-[#fafafa] pt-32 pb-20 px-6">
+      <div className="max-w-7xl mx-auto">
+        <header className="mb-16 text-center">
+          <h1 className="text-5xl font-black text-pink-900 font-serif mb-4 uppercase tracking-tighter">
             Welcome / Tote Bag
           </h1>
-          <p className="text-gray-600 font-medium max-w-2xl mx-auto">
-            Custom traditional wedding welcome tote bags. Choose to begin customizing.
+          <p className="text-gray-500 font-medium max-w-2xl mx-auto italic">
+            "Your design, our craft. Choose a style to begin your wedding masterpiece."
           </p>
+          <div className="mt-8 h-1 w-24 mx-auto bg-pink-100 rounded-full" />
         </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          <TemplateCard
-            id="blank"
-            name="Start from Scratch"
-            previewUrl="/assets/blank-canvas.png"
-            category="guest-gift-keepsakes"
-            subcategory="welcome-tote-bag"
-          />
-          {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-            <TemplateCard
-              key={i}
-              id={`design-${i}.psd`}
-              name={`Design ${i}`}
-              previewUrl={`/storage/previews/design-${i}.png`}
-              category="guest-gift-keepsakes"
-              subcategory="welcome-tote-bag"
-            />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+          {BAG_TYPES.map((bag) => (
+            <div key={bag.id} className="group flex flex-col h-full bg-white rounded-[2.5rem] p-4 shadow-sm hover:shadow-2xl hover:shadow-pink-100/50 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] border border-gray-100/50 hover:scale-[1.02] relative overflow-hidden">
+              {/* Image Container */}
+              <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden bg-gray-50/50 mb-6 group-hover:bg-white transition-colors duration-500">
+                <img
+                  src={`/assets/mockups/${bag.id}/white bag.png`}
+                  alt={bag.name}
+                  className="w-full h-full object-contain p-6 group-hover:scale-110 transition-transform duration-700 ease-out"
+                />
+
+                {/* Floating 3D Badge */}
+                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500 delay-100">
+                  <div className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
+                  <span className="text-[10px] font-bold text-gray-700 uppercase tracking-widest">3D View</span>
+                </div>
+              </div>
+
+              {/* Info & Actions */}
+              <div className="px-2 pb-2 flex flex-col flex-1">
+                <div className="mb-6">
+                  <h3 className="text-lg font-black text-gray-900 mb-1 tracking-tight group-hover:text-pink-600 transition-colors">
+                    {bag.name}
+                  </h3>
+                  <p className="text-xs text-gray-400 font-medium">{bag.desc}</p>
+                </div>
+
+                <div className="mt-auto grid grid-cols-2 gap-3">
+                  <a
+                    href={`/editor/guest-gift-keepsakes/welcome-tote-bag?template=blank&bagType=${bag.id}`}
+                    className="flex items-center justify-center py-3.5 bg-gray-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-pink-600 transition-all shadow-lg shadow-gray-200 hover:shadow-pink-200 active:scale-95"
+                  >
+                    Custom
+                  </a>
+                  <button
+                    className="flex items-center justify-center py-3.5 bg-white border border-gray-100 text-gray-400 rounded-2xl text-[11px] font-black uppercase tracking-widest cursor-default group-hover:text-gray-900 group-hover:border-gray-200 transition-all"
+                  >
+                    3D Design
+                  </button>
+                </div>
+              </div>
+
+              {/* Premium Glow Effect */}
+              <div className="absolute -inset-1 bg-linear-to-tr from-pink-100/0 via-pink-100/10 to-pink-100/0 rounded-[3rem] opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-500" />
+            </div>
           ))}
         </div>
       </div>

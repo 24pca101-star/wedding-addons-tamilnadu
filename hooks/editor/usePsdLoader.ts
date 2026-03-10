@@ -72,22 +72,36 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
                 // --- 1. Calculate Target Scale (Fit to Content) ---
                 const workspace = document.getElementById('editor-workspace');
                 let targetScale = 1;
-                if (workspace) {
-                    const padding = 60; // Padding around canvas
+
+                if (workspace && workspace.clientWidth > 0 && workspace.clientHeight > 0) {
+                    const padding = 80; // Total padding around canvas
                     const availableWidth = workspace.clientWidth - padding;
                     const availableHeight = workspace.clientHeight - padding;
 
                     const scaleX = availableWidth / metadata.width;
                     const scaleY = availableHeight / metadata.height;
-                    targetScale = Math.min(scaleX, scaleY, 1);
+
+                    // Use a slightly smaller scale (0.9x of fit) to prevent "zoomed in" feel
+                    targetScale = Math.min(scaleX, scaleY, 1) * 0.9;
+
+                    console.log(`Fabric: Workspace size ${workspace.clientWidth}x${workspace.clientHeight}`);
+                    console.log(`Fabric: Calculated targetScale: ${targetScale.toFixed(4)} (FitX: ${scaleX.toFixed(4)}, FitY: ${scaleY.toFixed(4)})`);
+                } else {
+                    console.warn("Fabric: Workspace element not found or has no size. Using default scale 0.5");
+                    targetScale = 0.5;
                 }
 
                 const scaledWidth = Math.round(metadata.width * targetScale);
                 const scaledHeight = Math.round(metadata.height * targetScale);
 
+                console.log(`Fabric: Final Canvas Dimensions: ${scaledWidth}x${scaledHeight} (Scale: ${targetScale})`);
+
                 activeCanvas.setDimensions({ width: scaledWidth, height: scaledHeight });
                 activeCanvas.setZoom(1);
                 handleZoom(1);
+
+                // Force a small state change to ensure page.tsx re-renders with new dimensions
+                setPreviewUrl(prev => prev || "");
 
                 // 2. Load layers with Manual Scaling (Explicit Property Calculation)
                 const templatePreviewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
@@ -96,24 +110,29 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
                 let layersProcessed = 0;
                 for (const layer of metadata.layers) {
                     if (loadId !== latestLoadId.current) break;
+
                     try {
                         const scaledLeft = layer.left * targetScale;
                         const scaledTop = layer.top * targetScale;
-                        const scaledLayerWidth = (layer.width || 200) * targetScale;
+                        const scaledLayerWidth = (layer.width || 1) * targetScale;
 
                         if (layer.type === 'text' && layer.text) {
-                            const text = new Textbox(layer.text.value, {
+                            // Defensive check for font size
+                            const originalFontSize = layer.text.size || 24;
+                            const scaledFontSize = originalFontSize * targetScale;
+
+                            const text = new Textbox(layer.text.value || " ", {
                                 left: scaledLeft,
                                 top: scaledTop,
-                                width: scaledLayerWidth,
-                                fontSize: (layer.text.size || 24) * targetScale,
+                                width: Math.max(scaledLayerWidth, 50),
+                                fontSize: scaledFontSize > 1 ? scaledFontSize : 12,
                                 fontFamily: layer.text.font || "Inter, Arial, sans-serif",
                                 fill: layer.text.color ? `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${(layer.text.color[3] || 255) / 255})` : "#000000",
                                 textAlign: layer.text.alignment || "left",
-                                lineHeight: layer.text.lineHeight > 0 && layer.text.size > 0
-                                    ? layer.text.lineHeight / layer.text.size
+                                lineHeight: layer.text.lineHeight > 0 && originalFontSize > 0
+                                    ? layer.text.lineHeight / originalFontSize
                                     : 1.16,
-                                opacity: layer.opacity ?? 1,
+                                opacity: Math.max((layer.opacity ?? 255) / 255, 0.01), // Avoid total invisibility
                                 visible: layer.visible ?? true,
                                 psdLayerName: layer.name,
                                 originX: 'left',
@@ -122,30 +141,40 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
                             activeCanvas.add(text);
                             layersProcessed++;
                         } else {
-                            const imageUrl = layer.imageUrl || layer.layerUrl || layer.LayerUrl;
-                            if (layer.type === 'image' && imageUrl) {
-                                const imgUrl = imageUrl.startsWith('http') ? imageUrl : `http://localhost:5001${imageUrl}`;
-                                const layerImg = await FabricImage.fromURL(imgUrl, { crossOrigin: 'anonymous' });
-                                if (loadId === latestLoadId.current) {
-                                    layerImg.set({
-                                        left: scaledLeft,
-                                        top: scaledTop,
-                                        scaleX: targetScale,
-                                        scaleY: targetScale,
-                                        opacity: layer.opacity ?? 1,
-                                        visible: layer.visible ?? true,
-                                        selectable: true,
-                                        psdLayerName: layer.name,
-                                        originX: 'left',
-                                        originY: 'top'
-                                    });
-                                    activeCanvas.add(layerImg);
-                                    layersProcessed++;
+                            // Robust check for any image/design layer
+                            const imageUrl = layer.imageUrl || layer.layerUrl || layer.LayerUrl || layer.url;
+
+                            if (imageUrl) {
+                                // Use relative path if it's a local storage path, otherwise use as is
+                                const imgUrl = imageUrl.startsWith('http')
+                                    ? imageUrl
+                                    : (imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`);
+
+                                try {
+                                    const layerImg = await FabricImage.fromURL(imgUrl, { crossOrigin: 'anonymous' });
+                                    if (loadId === latestLoadId.current) {
+                                        layerImg.set({
+                                            left: scaledLeft,
+                                            top: scaledTop,
+                                            scaleX: targetScale,
+                                            scaleY: targetScale,
+                                            opacity: (layer.opacity ?? 255) / 255,
+                                            visible: layer.visible ?? true,
+                                            selectable: true,
+                                            psdLayerName: layer.name,
+                                            originX: 'left',
+                                            originY: 'top'
+                                        });
+                                        activeCanvas.add(layerImg);
+                                        layersProcessed++;
+                                    }
+                                } catch (err) {
+                                    console.warn(`Fabric: Failed to load image layer "${layer.name}":`, err);
                                 }
                             }
                         }
                     } catch (err) {
-                        console.warn('Fabric: Failed to load layer', err);
+                        console.warn(`Fabric: Failed to load layer "${layer.name}":`, err);
                     }
                 }
 

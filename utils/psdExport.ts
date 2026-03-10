@@ -16,9 +16,10 @@ interface ExportRequest {
 export async function exportViaPsdService(
     canvas: fabric.Canvas,
     psdFilename: string,
-    format: "pdf" | "png" | "psd" = "pdf"
+    format: "pdf" | "png" | "psd" = "pdf",
+    originalWidth?: number
 ) {
-    const edits = getCanvasEdits(canvas);
+    const edits = getCanvasEdits(canvas, originalWidth);
 
     const request: ExportRequest = {
         filename: psdFilename,

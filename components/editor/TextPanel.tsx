@@ -1,22 +1,68 @@
-"use client";
-
+import { useState, useEffect } from "react";
 import { useFabric } from "@/context/FabricContext";
 
 export default function TextPanel() {
     const { addText, selectedObject, setFontFamily } = useFabric();
     const isTextbox = selectedObject?.type === "textbox";
 
+    // Local state to track properties for smooth UI updates
+    const [localFontSize, setLocalFontSize] = useState<string | number>(12);
+    const [localFill, setLocalFill] = useState<string>("#000000");
+
+    // Sync local state when selection changes or object is modified
+    useEffect(() => {
+        if (selectedObject) {
+            setLocalFontSize(Math.round((selectedObject as any).fontSize || 12));
+            setLocalFill((selectedObject as any).fill || "#000000");
+
+            const handleUpdate = () => {
+                setLocalFontSize(Math.round((selectedObject as any).fontSize || 12));
+                setLocalFill((selectedObject as any).fill || "#000000");
+            };
+
+            // Listen for changes made via canvas handles (scaling, etc.)
+            selectedObject.on('modified', handleUpdate);
+            selectedObject.on('scaling', handleUpdate);
+
+            return () => {
+                selectedObject.off('modified', handleUpdate);
+                selectedObject.off('scaling', handleUpdate);
+            };
+        }
+    }, [selectedObject]);
+
     const updateProperty = (prop: string, value: any) => {
         if (!selectedObject) return;
-        selectedObject.set(prop as any, value);
+
+        // Update Fabric Object
+        if (prop === "fontSize") {
+            const numValue = Number(value);
+            if (!isNaN(numValue) && numValue > 0) {
+                selectedObject.set("fontSize" as any, numValue);
+                setLocalFontSize(numValue);
+            }
+        } else {
+            selectedObject.set(prop as any, value);
+            if (prop === "fill") setLocalFill(value);
+        }
+
+        selectedObject.setCoords();
         selectedObject.canvas?.requestRenderAll();
     };
 
     const FONTS = [
         { name: "Inter", family: "Inter, sans-serif", type: "Sans" },
+        { name: "Montserrat", family: "Montserrat, sans-serif", type: "Sans" },
+        { name: "Poppins", family: "Poppins, sans-serif", type: "Sans" },
         { name: "Playfair Display", family: "Playfair Display, serif", type: "Serif" },
+        { name: "Roboto Slab", family: "Roboto Slab, serif", type: "Serif" },
+        { name: "Cinzel", family: "Cinzel, serif", type: "Serif" },
+        { name: "Libre Baskerville", family: "Libre Baskerville, serif", type: "Serif" },
         { name: "Great Vibes", family: "Great Vibes, cursive", type: "Script" },
         { name: "Pacifico", family: "Pacifico, cursive", type: "Script" },
+        { name: "Dancing Script", family: "Dancing Script, cursive", type: "Script" },
+        { name: "Satisfy", family: "Satisfy, cursive", type: "Script" },
+        { name: "Caveat", family: "Caveat, cursive", type: "Script" },
         { name: "Times New Roman", family: "Times New Roman, serif", type: "Serif" },
         { name: "Arial", family: "Arial, sans-serif", type: "Sans" },
     ];
@@ -56,7 +102,7 @@ export default function TextPanel() {
 
                         <div className="space-y-2 mb-4">
                             <label className="text-xs font-bold text-gray-600">Font Style</label>
-                            <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-1">
+                            <div className="grid grid-cols-1 gap-2 max-h-56 overflow-y-auto custom-scrollbar pr-1">
                                 {FONTS.map((font) => (
                                     <button
                                         key={font.name}
@@ -80,8 +126,12 @@ export default function TextPanel() {
                                 <label className="text-xs font-bold text-gray-600">Size</label>
                                 <input
                                     type="number"
-                                    value={(selectedObject as any).fontSize}
-                                    onChange={(e) => updateProperty("fontSize", Number(e.target.value))}
+                                    value={localFontSize}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setLocalFontSize(val);
+                                        updateProperty("fontSize", val);
+                                    }}
                                     className="w-full bg-gray-50 border-none rounded-lg p-2 text-sm font-bold focus:ring-2 focus:ring-pink-500 outline-none"
                                 />
                             </div>
@@ -90,7 +140,7 @@ export default function TextPanel() {
                                 <div className="flex gap-2">
                                     <input
                                         type="color"
-                                        value={(selectedObject as any).fill as string}
+                                        value={localFill}
                                         onChange={(e) => updateProperty("fill", e.target.value)}
                                         className="w-full h-9 p-0 border-none rounded-lg cursor-pointer overflow-hidden"
                                     />

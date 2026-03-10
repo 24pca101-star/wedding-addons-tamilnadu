@@ -47,7 +47,9 @@ export const useFabricEditor = () => {
         setOpacity,
         setFontFamily,
         addSafeArea,
-        toggleLock
+        toggleLock,
+        centerObjectH,
+        centerObjectV
     } = useEditorStyles({ canvasRef, saveHistory });
 
     // 5. PSD Loading
@@ -57,8 +59,37 @@ export const useFabricEditor = () => {
         psdMetadata
     } = usePsdLoader({ canvasRef, isAlive, handleZoom });
 
+    // 6. Mockup Mode (Automated vs Manual)
+    const [mockupMode, setMockupMode] = useState<"automated" | "manual">("automated");
+
     // Local state for the facade
     const [selectedObject, setSelectedObject] = useState<FabricObject | null>(null);
+
+    const autoLayout = useCallback(() => {
+        const c = canvasRef.current;
+        if (!c) return;
+        const objects = c.getObjects("image");
+        if (objects.length === 0) return;
+
+        const img = objects[objects.length - 1] as any;
+        const targetSize = Math.min(c.width! * 0.8, c.height! * 0.8);
+        const scale = Math.min(targetSize / img.width!, targetSize / img.height!);
+
+        img.set({
+            scaleX: scale,
+            scaleY: scale,
+            originX: 'center',
+            originY: 'center',
+            selectable: false,
+            evented: false,
+            hasControls: false
+        });
+
+        c.centerObject(img);
+        c.discardActiveObject();
+        c.requestRenderAll();
+        c.fire("object:modified");
+    }, [canvasRef]);
 
     const updateSelection = useCallback(() => {
         const c = canvasRef.current;
@@ -111,6 +142,11 @@ export const useFabricEditor = () => {
         setFontFamily,
         loadPsdTemplate,
         previewUrl,
-        psdMetadata
+        psdMetadata,
+        centerObjectH,
+        centerObjectV,
+        mockupMode,
+        setMockupMode,
+        autoLayout
     };
 };

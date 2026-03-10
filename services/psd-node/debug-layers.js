@@ -5,7 +5,7 @@ import path from 'path';
 
 initializeCanvas(createCanvas);
 
-const filePath = path.resolve('../../public/storage/templates/design-3.psd');
+const filePath = path.resolve('../../public/storage/templates/signboard1.psd');
 console.log(`Analyzing ${filePath}...`);
 
 const buffer = fs.readFileSync(filePath);

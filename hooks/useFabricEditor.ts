@@ -49,7 +49,8 @@ export const useFabricEditor = () => {
         addSafeArea,
         toggleLock,
         centerObjectH,
-        centerObjectV
+        centerObjectV,
+        setBackgroundImage
     } = useEditorStyles({ canvasRef, saveHistory });
 
     // 5. PSD Loading
@@ -61,6 +62,7 @@ export const useFabricEditor = () => {
 
     // 6. Mockup Mode (Automated vs Manual)
     const [mockupMode, setMockupMode] = useState<"automated" | "manual">("automated");
+    const [isPreview, setIsPreview] = useState(false);
 
     // Local state for the facade
     const [selectedObject, setSelectedObject] = useState<FabricObject | null>(null);
@@ -145,8 +147,11 @@ export const useFabricEditor = () => {
         psdMetadata,
         centerObjectH,
         centerObjectV,
+        setBackgroundImage,
         mockupMode,
         setMockupMode,
+        isPreview,
+        setIsPreview,
         autoLayout
     };
 };

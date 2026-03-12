@@ -9,6 +9,7 @@ type Props = {
     previewUrl?: string | null;
     zoom?: number;
     bgImage?: string | null;
+    isDirectionalBoard?: boolean;
 };
 
 export default function EditorCanvas({
@@ -17,12 +18,13 @@ export default function EditorCanvas({
     canvasRef,
     previewUrl,
     zoom = 1,
-    bgImage
+    bgImage,
+    isDirectionalBoard = false,
 }: Props) {
     return (
-        <div id="editor-workspace" className={`flex-1 flex items-center justify-center overflow-auto p-4 md:p-10 min-h-0 custom-scrollbar relative ${bgImage ? 'bg-white' : 'bg-[#f2f3f5]'}`}>
+        <div id="editor-workspace" className={`flex-1 flex items-center justify-center overflow-auto p-4 md:p-10 min-h-0 custom-scrollbar relative ${(bgImage && !isDirectionalBoard) ? 'bg-white' : 'bg-[#f2f3f5]'}`}>
             <div
-                className={`relative transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${bgImage ? 'bg-transparent' : 'shadow-[0_24px_50px_rgb(0,0,0,0.15)] bg-white rounded-2xl overflow-hidden'}`}
+                className={`relative transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${(bgImage && !isDirectionalBoard) ? 'bg-transparent' : 'shadow-[0_24px_50px_rgb(0,0,0,0.15)] bg-white rounded-2xl overflow-hidden'}`}
                 style={{
                     width: width,
                     height: height,
@@ -30,8 +32,8 @@ export default function EditorCanvas({
                     transformOrigin: 'center center'
                 }}
             >
-                {/* Product Background (e.g. the Bag) */}
-                {bgImage && (
+                {/* Product Background Environment (e.g. the Bag background) */}
+                {bgImage && !isDirectionalBoard && (
                     <div className="absolute inset-[-80px] z-0 flex items-center justify-center pointer-events-none">
                         <img
                             src={bgImage}

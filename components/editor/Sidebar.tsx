@@ -6,14 +6,15 @@ import Link from "next/link";
 type SidebarProps = {
     activePanel: "text" | "elements" | "uploads" | "shapes" | "ai" | "layers";
     setActivePanel: (panel: "text" | "elements" | "uploads" | "shapes" | "ai" | "layers") => void;
+    isDirectionalBoard?: boolean;
 };
 
-export default function Sidebar({ activePanel, setActivePanel }: SidebarProps) {
+export default function Sidebar({ activePanel, setActivePanel, isDirectionalBoard }: SidebarProps) {
     const menuItems = [
         { id: "text", icon: Type, label: "Text" },
         { id: "elements", icon: Layout, label: "Elements" },
         { id: "shapes", icon: Square, label: "Shapes" },
-        { id: "uploads", icon: Upload, label: "Uploads" },
+        { id: "uploads", icon: Upload, label: isDirectionalBoard ? "Signs" : "Uploads" },
         { id: "ai", icon: Sparkles, label: "AI Help" },
         { id: "layers", icon: Layers, label: "Layers" },
     ] as const;

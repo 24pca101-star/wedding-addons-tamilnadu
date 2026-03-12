@@ -95,11 +95,11 @@ export default function Navbar() {
           <Link href="/">
             <div className="flex items-center cursor-pointer">
               <Image
-                src="/logodesign.png"
+                src="/wedding-addons-logo.png"
                 alt="Wedding Add-Ons Logo"
                 width={150}
                 height={60}
-                style={{ width: 'auto', height: '50px' }}
+                style={{ width: 'auto', height: '50px', mixBlendMode: 'multiply' }}
                 priority
               />
             </div>

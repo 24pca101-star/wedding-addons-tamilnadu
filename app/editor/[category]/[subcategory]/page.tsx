@@ -13,6 +13,7 @@ import UploadsPanel from "@/components/editor/UploadPanel";
 import ToteBagUploadPanel from "@/components/editor/ToteBagUploadPanel";
 import AIPanel from "@/components/editor/AIPanel";
 import LayersPanel from "@/components/editor/LayersPanel";
+import WeddingTemplatesPanel from "@/components/editor/WeddingTemplatesPanel";
 import { exportAsPNG, exportAsPDF } from "@/utils/export";
 import { exportViaPsdService } from "@/utils/psdExport";
 import { FabricProvider, useFabric } from "@/context/FabricContext";
@@ -50,7 +51,10 @@ function EditorContent() {
         previewUrl,
         psdMetadata,
         mockupMode,
-        setMockupMode
+        setMockupMode,
+        setBackgroundImage,
+        isPreview,
+        setIsPreview
     } = useFabric();
 
     const [activePanel, setActivePanel] = useState<"text" | "elements" | "uploads" | "shapes" | "ai" | "layers">("text");
@@ -63,18 +67,48 @@ function EditorContent() {
     const bagType = searchParams.get("bagType");
 
     const isToteBag = subcategory === 'welcome-tote-bag';
+    const isDirectionalBoard = subcategory === 'directional-sign-boards';
+    const isCustomMockup = isToteBag || isDirectionalBoard;
 
-    // Set default panel and mockup state for Tote Bags
+    // Set default panel and mockup state for Custom Mockups
     useEffect(() => {
-        if (isToteBag) {
+        if (isCustomMockup) {
             setActivePanel("uploads");
-            setShowMockup(true);
+            // Only show the 3D mockup overlay by default for Tote Bags
+            if (isToteBag) {
+                setShowMockup(true);
+            }
+            // Directional boards should always start in manual mode for direct editing
+            if (isDirectionalBoard) {
+                setMockupMode("manual");
+            }
         }
-    }, [isToteBag]);
+    }, [isCustomMockup, isToteBag, isDirectionalBoard, setMockupMode]);
 
-    // Standardize dimensions for Tote Bag to ensure it fits the mockup visual perfectly
-    const canvasWidth = isToteBag ? 400 : (canvas?.width || psdMetadata?.width || 400);
-    const canvasHeight = isToteBag ? 500 : (canvas?.height || psdMetadata?.height || 600);
+    // Handle background image for Directional Signs (Real-time board editing)
+    useEffect(() => {
+        if (isDirectionalBoard && canvas && bagType) {
+            const boardPath = isPreview 
+                ? `/assets/mockups/directional-boards/${bagType}.png`
+                : `/assets/mockups/directional-boards/${bagType}-no-bg.png`;
+            setBackgroundImage(boardPath);
+
+            // Disable interaction in preview mode
+            canvas.getObjects().forEach(obj => {
+                obj.set({
+                    selectable: !isPreview,
+                    evented: !isPreview,
+                    hasControls: !isPreview
+                });
+            });
+            if (isPreview) canvas.discardActiveObject();
+            canvas.requestRenderAll();
+        }
+    }, [isDirectionalBoard, canvas, bagType, setBackgroundImage, isPreview]);
+
+    // Standardize dimensions for Custom Mockups to ensure it fits the mockup visual perfectly
+    const canvasWidth = isToteBag ? 400 : (isDirectionalBoard ? 600 : (canvas?.width || psdMetadata?.width || 400));
+    const canvasHeight = isToteBag ? 500 : (isDirectionalBoard ? 600 : (canvas?.height || psdMetadata?.height || 600));
 
     useEffect(() => {
         if (canvasElementRef.current && category && subcategory) {
@@ -87,9 +121,8 @@ function EditorContent() {
 
             if (c && template && template !== "blank") {
                 loadPsdTemplate(template, c);
-            } else if (c && !isToteBag) {
-                // Only add safe area for non-tote bags by default
-                // Tote bags should start as 'bag-only' as requested
+            } else if (c && !isCustomMockup) {
+                // Only add safe area for non-custom mockups by default
                 addSafeArea(c);
             }
 
@@ -129,9 +162,9 @@ function EditorContent() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [canvas, deleteSelected, undo, redo]);
 
-    // sync object selectability based on mockup mode (Tote Bag only)
+    // sync object selectability based on mockup mode (Custom Mockups only)
     useEffect(() => {
-        if (!isToteBag || !canvas) return;
+        if (!isCustomMockup || !canvas) return;
 
         const isAutomated = mockupMode === 'automated';
         const objects = canvas.getObjects();
@@ -181,13 +214,15 @@ function EditorContent() {
 
     return (
         <div className="flex h-[calc(100vh-96px)] bg-gray-50 overflow-hidden font-sans">
-            <Sidebar activePanel={activePanel} setActivePanel={setActivePanel} />
+            <Sidebar activePanel={activePanel} setActivePanel={setActivePanel} isDirectionalBoard={isDirectionalBoard} />
 
             <div className="w-80 bg-white border-r overflow-y-auto overflow-x-hidden shadow-sm z-10">
                 {activePanel === "text" && <TextPanel />}
                 {activePanel === "elements" && <ElementsPanel />}
                 {activePanel === "shapes" && <ShapesPanel />}
-                {activePanel === "uploads" && (isToteBag ? <ToteBagUploadPanel /> : <UploadsPanel />)}
+                {activePanel === "uploads" && (
+                    isDirectionalBoard ? <WeddingTemplatesPanel /> : (isToteBag ? <ToteBagUploadPanel /> : <UploadsPanel />)
+                )}
                 {activePanel === "ai" && <AIPanel />}
                 {activePanel === "layers" && <LayersPanel />}
             </div>
@@ -196,27 +231,24 @@ function EditorContent() {
                 <Toolbar
                     download={handleDownload}
                     onShowMockup={() => setShowMockup(true)}
+                    isDirectionalBoard={isDirectionalBoard}
                 />
 
-                <div className={`flex-1 relative overflow-hidden flex flex-col ${isToteBag ? 'bg-white' : ''}`}>
-                    {!isToteBag ? (
+                <div className={`flex-1 relative overflow-hidden flex flex-col ${isCustomMockup ? 'bg-white' : ''}`}>
+                    {(!isCustomMockup || isDirectionalBoard) ? (
                         <EditorCanvas
                             width={canvasWidth}
                             height={canvasHeight}
                             canvasRef={canvasElementRef}
                             previewUrl={previewUrl}
                             zoom={zoom}
+                            isDirectionalBoard={isDirectionalBoard}
                         />
                     ) : (
-                        <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-                            {/* Left Side: Interactive 2D Editor */}
-                            <div className={`relative transition-all duration-500 ease-in-out bg-gray-50 flex flex-col group/canvas ${mockupMode === 'automated' ? 'w-full' : 'w-full md:w-1/2 border-r border-gray-200 shadow-xl z-10'}`}>
-                                <div className="absolute top-4 left-4 z-20 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full border border-gray-100 shadow-sm flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                                    <span className="text-[10px] font-black text-gray-900 uppercase tracking-widest">
-                                        {mockupMode === 'automated' ? 'Direct Studio' : 'Interactive Editor'}
-                                    </span>
-                                </div>
+                        <div className="flex-1 flex overflow-hidden">
+                            {/* Left Side: 2D Canvas Editor */}
+                            <div className="flex-1 border-r border-gray-100 relative bg-[#f8f9fa] flex flex-col min-w-0">
+                                {/* Interactive 2D Editor */}
                                 <EditorCanvas
                                     width={canvasWidth}
                                     height={canvasHeight}
@@ -226,15 +258,6 @@ function EditorContent() {
                                     bgImage={`/assets/mockups/${bagType || subcategory || "tote-bag"}/white bag.png`}
                                 />
                                 {/* On-Object Toolbar */}
-                                <ObjectToolbar />
-                            </div>
-
-                            {/* Right Side: Real-time 3D Mockup (Only in Manual Mode) */}
-                            <div className={`transition-all duration-500 ease-in-out relative bg-[#f8fafc] ${mockupMode === 'manual' ? 'flex-1 translate-x-0 opacity-100' : 'w-0 translate-x-full opacity-0 overflow-hidden'}`}>
-                                <div className="absolute top-4 left-4 z-20 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-gray-100 shadow-sm flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse" />
-                                    <span className="text-[10px] font-black text-pink-900 uppercase tracking-widest">Live 3D Preview</span>
-                                </div>
                                 <MockupPreview
                                     active={true}
                                     onClose={() => { }}
@@ -247,9 +270,30 @@ function EditorContent() {
                         </div>
                     )}
 
+                    {/* Preview Indicator Overlay */}
+                    {isPreview && (
+                        <div className="absolute top-6 left-1/2 -translate-x-1/2 px-6 py-2 bg-pink-600 text-white rounded-full font-black text-[10px] uppercase tracking-[0.2em] shadow-2xl shadow-pink-500/40 z-50 animate-bounce pointer-events-none">
+                            Preview Mode Active
+                        </div>
+                    )}
+
+                    {/* On-Object Toolbar (Floating Delete/Duplicate menu) */}
+                    <ObjectToolbar />
+
                     {/* Quick Adjustment Controls (Floating buttons) */}
-                    {isToteBag && (
+                    {isCustomMockup && (
                         <div className="absolute bottom-6 left-6 flex flex-col bg-white shadow-2xl rounded-2xl p-2 gap-4 border border-gray-100 z-40 animate-in slide-in-from-left duration-500">
+                            <button
+                                onClick={() => setIsPreview(!isPreview)}
+                                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all ${isPreview ? 'bg-pink-500 text-white shadow-lg shadow-pink-200' : 'text-gray-400 hover:bg-gray-50 hover:text-pink-500'}`}
+                                title={isPreview ? "Exit Preview" : "Preview on Board"}
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                            <div className="h-px bg-gray-100 mx-2" />
                             <button
                                 onClick={undo}
                                 className="w-10 h-10 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-pink-500 rounded-xl transition-all"

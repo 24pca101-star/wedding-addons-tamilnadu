@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import * as fabric from "fabric";
 import { Canvas, Textbox, Rect, Object as FabricObject } from "fabric";
 
 interface Props {
@@ -111,6 +112,36 @@ export const useEditorStyles = ({ canvasRef, saveHistory }: Props) => {
         }
     }, [canvasRef, saveHistory]);
 
+    const setBackgroundImage = useCallback(async (url: string) => {
+        const c = canvasRef.current;
+        if (!c) return;
+
+        try {
+            const img = await fabric.FabricImage.fromURL(url);
+
+            // Calculate scaling to cover or fit
+            const scale = Math.min(c.width! / img.width!, c.height! / img.height!);
+
+            c.set({
+                backgroundImage: img,
+            });
+
+            img.set({
+                scaleX: scale,
+                scaleY: scale,
+                originX: 'center',
+                originY: 'center',
+                left: c.width! / 2,
+                top: c.height! / 2,
+            });
+
+            c.renderAll();
+            saveHistory();
+        } catch (err) {
+            console.error("Failed to set canvas background image", err);
+        }
+    }, [canvasRef, saveHistory]);
+
     return {
         zoom,
         handleZoom,
@@ -119,6 +150,7 @@ export const useEditorStyles = ({ canvasRef, saveHistory }: Props) => {
         addSafeArea,
         toggleLock,
         centerObjectH,
-        centerObjectV
+        centerObjectV,
+        setBackgroundImage
     };
 };

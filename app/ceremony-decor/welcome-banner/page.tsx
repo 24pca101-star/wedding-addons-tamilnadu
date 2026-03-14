@@ -2,16 +2,16 @@
 import TemplateCard from "@/components/TemplateCard";
 
 const TEMPLATES = [
-  { id: 'design-1.psd', name: 'Rose Gold Floral', preview: '/storage/previews/design-1.psd' },
-  { id: 'design-2.psd', name: 'Winter Watercolor', preview: '/storage/previews/design-2.psd' },
-  { id: 'design-3.psd', name: 'Winter Photo Invite', preview: '/storage/previews/design-3.psd' },
-  { id: 'design-4.psd', name: 'Romantic Hearts', preview: '/storage/previews/design-4.psd' },
-  { id: 'design-5.psd', name: 'Premium Gold Photo', preview: '/storage/previews/design-5.psd' },
-  { id: 'design-6.psd', name: 'Artistic Yellow', preview: '/storage/previews/design-6.psd' },
-  { id: 'design-7.psd', name: 'Modern Elegant', preview: '/storage/previews/design-7.psd' },
-  { id: 'design-8.psd', name: 'Traditional Classic', preview: '/storage/previews/design-8.psd' },
-  { id: 'design9.psd', name: 'Royal Wedding Bloom', preview: '/storage/previews/design9.psd' },
-  { id: 'design10.psd', name: 'Royal Garden Bloom', preview: '/storage/previews/design10.psd' },
+  { id: 'design-1.psd', name: 'Winter Watercolor', preview: '/storage/previews/design-1.png' },
+  { id: 'design-2.psd', name: 'Modern Pink Floral', preview: '/storage/previews/design-2.png' },
+  { id: 'design-3.psd', name: 'Classic Floral Invite', preview: '/storage/previews/design-3.png' },
+  { id: 'design-4.psd', name: 'Vintage Wedding Planner', preview: '/storage/previews/design-4.png' },
+  { id: 'design-5.psd', name: 'Elegant Resort Banner', preview: '/storage/previews/design-5.png' },
+  { id: 'design-6.psd', name: 'Autumn Watercolor', preview: '/storage/previews/design-6.png' },
+  { id: 'design-7.psd', name: 'Pink Mandala Frame', preview: '/storage/previews/design-7.png' },
+  { id: 'design-8.psd', name: 'Traditional Classic', preview: '/storage/previews/design-8.png' },
+  { id: 'design9.psd', name: 'Royal Wedding Bloom', preview: '/storage/previews/design9.png' },
+  { id: 'design10.psd', name: 'Royal Garden Bloom', preview: '/storage/previews/design10.png' },
 ];
 
 export default function WelcomeBannerPage() {

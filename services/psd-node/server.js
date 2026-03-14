@@ -59,7 +59,7 @@ await loadFonts();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-import { parsePsdMetadata, generateCleanPreview } from './parser.js';
+import { parsePsdMetadata, generatePreview } from './parser.js';
 import { getFontMap, generateFontFaceCSS } from './fontLoader.js';
 
 // Logging middleware for debugging
@@ -150,8 +150,8 @@ app.get('/preview/:filename', async (req, res) => {
         }
 
         if (needsGeneration) {
-            console.log(`🎨 Generating NEW clean preview for ${psdFilename}`);
-            await generateCleanPreview(inputPath, outputPath);
+            console.log(`🎨 Generating NEW preview for ${psdFilename}`);
+            await generatePreview(inputPath, outputPath);
         }
 
         res.setHeader('Access-Control-Allow-Origin', '*');
@@ -191,7 +191,7 @@ app.post('/api/psd/upload', upload.single('psd'), async (req, res) => {
         const outputPath = path.join(PREVIEWS_DIR, req.file.originalname.replace('.psd', '.png'));
 
         // Ensure preview is generated
-        await generateCleanPreview(inputPath, outputPath);
+        await generatePreview(inputPath, outputPath);
 
         res.json({
             success: true,

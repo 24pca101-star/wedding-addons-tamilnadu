@@ -44,10 +44,20 @@ export default function TemplateCard({ id, name, previewUrl, category, subcatego
             href={`/editor/${category}/${subcategory}?template=${id}`}
             className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100 block h-full flex flex-col"
         >
-            <div className={`relative overflow-hidden aspect-[4/5] flex items-center justify-center bg-gradient-to-br ${colors.bg}`}>
-                <span className={`text-5xl font-bold ${colors.text} transform group-hover:scale-110 transition-transform duration-500 opacity-80`}>
-                    {name.charAt(0).toUpperCase()}
-                </span>
+            <div className={`relative overflow-hidden aspect-[3/2] flex items-center justify-center bg-gradient-to-br ${colors.bg}`}>
+                {!imgError && previewUrl ? (
+                    <img 
+                        src={previewUrl} 
+                        alt={name}
+                        className="object-contain w-full h-full transform group-hover:scale-105 transition-transform duration-500 p-2"
+                        onError={() => setImgError(true)}
+                    />
+                ) : (
+                    <span className={`text-5xl font-bold ${colors.text} transform group-hover:scale-110 transition-transform duration-500 opacity-80`}>
+                        {name.charAt(0).toUpperCase()}
+                    </span>
+                )}
+                
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
             </div>
             <div className="p-4 bg-white border-t border-gray-50 flex items-center justify-between mt-auto">

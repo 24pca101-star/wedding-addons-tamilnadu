@@ -1,94 +1,187 @@
 "use client";
 
-import React from 'react';
-import { Sparkles, MessageSquare, Wand2, Lightbulb } from 'lucide-react';
+import React, { useState } from 'react';
+import { Sparkles, MessageSquare, Wand2, Lightbulb, Loader2, Send, Image as ImageIcon } from 'lucide-react';
+import { useFabric } from '@/context/FabricContext';
+import * as fabric from 'fabric';
 
 export default function AIPanel() {
+    const { canvas, selectedObject, replaceImage } = useFabric();
+    const [prompt, setPrompt] = useState("");
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+
+    const isImageSelected = selectedObject && selectedObject.type === 'image';
+
+    const handleGenerate = async (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        if (!prompt.trim()) return;
+
+        setIsGenerating(true);
+        setError(null);
+        setGeneratedImage(null);
+
+        try {
+            const response = await fetch("/api/freepik", {
+                method: "POST",
+                headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    prompt: prompt
+                })
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`API Error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.base64) {
+                 setGeneratedImage(`data:image/jpeg;base64,${data.base64}`);
+            } else if (data.data?.[0]?.base64) {
+                 setGeneratedImage(`data:image/jpeg;base64,${data.data[0].base64}`);
+            } else if (data.url || data.data?.[0]?.url) {
+                 setGeneratedImage(data.url || data.data[0].url);
+            } else {
+                 throw new Error("Invalid response format from Freepik");
+            }
+            
+        } catch (err: any) {
+            console.error(err);
+            setError(err.message || "Failed to generate image");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleInsert = () => {
+        if (!generatedImage || !canvas) return;
+
+        if (isImageSelected) {
+            replaceImage(generatedImage);
+        } else {
+            fabric.FabricImage.fromURL(generatedImage).then((img) => {
+                const targetSize = Math.min(canvas.width! * 0.7, canvas.height! * 0.7);
+                const scale = Math.min(targetSize / img.width!, targetSize / img.height!);
+
+                img.set({
+                    scaleX: scale,
+                    scaleY: scale,
+                    originX: 'center',
+                    originY: 'center',
+                    shadow: new fabric.Shadow({
+                        color: 'rgba(0,0,0,0.1)',
+                        blur: 10,
+                        offsetX: 0,
+                        offsetY: 4
+                    })
+                });
+
+                canvas.add(img);
+                canvas.centerObject(img);
+                canvas.setActiveObject(img);
+                canvas.requestRenderAll();
+                canvas.fire("object:modified");
+            });
+        }
+    };
+
     return (
-        <div className="p-6 flex flex-col gap-6 animate-in slide-in-from-left duration-300">
+        <div className="p-6 flex flex-col gap-6 animate-in slide-in-from-left duration-300 h-full">
             <header>
                 <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 bg-pink-100 rounded-lg flex items-center justify-center">
                         <Sparkles className="text-pink-600" size={20} />
                     </div>
-                    <h2 className="text-xl font-serif font-black text-pink-900">AI Assistant</h2>
+                    <h2 className="text-xl font-serif font-black text-pink-900">AI Design</h2>
                 </div>
-                <p className="text-sm text-gray-500 italic">"Intelligent design at your fingertips."</p>
+                <p className="text-sm text-gray-500 italic">"Generate assets with Freepik AI"</p>
             </header>
 
-            <div className="space-y-4">
-                {/* Product Context Badge */}
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-pink-50 rounded-full w-fit border border-pink-100/50">
-                    <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
-                    <span className="text-[10px] font-black text-pink-600 uppercase tracking-widest">Tote Bag Context</span>
-                </div>
+            <div className="flex-1 flex flex-col space-y-4">
+                
+                {/* Generation Area */}
+                <div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-1">
+                    {/* Prompt Input Area */}
+                    <div className="bg-white border rounded-2xl shadow-sm overflow-hidden focus-within:border-pink-300 focus-within:ring-2 focus-within:ring-pink-100 transition-all">
+                        <form onSubmit={handleGenerate}>
+                            <textarea
+                                value={prompt}
+                                onChange={(e) => setPrompt(e.target.value)}
+                                placeholder="Describe the image you want to generate... e.g., 'aesthetic floral wedding border'"
+                                className="w-full p-4 min-h-[100px] resize-none focus:outline-none text-sm text-gray-700 bg-transparent"
+                                disabled={isGenerating}
+                            />
+                            <div className="bg-gray-50 px-4 py-3 flex justify-between items-center border-t">
+                                <span className="text-[10px] uppercase font-black tracking-widest text-gray-400">
+                                    Prompts
+                                </span>
+                                <button
+                                    type="submit"
+                                    disabled={isGenerating || !prompt.trim()}
+                                    className="flex items-center gap-2 px-4 py-2 bg-pink-600 hover:bg-pink-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-sm shadow-pink-200"
+                                >
+                                    {isGenerating ? (
+                                        <Loader2 size={16} className="animate-spin" />
+                                    ) : (
+                                        <Send size={16} />
+                                    )}
+                                    Generate
+                                </button>
+                            </div>
+                        </form>
+                    </div>
 
-                {/* AI Features */}
-                <div className="grid grid-cols-1 gap-3">
-                    <button className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-gray-100 hover:border-pink-200 hover:bg-pink-50/30 transition-all text-left group shadow-sm hover:shadow-md">
-                        <div className="w-10 h-10 bg-rose-50 rounded-xl flex items-center justify-center group-hover:bg-rose-100 transition-colors">
-                            <MessageSquare className="text-rose-600" size={20} />
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-gray-800">Generate Content</h3>
-                            <p className="text-[10px] text-gray-400">Write catchy headings & quotes</p>
-                        </div>
-                    </button>
-
-                    <button className="flex items-center gap-4 p-4 rounded-2xl bg-white border border-gray-100 hover:border-pink-200 hover:bg-pink-50/30 transition-all text-left group shadow-sm hover:shadow-md">
-                        <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center group-hover:bg-amber-100 transition-colors">
-                            <Wand2 className="text-amber-600" size={20} />
-                        </div>
-                        <div>
-                            <h3 className="text-sm font-bold text-gray-800">Smart Layout</h3>
-                            <p className="text-[10px] text-gray-400">Auto-align elements perfectly</p>
-                        </div>
-                    </button>
-                </div>
-
-                {/* Quick Suggestions Section */}
-                <div className="mt-4">
-                    <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                        <Lightbulb size={14} className="text-amber-500" />
-                        Quick Suggestions
-                    </h4>
+                    {/* Quick Prompts (clickable) */}
                     <div className="grid grid-cols-2 gap-2">
-                        <button className="p-3 bg-gray-50 hover:bg-white border border-gray-100 hover:border-pink-200 rounded-xl transition-all text-left">
-                            <span className="text-[10px] font-bold text-gray-700 block mb-1">Elegant Serif</span>
-                            <span className="text-[8px] text-gray-400">Apply classic wedding typography</span>
+                        <button 
+                            onClick={() => setPrompt("elegant rose gold floral corner border, watercolor style, transparent background, isolated")}
+                            className="p-3 bg-gray-50 hover:bg-pink-50 border border-gray-100 hover:border-pink-200 rounded-xl transition-all text-left text-[10px] font-bold text-gray-600"
+                        >
+                            Rose Gold Florals
                         </button>
-                        <button className="p-3 bg-gray-50 hover:bg-white border border-gray-100 hover:border-pink-200 rounded-xl transition-all text-left">
-                            <span className="text-[10px] font-bold text-gray-700 block mb-1">Floral Accents</span>
-                            <span className="text-[8px] text-gray-400">Add subtle botanical elements</span>
-                        </button>
-                        <button className="p-3 bg-gray-50 hover:bg-white border border-gray-100 hover:border-pink-200 rounded-xl transition-all text-left">
-                            <span className="text-[10px] font-bold text-gray-700 block mb-1">Royal Gold</span>
-                            <span className="text-[8px] text-gray-400">Elevate with premium metallic tones</span>
-                        </button>
-                        <button className="p-3 bg-gray-50 hover:bg-white border border-gray-100 hover:border-pink-200 rounded-xl transition-all text-left">
-                            <span className="text-[10px] font-bold text-gray-700 block mb-1">Minimalist</span>
-                            <span className="text-[8px] text-gray-400">Clean, modern spacing & colors</span>
+                        <button 
+                            onClick={() => setPrompt("minimalist geometric gold frame with subtle green leaves, elegant")}
+                            className="p-3 bg-gray-50 hover:bg-pink-50 border border-gray-100 hover:border-pink-200 rounded-xl transition-all text-left text-[10px] font-bold text-gray-600"
+                        >
+                            Geometric Frame
                         </button>
                     </div>
-                </div>
 
-                {/* Chat Placeholder */}
-                <div className="mt-8 bg-linear-to-br from-gray-900 to-gray-800 p-6 rounded-[2.5rem] shadow-xl relative overflow-hidden group border border-white/5">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-125 transition-transform">
-                        <Sparkles size={100} color="white" />
-                    </div>
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="px-2 py-0.5 bg-pink-500/20 rounded text-[8px] font-black text-pink-400 uppercase tracking-widest border border-pink-500/30">Beta</div>
-                            <h3 className="text-white font-bold text-sm">AI Design Chat</h3>
+                    {error && (
+                        <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600 font-medium">
+                            {error}
                         </div>
-                        <p className="text-gray-400 text-[10px] leading-relaxed">
-                            Describe your vision and watch the AI transform your design in real-time.
-                        </p>
-                        <button className="mt-4 w-full py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-[10px] font-black text-gray-300 uppercase tracking-widest transition-all">
-                            Join Waitlist
-                        </button>
-                    </div>
+                    )}
+
+                    {/* Generated Image Result */}
+                    {generatedImage && (
+                        <div className="mt-4 p-4 border border-pink-100 bg-pink-50/30 rounded-2xl flex flex-col items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <span className="text-[10px] uppercase font-black tracking-widest text-pink-600 zelf-start w-full text-center">Generated Result</span>
+                            <div className="relative group w-full aspect-square rounded-xl overflow-hidden shadow-sm border border-black/5 bg-gray-100 flex items-center justify-center">
+                                <img src={generatedImage} alt="AI Generated" className="object-contain w-full h-full" />
+                            </div>
+                            
+                            <button
+                                onClick={handleInsert}
+                                className="w-full flex items-center justify-center gap-2 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-xl font-bold shadow-md shadow-pink-200 transition-all hover:-translate-y-0.5"
+                            >
+                                <ImageIcon size={18} />
+                                {isImageSelected ? "Replace Selected Layer" : "Add to Canvas"}
+                            </button>
+                            
+                            {isImageSelected && (
+                                <p className="text-[10px] text-gray-500 text-center leading-relaxed">
+                                    The active layer <strong className="font-bold text-gray-700">will be replaced</strong> with this image while preserving its position, size, and rotation.
+                                </p>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

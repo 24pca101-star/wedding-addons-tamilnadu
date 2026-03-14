@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { Canvas, Textbox, Rect, Object as FabricObject } from "fabric";
+import { Canvas, Textbox, Rect, Object as FabricObject, FabricImage, Shadow } from "fabric";
 
 interface Props {
     canvasRef: React.MutableRefObject<Canvas | null>;
@@ -127,6 +127,66 @@ export const useEditorActions = ({ canvasRef, isAlive, saveHistory }: Props) => 
         }
     }, [canvasRef, saveHistory]);
 
+    const replaceImage = useCallback((url: string) => {
+        const c = canvasRef.current;
+        if (!c) return;
+
+        const activeObject = c.getActiveObject() as FabricImage;
+        if (!activeObject || activeObject.type !== 'image') {
+            console.warn("No image is currently selected to replace.");
+            return;
+        }
+
+        // Capture properties of the existing image to preserve them
+        const {
+            left, top, scaleX, scaleY, angle, opacity, flipX, flipY, originX, originY
+        } = activeObject;
+
+        // Remember the z-index of the original object
+        const objects = c.getObjects();
+        const zIndex = objects.indexOf(activeObject);
+
+        FabricImage.fromURL(url).then((img) => {
+            // Apply all the captured visual properties to the new image
+            img.set({
+                left,
+                top,
+                scaleX: scaleX !== undefined ? scaleX : 1,
+                scaleY: scaleY !== undefined ? scaleY : 1,
+                angle: angle || 0,
+                opacity: opacity !== undefined ? opacity : 1,
+                flipX: flipX || false,
+                flipY: flipY || false,
+                originX: originX || 'left',
+                originY: originY || 'top',
+                // Re-apply the shadow if it existed, or add a subtle one
+                shadow: activeObject.shadow || new Shadow({
+                    color: 'rgba(0,0,0,0.1)',
+                    blur: 10,
+                    offsetX: 0,
+                    offsetY: 4
+                })
+            });
+
+            // Remove the old image
+            c.remove(activeObject);
+
+            // Add the new image
+            c.add(img);
+
+            // Re-stack it exactly where the old image was
+            c.moveObjectTo(img, zIndex);
+
+            // Select the new image
+            c.setActiveObject(img);
+            c.requestRenderAll();
+            c.fire("object:modified");
+            saveHistory();
+        }).catch(err => {
+            console.error("Failed to load image for replacement:", err);
+        });
+    }, [canvasRef, saveHistory]);
+
     return {
         addText,
         addRect,
@@ -134,6 +194,7 @@ export const useEditorActions = ({ canvasRef, isAlive, saveHistory }: Props) => 
         bringToFront,
         sendToBack,
         bringForward,
-        sendBackward
+        sendBackward,
+        replaceImage
     };
 };

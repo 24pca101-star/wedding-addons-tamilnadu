@@ -37,7 +37,8 @@ export const useFabricEditor = () => {
         bringToFront,
         sendToBack,
         bringForward,
-        sendBackward
+        sendBackward,
+        replaceImage
     } = useEditorActions({ canvasRef, isAlive, saveHistory });
 
     // 4. Style Management
@@ -152,6 +153,7 @@ export const useFabricEditor = () => {
         setMockupMode,
         isPreview,
         setIsPreview,
-        autoLayout
+        autoLayout,
+        replaceImage
     };
 };

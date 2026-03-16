@@ -10,7 +10,7 @@ interface Props {
 
 export const useImageActions = ({ canvasRef, saveHistory }: Props) => {
     
-    const replaceImage = useCallback((url: string) => {
+    const replaceImage = useCallback((url: string, mode: 'cover' | 'contain' | 'stretch' = 'cover') => {
         const c = canvasRef.current;
         if (!c) return;
 
@@ -20,19 +20,40 @@ export const useImageActions = ({ canvasRef, saveHistory }: Props) => {
             return;
         }
 
+        // Get the target visual dimensions of the current object
+        const targetWidth = activeObject.width * activeObject.scaleX;
+        const targetHeight = activeObject.height * activeObject.scaleY;
+
         const {
-            left, top, scaleX, scaleY, angle, opacity, flipX, flipY, originX, originY
+            left, top, angle, opacity, flipX, flipY, originX, originY
         } = activeObject;
 
         const objects = c.getObjects();
         const zIndex = objects.indexOf(activeObject);
 
         FabricImage.fromURL(url).then((img) => {
+            let finalScaleX = 1;
+            let finalScaleY = 1;
+
+            if (mode === 'stretch') {
+                finalScaleX = targetWidth / img.width;
+                finalScaleY = targetHeight / img.height;
+            } else if (mode === 'contain') {
+                const scale = Math.min(targetWidth / img.width, targetHeight / img.height);
+                finalScaleX = scale;
+                finalScaleY = scale;
+            } else {
+                // Default: Cover (Fill)
+                const scale = Math.max(targetWidth / img.width, targetHeight / img.height);
+                finalScaleX = scale;
+                finalScaleY = scale;
+            }
+
             img.set({
                 left,
                 top,
-                scaleX: scaleX !== undefined ? scaleX : 1,
-                scaleY: scaleY !== undefined ? scaleY : 1,
+                scaleX: finalScaleX,
+                scaleY: finalScaleY,
                 angle: angle || 0,
                 opacity: opacity !== undefined ? opacity : 1,
                 flipX: flipX || false,

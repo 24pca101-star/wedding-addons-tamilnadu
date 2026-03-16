@@ -11,6 +11,7 @@ export default function AIPanel() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [generatedImage, setGeneratedImage] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [fitMode, setFitMode] = useState<'cover' | 'contain' | 'stretch'>('cover');
 
     const isImageSelected = selectedObject && selectedObject.type === 'image';
 
@@ -63,7 +64,7 @@ export default function AIPanel() {
         if (!generatedImage || !canvas) return;
 
         if (isImageSelected) {
-            replaceImage(generatedImage);
+            replaceImage(generatedImage, fitMode);
         } else {
             fabric.FabricImage.fromURL(generatedImage).then((img) => {
                 const targetSize = Math.min(canvas.width! * 0.7, canvas.height! * 0.7);
@@ -166,18 +167,33 @@ export default function AIPanel() {
                             <div className="relative group w-full aspect-square rounded-xl overflow-hidden shadow-sm border border-black/5 bg-gray-100 flex items-center justify-center">
                                 <img src={generatedImage} alt="AI Generated" className="object-contain w-full h-full" />
                             </div>
+
+                            {isImageSelected && (
+                                <div className="w-full space-y-2">
+                                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Fit Mode</label>
+                                    <select 
+                                        value={fitMode}
+                                        onChange={(e) => setFitMode(e.target.value as any)}
+                                        className="w-full p-2 bg-white border border-pink-100 rounded-xl text-xs font-bold text-gray-700 focus:outline-none focus:ring-2 focus:ring-pink-200 transition-all cursor-pointer"
+                                    >
+                                        <option value="cover">Cover (Fill Area)</option>
+                                        <option value="contain">Contain (Fit Inside)</option>
+                                        <option value="stretch">Stretch (Exact Match)</option>
+                                    </select>
+                                </div>
+                            )}
                             
                             <button
                                 onClick={handleInsert}
                                 className="w-full flex items-center justify-center gap-2 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-xl font-bold shadow-md shadow-pink-200 transition-all hover:-translate-y-0.5"
                             >
                                 <ImageIcon size={18} />
-                                {isImageSelected ? "Replace Selected Layer" : "Add to Canvas"}
+                                {isImageSelected ? "Magic Replace" : "Add to Canvas"}
                             </button>
                             
                             {isImageSelected && (
                                 <p className="text-[10px] text-gray-500 text-center leading-relaxed">
-                                    The active layer <strong className="font-bold text-gray-700">will be replaced</strong> with this image while preserving its position, size, and rotation.
+                                    The active layer <strong className="font-bold text-gray-700">will be replaced</strong> using <strong className="text-pink-600">{fitMode}</strong> mode.
                                 </p>
                             )}
                         </div>

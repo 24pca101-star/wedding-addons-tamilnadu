@@ -1,14 +1,15 @@
-"use client";
-
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { Object as FabricObject } from "fabric";
 
-// Import modular hooks
+// Import granular feature hooks
 import { useCanvasLifecycle } from "./editor/useCanvasLifecycle";
 import { useHistory } from "./editor/useHistory";
-import { useEditorActions } from "./editor/useEditorActions";
-import { useEditorStyles } from "./editor/useEditorStyles";
 import { usePsdLoader } from "./editor/usePsdLoader";
+import { useTextActions } from "./editor/useTextActions";
+import { useImageActions } from "./editor/useImageActions";
+import { useLayerActions } from "./editor/useLayerActions";
+import { useViewActions } from "./editor/useViewActions";
+import { useShapeActions } from "./editor/useShapeActions";
 
 export const useFabricEditor = () => {
     // 1. Canvas Lifecycle
@@ -29,37 +30,53 @@ export const useFabricEditor = () => {
         redo
     } = useHistory({ canvasRef, isAlive });
 
-    // 3. Editor Actions
+    // 3. View Actions (Moved up to provide stable handleZoom)
+    const {
+        zoom,
+        handleZoom,
+        addSafeArea
+    } = useViewActions({ canvasRef });
+
+    // 4. PSD Loading
+    const {
+        loadPsdTemplate,
+        previewUrl,
+        psdMetadata
+    } = usePsdLoader({ canvasRef, isAlive, handleZoom });
+
+    // 5. Feature Actions (Granular)
     const {
         addText,
+        setFontFamily,
+        setTextColor,
+        setTextAlign,
+        setTextSize
+    } = useTextActions({ canvasRef, isAlive, saveHistory });
+
+    const {
+        replaceImage,
+        setBackgroundImage,
+        addImage
+    } = useImageActions({ canvasRef, saveHistory });
+
+    const {
         addRect,
         deleteSelected,
         bringToFront,
         sendToBack,
         bringForward,
         sendBackward,
-        replaceImage
-    } = useEditorActions({ canvasRef, isAlive, saveHistory });
-
-    // 4. Style Management
-    const {
-        zoom,
-        handleZoom,
-        setOpacity,
-        setFontFamily,
-        addSafeArea,
         toggleLock,
         centerObjectH,
         centerObjectV,
-        setBackgroundImage
-    } = useEditorStyles({ canvasRef, saveHistory });
+        setOpacity,
+        toggleVisibility,
+        duplicateObject
+    } = useLayerActions({ canvasRef, saveHistory });
 
-    // 5. PSD Loading
     const {
-        loadPsdTemplate,
-        previewUrl,
-        psdMetadata
-    } = usePsdLoader({ canvasRef, isAlive, handleZoom });
+        addShape
+    } = useShapeActions({ canvasRef, saveHistory });
 
     // 6. Mockup Mode (Automated vs Manual)
     const [mockupMode, setMockupMode] = useState<"automated" | "manual">("automated");
@@ -121,7 +138,8 @@ export const useFabricEditor = () => {
         };
     }, [canvas, updateSelection, saveHistory, canvasRef]);
 
-    return {
+    // 7. Memoize the return value to prevent context consumers from re-rendering on every editor render
+    const value = useMemo(() => ({
         canvas,
         setCanvas,
         initCanvas,
@@ -135,6 +153,7 @@ export const useFabricEditor = () => {
         handleZoom,
         addSafeArea,
         toggleLock,
+        toggleVisibility,
         resizeCanvas,
         disposeCanvas,
         bringToFront,
@@ -143,6 +162,9 @@ export const useFabricEditor = () => {
         sendBackward,
         setOpacity,
         setFontFamily,
+        setTextSize,
+        setTextColor,
+        setTextAlign,
         loadPsdTemplate,
         previewUrl,
         psdMetadata,
@@ -154,6 +176,19 @@ export const useFabricEditor = () => {
         isPreview,
         setIsPreview,
         autoLayout,
-        replaceImage
-    };
+        replaceImage,
+        addImage,
+        addShape,
+        duplicateObject
+    }), [
+        canvas, setCanvas, initCanvas, addText, addRect, deleteSelected, selectedObject, 
+        undo, redo, zoom, handleZoom, addSafeArea, toggleLock, toggleVisibility, 
+        resizeCanvas, disposeCanvas, bringToFront, sendToBack, bringForward, 
+        sendBackward, setOpacity, setFontFamily, setTextSize, setTextColor, 
+        setTextAlign, loadPsdTemplate, previewUrl, psdMetadata, centerObjectH, 
+        centerObjectV, setBackgroundImage, mockupMode, setMockupMode, isPreview, 
+        setIsPreview, autoLayout, replaceImage, addImage, addShape, duplicateObject
+    ]);
+
+    return value;
 };

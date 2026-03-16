@@ -14,6 +14,7 @@ export default function ObjectToolbar() {
         sendBackward,
         centerObjectH,
         centerObjectV,
+        duplicateObject,
         canvas
     } = useFabric();
 
@@ -34,16 +35,12 @@ export default function ObjectToolbar() {
                 return;
             }
 
-            // Get object bounding rect in canvas coordinates
             const boundingRect = activeObject.getBoundingRect();
             const canvasElement = canvas.lowerCanvasEl;
             if (!canvasElement) return;
 
-            // Get canvas position on screen
             const canvasRect = canvasElement.getBoundingClientRect();
 
-            // Calculate toolbar position (centered above the object)
-            // We add 10px buffer above the object
             const top = canvasRect.top + (boundingRect.top * canvas.getZoom()) - 60;
             const left = canvasRect.left + (boundingRect.left * canvas.getZoom()) + (boundingRect.width * canvas.getZoom() / 2);
 
@@ -58,9 +55,8 @@ export default function ObjectToolbar() {
         canvas.on('object:rotating', updatePosition);
         canvas.on('selection:updated', updatePosition);
 
-        // Also listen for scroll and resize events on the window
         window.addEventListener('scroll', updatePosition, true);
-        window.addEventListener('resize', updatePosition);
+        window.addEventListener('resizing', updatePosition); // Use resize instead?
 
         return () => {
             canvas.off('object:moving', updatePosition);
@@ -74,21 +70,6 @@ export default function ObjectToolbar() {
 
     if (!isVisible) return null;
 
-    const handleDuplicate = async () => {
-        if (!canvas || !selectedObject) return;
-        const activeObject = canvas.getActiveObject();
-        if (!activeObject) return;
-
-        const cloned = await activeObject.clone();
-        cloned.set({
-            left: activeObject.left! + 20,
-            top: activeObject.top! + 20,
-        });
-        canvas.add(cloned);
-        canvas.setActiveObject(cloned);
-        canvas.renderAll();
-    };
-
     return (
         <div
             ref={toolbarRef}
@@ -101,7 +82,7 @@ export default function ObjectToolbar() {
         >
             <div className="flex items-center gap-1">
                 <button
-                    onClick={handleDuplicate}
+                    onClick={duplicateObject}
                     className="p-2 hover:bg-white/10 rounded-lg transition-colors flex flex-col items-center gap-1 group"
                     title="Duplicate"
                 >
@@ -155,7 +136,6 @@ export default function ObjectToolbar() {
                 </button>
             </div>
 
-            {/* Pointer arrow */}
             <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-gray-900 border-r border-b border-white/10 rotate-45" />
         </div>
     );

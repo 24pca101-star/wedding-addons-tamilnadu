@@ -48,7 +48,7 @@ export const useCanvasLifecycle = () => {
 
             canvasRef.current.dispose();
             canvasRef.current = null;
-            setCanvas(null);
+            setCanvas(prev => prev === null ? null : null); // Still triggers render if not null
         }
     }, []);
 

@@ -50,11 +50,20 @@ function EditorContent() {
         loadPsdTemplate,
         previewUrl,
         psdMetadata,
+        centerObjectH,
+        centerObjectV,
         mockupMode,
         setMockupMode,
         setBackgroundImage,
         isPreview,
-        setIsPreview
+        setIsPreview,
+        duplicateObject,
+        addShape,
+        addImage,
+        setTextSize,
+        setTextColor,
+        setTextAlign,
+        toggleVisibility
     } = useFabric();
 
     const [activePanel, setActivePanel] = useState<"text" | "elements" | "uploads" | "shapes" | "ai" | "layers">("text");
@@ -154,6 +163,9 @@ function EditorContent() {
                 } else if (e.key === "y" || (e.shiftKey && e.key === "Z")) {
                     e.preventDefault();
                     redo();
+                } else if (e.key === "d") {
+                    e.preventDefault();
+                    duplicateObject();
                 }
             }
         };

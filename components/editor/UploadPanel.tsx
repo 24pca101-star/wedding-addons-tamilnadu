@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useFabric } from "@/context/FabricContext";
 
 export default function UploadPanel() {
-    const { canvas } = useFabric();
+    const { addImage } = useFabric();
     const [isDragging, setIsDragging] = useState(false);
 
     const handleUpload = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
@@ -18,37 +18,12 @@ export default function UploadPanel() {
             file = (e as React.DragEvent).dataTransfer.files[0];
         }
 
-        if (!file || !canvas) return;
+        if (!file) return;
 
         const reader = new FileReader();
         reader.onload = (f) => {
             const data = f.target?.result as string;
-            fabric.FabricImage.fromURL(data).then((img) => {
-                // Professional Auto-Mockup Scaling: 
-                // Aim for 70% of the canvas height or width, whichever is smaller
-                const targetSize = Math.min(canvas.width! * 0.7, canvas.height! * 0.7);
-                const scale = Math.min(targetSize / img.width!, targetSize / img.height!);
-
-                img.set({
-                    scaleX: scale,
-                    scaleY: scale,
-                    originX: 'center',
-                    originY: 'center',
-                    // Add a subtle drop shadow to make it look "printed" and premium
-                    shadow: new fabric.Shadow({
-                        color: 'rgba(0,0,0,0.1)',
-                        blur: 10,
-                        offsetX: 0,
-                        offsetY: 4
-                    })
-                });
-
-                canvas.add(img);
-                canvas.centerObject(img);
-                canvas.setActiveObject(img);
-                canvas.requestRenderAll();
-                canvas.fire("object:modified");
-            });
+            addImage(data);
         };
         reader.readAsDataURL(file);
     };

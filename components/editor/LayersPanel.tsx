@@ -12,31 +12,27 @@ export default function LayersPanel() {
         deleteSelected,
         bringForward,
         sendBackward,
-        toggleLock
+        toggleLock,
+        toggleVisibility
     } = useFabric();
 
     const [layers, setLayers] = useState<fabric.Object[]>([]);
 
     const refreshLayers = () => {
         if (!canvas) return;
-        // Reversed so top layers appear at the top of the list
         const objects = [...canvas.getObjects()].reverse();
         setLayers(objects);
     };
 
     useEffect(() => {
         if (!canvas) return;
-
         const handleUpdate = () => refreshLayers();
-
         canvas.on("object:added", handleUpdate);
         canvas.on("object:removed", handleUpdate);
         canvas.on("selection:created", handleUpdate);
         canvas.on("selection:cleared", handleUpdate);
         canvas.on("selection:updated", handleUpdate);
-
         refreshLayers();
-
         return () => {
             canvas.off("object:added", handleUpdate);
             canvas.off("object:removed", handleUpdate);
@@ -46,17 +42,11 @@ export default function LayersPanel() {
         };
     }, [canvas]);
 
-    const handleToggleVisibility = (e: React.MouseEvent, obj: fabric.Object) => {
-        e.stopPropagation();
-        obj.set("visible", !obj.visible);
-        canvas?.requestRenderAll();
-        refreshLayers();
-    };
-
     const handleSelect = (obj: fabric.Object) => {
         if (!canvas) return;
         canvas.setActiveObject(obj);
         canvas.requestRenderAll();
+        // Since refreshing layers is triggered by selection change, no need to call here
     };
 
     const getLayerName = (obj: any) => {
@@ -149,7 +139,11 @@ export default function LayersPanel() {
 
                                     <div className="flex items-center gap-2 border-l pl-3 ml-1">
                                         <button
-                                            onClick={(e) => handleToggleVisibility(e, obj)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleVisibility(obj);
+                                                refreshLayers();
+                                            }}
                                             className={`p-1 rounded transition-colors ${obj.visible ? "text-gray-400 hover:text-pink-500" : "text-pink-500"
                                                 }`}
                                         >

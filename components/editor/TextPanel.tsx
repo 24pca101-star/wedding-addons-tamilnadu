@@ -2,14 +2,19 @@ import { useState, useEffect } from "react";
 import { useFabric } from "@/context/FabricContext";
 
 export default function TextPanel() {
-    const { addText, selectedObject, setFontFamily } = useFabric();
+    const { 
+        addText, 
+        selectedObject, 
+        setFontFamily,
+        setTextSize,
+        setTextColor
+    } = useFabric();
     const isTextbox = selectedObject?.type === "textbox";
 
-    // Local state to track properties for smooth UI updates
+    // Local state for smooth input experience
     const [localFontSize, setLocalFontSize] = useState<string | number>(12);
     const [localFill, setLocalFill] = useState<string>("#000000");
 
-    // Sync local state when selection changes or object is modified
     useEffect(() => {
         if (selectedObject) {
             setLocalFontSize(Math.round((selectedObject as any).fontSize || 12));
@@ -20,7 +25,6 @@ export default function TextPanel() {
                 setLocalFill((selectedObject as any).fill || "#000000");
             };
 
-            // Listen for changes made via canvas handles (scaling, etc.)
             selectedObject.on('modified', handleUpdate);
             selectedObject.on('scaling', handleUpdate);
 
@@ -30,25 +34,6 @@ export default function TextPanel() {
             };
         }
     }, [selectedObject]);
-
-    const updateProperty = (prop: string, value: any) => {
-        if (!selectedObject) return;
-
-        // Update Fabric Object
-        if (prop === "fontSize") {
-            const numValue = Number(value);
-            if (!isNaN(numValue) && numValue > 0) {
-                selectedObject.set("fontSize" as any, numValue);
-                setLocalFontSize(numValue);
-            }
-        } else {
-            selectedObject.set(prop as any, value);
-            if (prop === "fill") setLocalFill(value);
-        }
-
-        selectedObject.setCoords();
-        selectedObject.canvas?.requestRenderAll();
-    };
 
     const FONTS = [
         { name: "Inter", family: "Inter, sans-serif", type: "Sans" },
@@ -130,7 +115,7 @@ export default function TextPanel() {
                                     onChange={(e) => {
                                         const val = e.target.value;
                                         setLocalFontSize(val);
-                                        updateProperty("fontSize", val);
+                                        setTextSize(val);
                                     }}
                                     className="w-full bg-gray-50 border-none rounded-lg p-2 text-sm font-bold focus:ring-2 focus:ring-pink-500 outline-none"
                                 />
@@ -141,7 +126,11 @@ export default function TextPanel() {
                                     <input
                                         type="color"
                                         value={localFill}
-                                        onChange={(e) => updateProperty("fill", e.target.value)}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            setLocalFill(val);
+                                            setTextColor(val);
+                                        }}
                                         className="w-full h-9 p-0 border-none rounded-lg cursor-pointer overflow-hidden"
                                     />
                                 </div>

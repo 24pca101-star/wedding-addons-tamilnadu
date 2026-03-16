@@ -18,7 +18,7 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
     useEffect(() => {
         const loadPsdFonts = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/psd/fonts");
+                const response = await fetch("http://localhost:5005/api/psd/fonts");
                 if (!response.ok) return;
                 const data = await response.json();
                 if (data.css) {
@@ -47,7 +47,7 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
         try {
             console.log(`Fabric: Loading LAYERED PSD template ${filename} (LoadID: ${loadId})`);
 
-            const response = await fetch(`http://localhost:5199/api/Psd/split/${filename}`);
+            const response = await fetch(`http://localhost:5005/api/psd/layers/${filename}`);
             if (!response.ok) throw new Error(`Metadata fetch failed: ${response.status}`);
 
             if (loadId !== latestLoadId.current) return;
@@ -104,7 +104,7 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
                 setPreviewUrl(prev => prev || "");
 
                 // 2. Load layers with Manual Scaling (Explicit Property Calculation)
-                const templatePreviewUrl = `http://localhost:5001/preview/${filename.replace('.psd', '.png')}`;
+                const templatePreviewUrl = `http://localhost:5005/preview/${filename.replace('.psd', '.png')}`;
                 setPreviewUrl(templatePreviewUrl);
 
                 let layersProcessed = 0;

@@ -108,7 +108,6 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
 
             if (isGroup && !shouldFlatten) {
                 console.log(`📂 Entering Group (Open): ${name}`);
-                // ag-psd children are ordered TOP to BOTTOM.
                 for (const child of item.children) {
                     await processLayers(child);
                 }
@@ -167,16 +166,32 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
                     left: dims.x,
                     width: dims.width,
                     height: dims.height,
-                    opacity: item.opacity ?? 1,
+                    opacity: Math.round((item.opacity ?? 1) * 255), // Convert 0-1 to 0-255
                     visible: item.visible !== false,
                     imageUrl: layerImageUrl,
                     isFlattened: shouldFlatten,
                     text: isText ? {
                         value: item.text.text,
-                        font: item.text.fonts?.[0]?.name || 'Inter',
-                        size: item.text.fonts?.[0]?.size || 24,
-                        color: item.text.colors?.[0] || [0, 0, 0, 255],
-                        alignment: item.text.justification || 'left'
+                        font: item.text.style?.font?.name || item.text.fonts?.[0]?.name || 'Inter',
+                        // ag-psd text layers have a transform matrix [a, b, c, d, tx, ty]
+                        // We must multiply the style fontSize by the scale factor from the transform (usually diagonals a and d)
+                        size: (() => {
+                            const baseFontSize = item.text.style?.fontSize || item.text.fonts?.[0]?.size || 24;
+                            const transform = item.text.transform;
+                            let scaleFactor = 1;
+                            if (transform && transform.length >= 4) {
+                                // Scale is the magnitude of the basis vectors (usually just transform[0] or transform[3])
+                                scaleFactor = Math.sqrt(transform[0] * transform[0] + transform[1] * transform[1]);
+                            }
+                            // PSD resolution: 72dpi means 1pt = 1px.
+                            const resolution = typeof psd.resolution === 'object' ? psd.resolution.horizontal : (psd.resolution || 72);
+                            const resFactor = resolution / 72;
+                            return Math.round(baseFontSize * scaleFactor * resFactor);
+                        })(),
+                        color: item.text.style?.fillColor 
+                            ? [item.text.style.fillColor.r, item.text.style.fillColor.g, item.text.style.fillColor.b, 255]
+                            : (item.text.colors?.[0] || [0, 0, 0, 255]),
+                        alignment: item.text.paragraphStyle?.justification || item.text.justification || 'left'
                     } : null
                 };
                 layers.push(layer);
@@ -195,7 +210,7 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
                     fontFamily: layer.text?.font,
                     color: layer.text?.color,
                     textAlign: layer.text?.alignment,
-                    opacity: layer.opacity,
+                    opacity: Math.round((item.opacity ?? 1) * 255),
                     visible: layer.visible,
                     isFlattened: shouldFlatten
                 });
@@ -241,9 +256,8 @@ export async function generateCleanPreview(filePath, outputPath) {
             const isVisible = parentVisible && item.visible !== false;
 
             if (item.children) {
-                // To draw correctly, iterate REVERSE (BOTTOM to TOP).
-                for (let i = item.children.length - 1; i >= 0; i--) {
-                    drawLayers(item.children[i], isVisible);
+                for (const child of item.children) {
+                    drawLayers(child, isVisible);
                 }
             } else {
                 const isText = (item.text != null);
@@ -279,7 +293,7 @@ export async function generatePreview(filePath, outputPath) {
         } else {
             function drawAll(item) {
                 if (item.children) {
-                    for (let i = item.children.length - 1; i >= 0; i--) drawAll(item.children[i]);
+                    for (const child of item.children) drawAll(child);
                 } else if (item.canvas && item.visible !== false) {
                     ctx.globalAlpha = item.opacity ?? 1;
                     ctx.drawImage(item.canvas, item.left || 0, item.top || 0);

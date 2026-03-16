@@ -36,6 +36,41 @@ const FONTS_DIR = path.resolve(__dirname, './fonts');
     if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
 });
 
+// Helper to find template file with various naming fallbacks (design-X vs designX)
+async function findTemplateFile(filename) {
+    const base = filename.endsWith('.psd') ? filename : `${filename}.psd`;
+    const fullPath = path.join(TEMPLATES_DIR, base);
+    
+    if (existsSync(fullPath)) return fullPath;
+
+    // Fallback 1: Try adding/removing hyphen after 'design'
+    let fallback;
+    if (base.startsWith('design-')) {
+        fallback = base.replace('design-', 'design');
+    } else if (base.startsWith('design')) {
+        fallback = base.replace('design', 'design-');
+    }
+    
+    if (fallback) {
+        const fallbackPath = path.join(TEMPLATES_DIR, fallback);
+        if (existsSync(fallbackPath)) {
+            console.log(`💡 Found fallback path: ${fallbackPath} for ${filename}`);
+            return fallbackPath;
+        }
+    }
+
+    // Fallback 2: Case-insensitive search
+    try {
+        const files = await fs.readdir(TEMPLATES_DIR);
+        const match = files.find(f => f.toLowerCase() === base.toLowerCase());
+        if (match) return path.join(TEMPLATES_DIR, match);
+    } catch (e) {
+        console.error('Error in readdir fallback:', e);
+    }
+
+    return null;
+}
+
 // Font mapping
 const FONT_OBJECTS = {};
 async function loadFonts() {
@@ -98,9 +133,14 @@ app.get('/api/psd/fonts', (req, res) => {
 
 app.get('/api/psd/layers/:filename', async (req, res) => {
     try {
-        const filename = req.params.filename.endsWith('.psd') ? req.params.filename : `${req.params.filename}.psd`;
-        const filePath = path.join(TEMPLATES_DIR, filename);
-        if (!existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+        const filePath = await findTemplateFile(req.params.filename);
+        if (!filePath) {
+            console.warn(`❌ 404: Template not found: ${req.params.filename}`);
+            return res.status(404).json({ error: 'File not found' });
+        }
+        
+        const filename = path.basename(filePath);
+        console.log(`✨ Loading layers for: ${filename}`);
 
         const PUBLIC_DIR = path.resolve(process.cwd(), '../../public');
         const metadata = await parsePsdMetadata(filePath, PUBLIC_DIR);
@@ -113,9 +153,10 @@ app.get('/api/psd/layers/:filename', async (req, res) => {
 
 app.get('/parse/:filename', async (req, res) => {
     try {
-        const filename = req.params.filename.endsWith('.psd') ? req.params.filename : `${req.params.filename}.psd`;
-        const filePath = path.join(TEMPLATES_DIR, filename);
-        if (!existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+        const filePath = await findTemplateFile(req.params.filename);
+        if (!filePath) return res.status(404).json({ error: 'File not found' });
+
+        const filename = path.basename(filePath);
 
         const PUBLIC_DIR = path.resolve(process.cwd(), '../../public');
         const metadata = await parsePsdMetadata(filePath, PUBLIC_DIR);
@@ -170,7 +211,7 @@ app.get('/api/psd/templates', async (req, res) => {
             id: f,
             name: f.replace('.psd', '').replace(/-/g, ' '),
             filename: f,
-            preview: `http://localhost:5001/preview/${f.replace('.psd', '.png')}`
+            preview: `http://localhost:5005/preview/${f.replace('.psd', '.png')}`
         }));
         res.json(templates);
     } catch (error) {
@@ -196,7 +237,7 @@ app.post('/api/psd/upload', upload.single('psd'), async (req, res) => {
         res.json({
             success: true,
             filename: req.file.originalname,
-            previewUrl: `http://localhost:5001/preview/${req.file.originalname.replace('.psd', '.png')}`
+            previewUrl: `http://localhost:5005/preview/${req.file.originalname.replace('.psd', '.png')}`
         });
     } catch (error) {
         console.error('Upload failed:', error);

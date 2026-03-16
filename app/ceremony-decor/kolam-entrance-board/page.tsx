@@ -26,7 +26,7 @@ export default function KolamEntranceBoard() {
           <TemplateCard
             id="kolam-1.psd"
             name="Traditional Lotus Kolam"
-            previewUrl="http://localhost:5001/preview/kolam-1.png"
+            previewUrl="http://localhost:5005/preview/kolam-1.png"
             category="ceremony-decor"
             subcategory="kolam-entrance-board"
           />

@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, use } from 'react';
 import TemplateCard from "@/components/TemplateCard";
 import axios from 'axios';
 
@@ -11,18 +12,19 @@ interface Template {
     subcategory: string;
 }
 
-export default function PsdTemplatesPage({ params }: { params: { category: string } }) {
+export default function PsdTemplatesPage({ params }: { params: Promise<{ category: string }> }) {
+    const { category } = use(params);
     const [templates, setTemplates] = useState<Template[]>([]);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
 
     const fetchTemplates = async () => {
         try {
-            const response = await axios.get('http://localhost:5001/api/psd/templates');
+            const response = await axios.get('http://localhost:5005/api/psd/templates');
             // Filter by category if needed, or mapping them
             const mapped = response.data.map((t: any) => ({
                 ...t,
-                category: params.category,
+                category: category,
                 subcategory: 'welcome-banner' // Default for now
             }));
             setTemplates(mapped);
@@ -35,7 +37,7 @@ export default function PsdTemplatesPage({ params }: { params: { category: strin
 
     useEffect(() => {
         fetchTemplates();
-    }, [params.category]);
+    }, [category]);
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -46,7 +48,7 @@ export default function PsdTemplatesPage({ params }: { params: { category: strin
         formData.append('psd', file);
 
         try {
-            await axios.post('http://localhost:5001/api/psd/upload', formData);
+            await axios.post('http://localhost:5005/api/psd/upload', formData);
             await fetchTemplates();
         } catch (error) {
             alert("Upload failed");
@@ -57,7 +59,7 @@ export default function PsdTemplatesPage({ params }: { params: { category: strin
 
     const handleDelete = async (id: string) => {
         try {
-            await axios.delete(`http://localhost:5001/api/psd/${id}`);
+            await axios.delete(`http://localhost:5005/api/psd/${id}`);
             setTemplates(prev => prev.filter(t => t.id !== id));
         } catch (error) {
             alert("Delete failed");
@@ -70,7 +72,7 @@ export default function PsdTemplatesPage({ params }: { params: { category: strin
                 <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
                         <h1 className="text-4xl font-black text-pink-800 font-serif mb-4 capitalize">
-                            {params.category.replace('-', ' ')} Templates
+                            {category.replace('-', ' ')} Templates
                         </h1>
                         <p className="text-gray-600 font-medium">Manage and customize your PSD templates.</p>
                     </div>

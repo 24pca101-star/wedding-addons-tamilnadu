@@ -8,10 +8,8 @@ const TEMPLATES = [
   { id: 'design-4.psd', name: 'Vintage Wedding Planner', preview: '/storage/previews/design-4.png' },
   { id: 'design-5.psd', name: 'Elegant Resort Banner', preview: '/storage/previews/design-5.png' },
   { id: 'design-6.psd', name: 'Autumn Watercolor', preview: '/storage/previews/design-6.png' },
-  { id: 'design-7.psd', name: 'Pink Mandala Frame', preview: '/storage/previews/design-7.png' },
-  { id: 'design-8.psd', name: 'Traditional Classic', preview: '/storage/previews/design-8.png' },
-  { id: 'design9.psd', name: 'Royal Wedding Bloom', preview: '/storage/previews/design9.png' },
-  { id: 'design10.psd', name: 'Royal Garden Bloom', preview: '/storage/previews/design10.png' },
+  { id: 'design-9.psd', name: 'Royal Wedding Bloom', preview: '/storage/previews/design-9.png' },
+  { id: 'design-10.psd', name: 'Royal Garden Bloom', preview: '/storage/previews/design-10.png' },
 ];
 
 export default function WelcomeBannerPage() {

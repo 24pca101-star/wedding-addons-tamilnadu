@@ -1,4 +1,21 @@
-const BAG_TYPES: any[] = [];
+"use client";
+import TemplateCard from "@/components/TemplateCard";
+
+const BAG_TYPES = [
+  { id: 'totebag1', name: 'Premium Canvas Tote', desc: 'Natural White Texture' },
+  { id: 'totebag2', name: 'Luxury Cotton Bag', desc: 'Soft Cream Finish' },
+  { id: 'totebag4', name: 'Eco-Friendly Jute', desc: 'Traditional Hessian' },
+  { id: 'totebag5', name: 'Satin Wedding Pouch', desc: 'Glossy Silk Feel' },
+  { id: 'totebag6', name: 'Mini Welcome Bag', desc: 'Compact Gift Style' },
+];
+
+const TEMPLATES = [
+  { id: 'tote-bag-1.psd', name: 'Floral Welcome', preview: 'http://localhost:5005/preview/tote-bag-1.png' },
+  { id: 'tote-bag-2.psd', name: 'Royal Monogram', preview: 'http://localhost:5005/preview/tote-bag-2.png' },
+  { id: 'tote-bag-3.psd', name: 'Minimalist Script', preview: 'http://localhost:5005/preview/tote-bag-3.png' },
+  { id: 'tote-bag-4.psd', name: 'Traditional Pattern', preview: 'http://localhost:5005/preview/tote-bag-4.png' },
+  { id: 'tote-bag-5.psd', name: 'Modern Eucalyptus', preview: 'http://localhost:5005/preview/tote-bag-5.png' },
+];
 
 export default function WelcomeToteBag() {
   return (
@@ -14,6 +31,31 @@ export default function WelcomeToteBag() {
           <div className="mt-8 h-1 w-24 mx-auto bg-pink-100 rounded-full" />
         </header>
 
+        {/* Templates Section */}
+        <section className="mb-20">
+          <h2 className="text-2xl font-black text-gray-900 mb-8 uppercase tracking-tight">Design Templates</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <TemplateCard
+              id="blank"
+              name="Start from Scratch"
+              previewUrl="/assets/blank-canvas.png"
+              category="guest-gift-keepsakes"
+              subcategory="welcome-tote-bag"
+            />
+            {TEMPLATES.map(t => (
+              <TemplateCard
+                key={t.id}
+                id={t.id}
+                name={t.name}
+                previewUrl={t.preview}
+                category="guest-gift-keepsakes"
+                subcategory="welcome-tote-bag"
+              />
+            ))}
+          </div>
+        </section>
+
+        <h2 className="text-2xl font-black text-gray-900 mb-8 uppercase tracking-tight">Blank Bag Styles</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
           {BAG_TYPES.map((bag) => (
             <div key={bag.id} className="group flex flex-col h-full bg-white rounded-[2.5rem] p-4 shadow-sm hover:shadow-2xl hover:shadow-pink-100/50 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] border border-gray-100/50 hover:scale-[1.02] relative overflow-hidden">
@@ -23,6 +65,9 @@ export default function WelcomeToteBag() {
                   src={`/assets/mockups/${bag.id}/white bag.png`}
                   alt={bag.name}
                   className="w-full h-full object-contain p-6 group-hover:scale-110 transition-transform duration-700 ease-out"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/assets/blank-canvas.png';
+                  }}
                 />
 
                 {/* Floating 3D Badge */}

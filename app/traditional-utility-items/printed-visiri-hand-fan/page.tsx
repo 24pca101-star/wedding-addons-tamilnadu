@@ -1,6 +1,15 @@
 "use client";
 import TemplateCard from "@/components/TemplateCard";
 
+const TEMPLATES = [
+  { id: 'hand-fan-1.psd', name: 'Traditional Floral', preview: 'http://localhost:5005/preview/hand-fan-1.png' },
+  { id: 'hand-fan-2.psd', name: 'Royal Gold Border', preview: 'http://localhost:5005/preview/hand-fan-2.png' },
+  { id: 'hand-fan-3.psd', name: 'Peacock Theme', preview: 'http://localhost:5005/preview/hand-fan-3.png' },
+  { id: 'hand-fan-4.psd', name: 'Vintage Wedding', preview: 'http://localhost:5005/preview/hand-fan-4.png' },
+  { id: 'hand-fan-5.psd', name: 'Modern Rose Bloom', preview: 'http://localhost:5005/preview/hand-fan-5.png' },
+  { id: 'hand-fan-6.psd', name: 'Classic Script', preview: 'http://localhost:5005/preview/hand-fan-6.png' },
+];
+
 export default function PrintedVisiriHandFan() {
   return (
     <div className="min-h-screen bg-pink-50/30 pt-32 pb-20 px-6">
@@ -10,7 +19,7 @@ export default function PrintedVisiriHandFan() {
             Printed Visiri Hand Fan
           </h1>
           <p className="text-gray-600 font-medium max-w-2xl mx-auto">
-            Custom traditional wedding printed visiri hand fans. Choose to begin customizing.
+            Custom traditional wedding printed visiri hand fans. Choose a professional PSD template to begin.
           </p>
         </header>
 
@@ -22,6 +31,16 @@ export default function PrintedVisiriHandFan() {
             category="traditional-utility-items"
             subcategory="printed-visiri-hand-fan"
           />
+          {TEMPLATES.map(t => (
+            <TemplateCard
+              key={t.id}
+              id={t.id}
+              name={t.name}
+              previewUrl={t.preview}
+              category="traditional-utility-items"
+              subcategory="printed-visiri-hand-fan"
+            />
+          ))}
         </div>
       </div>
     </div>

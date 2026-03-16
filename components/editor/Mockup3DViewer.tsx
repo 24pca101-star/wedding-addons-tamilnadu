@@ -16,7 +16,22 @@ function BagModel({ designUrl, productType }: Mockup3DViewerProps) {
 
     // 1. High-Quality Process and Cutout the Bag Image
     useEffect(() => {
-        const bagPath = `/assets/mockups/${productType || 'tote-bag'}/white bag.png`;
+        // Normalize productType mapping for directories
+        const dirMap: Record<string, string> = {
+            'welcome-tote-bag': 'tote-bags',
+            'printed-visiri-hand-fan': 'hand-fans',
+            'tote-bag': 'tote-bags', // Fallback
+            'hand-fan': 'hand-fans'   // Fallback
+        };
+
+        const dir = dirMap[productType] || productType;
+        const internalBagType = (productType === 'welcome-tote-bag' || dir === 'tote-bags') ? 'totebag1' : 'handfan1';
+        
+        // Use the generated PNG as the base for the 3D mockup
+        const bagPath = `/assets/mockups/${dir}/${designUrl ? (designUrl.split('template=')[1]?.replace('.psd', '') || internalBagType) : internalBagType}.png`;
+        
+        console.log(`3D Viewer: Loading mockup base from ${bagPath}`);
+        
         const img = new Image();
         img.crossOrigin = "anonymous";
         img.src = bagPath;

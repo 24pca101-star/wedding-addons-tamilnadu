@@ -305,7 +305,7 @@ export default function WeddingTemplatesPanel() {
                 canvas.setActiveObject(group);
                 canvas.requestRenderAll();
             } else if (item.image) {
-                const img = await fabric.FabricImage.fromURL(item.image);
+                const img = await fabric.FabricImage.fromURL(item.image, { crossOrigin: 'anonymous' });
 
                 if (img.width! > targetDim || img.height! > targetDim) {
                     const scale = targetDim / Math.max(img.width!, img.height!);
@@ -333,44 +333,46 @@ export default function WeddingTemplatesPanel() {
             <div className="p-6 border-b border-gray-50 bg-white sticky top-0 z-10">
                 <h3 className="text-xl font-black text-gray-900 font-sans tracking-tight flex items-center gap-2">
                     <Flower2 className="text-pink-500" size={24} />
-                    Wedding Signs
+                    Wedding Studio
                 </h3>
                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-1">Design Studio</p>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4 space-y-10 scrollbar-hide py-6">
 
-                {/* 0. BOARD STYLES */}
-                <section className="space-y-4">
-                    <div className="flex items-center gap-2 px-1">
-                        <Palette className="text-pink-500" size={16} />
-                        <h4 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">
-                            Board Styles
-                        </h4>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                        {BOARD_STYLES.map((board) => (
-                            <button
-                                key={board.id}
-                                onClick={() => handleBoardChange(board.id)}
-                                disabled={isPreview}
-                                className={`group flex flex-col items-center gap-2 p-2 rounded-xl border border-transparent transition-all ${isPreview ? 'opacity-50 cursor-not-allowed' : 'bg-gray-50 hover:bg-pink-50/50 hover:border-pink-100 active:scale-[0.95]'}`}
-                                title={isPreview ? "Exit preview to change board" : board.name}
-                            >
-                                <div className="w-full aspect-square bg-white rounded-lg overflow-hidden border border-gray-100">
-                                    <img
-                                        src={`/assets/mockups/directional-boards/${board.id}.png`}
-                                        alt={board.name}
-                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                    />
-                                </div>
-                                <span className="text-[9px] font-bold text-gray-500 group-hover:text-pink-600 transition-colors truncate w-full text-center">
-                                    {board.name}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-                </section>
+                {/* 0. BOARD STYLES - Only show for directional boards */}
+                {canvas?.height === 600 && canvas?.width === 600 && (
+                    <section className="space-y-4">
+                        <div className="flex items-center gap-2 px-1">
+                            <Palette className="text-pink-500" size={16} />
+                            <h4 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">
+                                Board Styles
+                            </h4>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                            {BOARD_STYLES.map((board) => (
+                                <button
+                                    key={board.id}
+                                    onClick={() => handleBoardChange(board.id)}
+                                    disabled={isPreview}
+                                    className={`group flex flex-col items-center gap-2 p-2 rounded-xl border border-transparent transition-all ${isPreview ? 'opacity-50 cursor-not-allowed' : 'bg-gray-50 hover:bg-pink-50/50 hover:border-pink-100 active:scale-[0.95]'}`}
+                                    title={isPreview ? "Exit preview to change board" : board.name}
+                                >
+                                    <div className="w-full aspect-square bg-white rounded-lg overflow-hidden border border-gray-100">
+                                        <img
+                                            src={`/assets/mockups/directional-boards/${board.id}.png`}
+                                            alt={board.name}
+                                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                        />
+                                    </div>
+                                    <span className="text-[9px] font-bold text-gray-500 group-hover:text-pink-600 transition-colors truncate w-full text-center">
+                                        {board.name}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </section>
+                )}
 
                 <div className="h-px bg-gray-50 mx-2" />
 

@@ -29,7 +29,8 @@ export default function EditorCanvas({
                     width: width,
                     height: height,
                     transform: `scale(${zoom})`,
-                    transformOrigin: 'center center'
+                    transformOrigin: 'center center',
+                    willChange: 'transform'
                 }}
             >
                 {/* Product Background Environment (e.g. the Bag background) */}

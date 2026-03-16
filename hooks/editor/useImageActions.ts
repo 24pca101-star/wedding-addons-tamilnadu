@@ -26,8 +26,9 @@ export const useImageActions = ({ canvasRef, saveHistory }: Props) => {
 
         const objects = c.getObjects();
         const zIndex = objects.indexOf(activeObject);
+        console.log(`Fabric: Replacing image with CORS anonymous: ${url}`);
 
-        FabricImage.fromURL(url).then((img) => {
+        FabricImage.fromURL(url, { crossOrigin: 'anonymous' }).then((img) => {
             img.set({
                 left,
                 top,
@@ -64,7 +65,8 @@ export const useImageActions = ({ canvasRef, saveHistory }: Props) => {
         if (!c) return;
 
         try {
-            const img = await FabricImage.fromURL(url);
+            console.log(`Fabric: Setting background with CORS anonymous: ${url}`);
+            const img = await FabricImage.fromURL(url, { crossOrigin: 'anonymous' });
             const scale = Math.min(c.width! / img.width!, c.height! / img.height!);
 
             c.set({ backgroundImage: img });
@@ -88,8 +90,9 @@ export const useImageActions = ({ canvasRef, saveHistory }: Props) => {
     const addImage = useCallback((url: string) => {
         const c = canvasRef.current;
         if (!c) return;
+        console.log(`Fabric: Adding image with CORS anonymous: ${url}`);
 
-        FabricImage.fromURL(url).then((img) => {
+        FabricImage.fromURL(url, { crossOrigin: 'anonymous' }).then((img) => {
             const targetSize = Math.min(c.width! * 0.7, c.height! * 0.7);
             const scale = Math.min(targetSize / img.width!, targetSize / img.height!);
 

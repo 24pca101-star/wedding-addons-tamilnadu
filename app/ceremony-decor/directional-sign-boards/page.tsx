@@ -1,4 +1,5 @@
 "use client";
+import TemplateCard from "@/components/TemplateCard";
 
 const BOARD_TYPES = [
   { id: 'easel-arch', name: 'Luxury Arch-Top Easel', desc: 'Premium Gold Finish' },
@@ -11,6 +12,10 @@ const BOARD_TYPES = [
   { id: 'easel-custom-darkwood', name: 'Dark Wood Roses', desc: 'Elegant Mauve Florals' },
   { id: 'easel-custom-hanging', name: 'Hanging Gold Frame', desc: 'Pink Drapes & Roses' },
   { id: 'easel-custom-round', name: 'Round White Easel', desc: 'Minimalist Floral Circle' },
+];
+
+const TEMPLATES = [
+  { id: 'directional-sign-1.psd', name: 'Classic Wedding Sign', preview: 'http://localhost:5005/preview/directional-sign-1.png' },
 ];
 
 export default function DirectionalSignBoards() {
@@ -27,6 +32,31 @@ export default function DirectionalSignBoards() {
           <div className="mt-8 h-1 w-24 mx-auto bg-pink-100 rounded-full" />
         </header>
 
+        {/* Templates Section */}
+        <section className="mb-20">
+          <h2 className="text-2xl font-black text-gray-900 mb-8 uppercase tracking-tight">Design Templates</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <TemplateCard
+              id="blank"
+              name="Start from Scratch"
+              previewUrl="/assets/blank-canvas.png"
+              category="ceremony-decor"
+              subcategory="directional-sign-boards"
+            />
+            {TEMPLATES.map(t => (
+              <TemplateCard
+                key={t.id}
+                id={t.id}
+                name={t.name}
+                previewUrl={t.preview}
+                category="ceremony-decor"
+                subcategory="directional-sign-boards"
+              />
+            ))}
+          </div>
+        </section>
+
+        <h2 className="text-2xl font-black text-gray-900 mb-8 uppercase tracking-tight">Blank Board Contexts</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
           {BOARD_TYPES.map((board) => (
             <div key={board.id} className="group flex flex-col h-full bg-white rounded-[2.5rem] p-4 shadow-sm hover:shadow-2xl hover:shadow-pink-100/50 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] border border-gray-100/50 hover:scale-[1.02] relative overflow-hidden">

@@ -73,11 +73,12 @@ function EditorContent() {
     const category = params?.category as string;
     const subcategory = params?.subcategory as string;
     const template = searchParams.get("template");
-    const bagType = searchParams.get("bagType");
+    const bagType = searchParams.get("bagType") || (subcategory === 'directional-sign-boards' ? 'easel-arch' : null);
 
     const isToteBag = subcategory === 'welcome-tote-bag';
     const isDirectionalBoard = subcategory === 'directional-sign-boards';
-    const isCustomMockup = isToteBag || isDirectionalBoard;
+    const isHandFan = subcategory === 'printed-visiri-hand-fan';
+    const isCustomMockup = isToteBag || isDirectionalBoard || isHandFan;
 
     // Set default panel and mockup state for Custom Mockups
     useEffect(() => {
@@ -87,20 +88,59 @@ function EditorContent() {
             if (isToteBag) {
                 setShowMockup(true);
             }
-            // Directional boards should always start in manual mode for direct editing
-            if (isDirectionalBoard) {
+            // Directional boards & Hand Fans should start in manual mode
+            if (isDirectionalBoard || isHandFan) {
                 setMockupMode("manual");
             }
         }
-    }, [isCustomMockup, isToteBag, isDirectionalBoard, setMockupMode]);
+    }, [isCustomMockup, isToteBag, isDirectionalBoard, isHandFan, setMockupMode]);
 
-    // Handle background image for Directional Signs (Real-time board editing)
+    // Handle background image for Custom Mockups
     useEffect(() => {
-        if (isDirectionalBoard && canvas && bagType) {
-            const boardPath = isPreview 
-                ? `/assets/mockups/directional-boards/${bagType}.png`
-                : `/assets/mockups/directional-boards/${bagType}-no-bg.png`;
-            setBackgroundImage(boardPath);
+        if (canvas && isCustomMockup) {
+            let boardPath = "";
+            let generatedPreviewPath = template && template !== "blank" 
+                ? `http://localhost:5005/preview/${template.replace('.psd', '.png')}` 
+                : "";
+            
+            if (isDirectionalBoard && bagType) {
+                boardPath = isPreview 
+                    ? `/assets/mockups/directional-boards/${bagType}.png`
+                    : `/assets/mockups/directional-boards/${bagType}-no-bg.png`;
+            } else if (isToteBag) {
+                // Map subcategory to asset folder 'tote-bags' and use selected bagType or default
+                const internalBagType = bagType || "totebag1";
+                boardPath = `/assets/mockups/tote-bags/${internalBagType}.png`;
+            } else if (isHandFan) {
+                // Map subcategory to asset folder 'hand-fans'
+                const internalFanType = bagType || "handfan1";
+                boardPath = `/assets/mockups/hand-fans/${internalFanType}.png`; 
+            }
+
+            const setCustomBackground = async (path: string) => {
+                try {
+                    // Check if image exists before setting it
+                    const img = new Image();
+                    img.onload = () => setBackgroundImage(path);
+                    img.onerror = () => {
+                        console.warn(`⚠️ Mockup image not found: ${path}. Falling back to generated preview or blank.`);
+                        if (generatedPreviewPath) {
+                            setBackgroundImage(generatedPreviewPath);
+                        } else {
+                            setBackgroundImage("/assets/blank-canvas.png");
+                        }
+                    };
+                    img.src = path;
+                } catch (e) {
+                    setBackgroundImage("/assets/blank-canvas.png");
+                }
+            };
+
+            if (boardPath) {
+                setCustomBackground(boardPath);
+            } else if (generatedPreviewPath) {
+                setBackgroundImage(generatedPreviewPath);
+            }
 
             // Disable interaction in preview mode
             canvas.getObjects().forEach(obj => {
@@ -113,11 +153,11 @@ function EditorContent() {
             if (isPreview) canvas.discardActiveObject();
             canvas.requestRenderAll();
         }
-    }, [isDirectionalBoard, canvas, bagType, setBackgroundImage, isPreview]);
+    }, [isCustomMockup, isDirectionalBoard, isToteBag, isHandFan, canvas, bagType, template, setBackgroundImage, isPreview]);
 
-    // Standardize dimensions for Custom Mockups to ensure it fits the mockup visual perfectly
-    const canvasWidth = isToteBag ? 400 : (isDirectionalBoard ? 600 : (canvas?.width || psdMetadata?.width || 400));
-    const canvasHeight = isToteBag ? 500 : (isDirectionalBoard ? 600 : (canvas?.height || psdMetadata?.height || 600));
+    // Standardize dimensions for Custom Mockups
+    const canvasWidth = isToteBag ? 400 : (isDirectionalBoard ? 600 : (isHandFan ? 500 : (canvas?.width || psdMetadata?.width || 400)));
+    const canvasHeight = isToteBag ? 500 : (isDirectionalBoard ? 600 : (isHandFan ? 500 : (canvas?.height || psdMetadata?.height || 600)));
 
     useEffect(() => {
         if (canvasElementRef.current && category && subcategory) {
@@ -233,7 +273,7 @@ function EditorContent() {
                 {activePanel === "elements" && <ElementsPanel />}
                 {activePanel === "shapes" && <ShapesPanel />}
                 {activePanel === "uploads" && (
-                    isDirectionalBoard ? <WeddingTemplatesPanel /> : (isToteBag ? <ToteBagUploadPanel /> : <UploadsPanel />)
+                    (isDirectionalBoard || isHandFan) ? <WeddingTemplatesPanel /> : (isToteBag ? <ToteBagUploadPanel /> : <UploadsPanel />)
                 )}
                 {activePanel === "ai" && <AIPanel />}
                 {activePanel === "layers" && <LayersPanel />}
@@ -247,7 +287,7 @@ function EditorContent() {
                 />
 
                 <div className={`flex-1 relative overflow-hidden flex flex-col ${isCustomMockup ? 'bg-white' : ''}`}>
-                    {(!isCustomMockup || isDirectionalBoard) ? (
+                    {(!isCustomMockup || isDirectionalBoard || isHandFan) ? (
                         <EditorCanvas
                             width={canvasWidth}
                             height={canvasHeight}
@@ -259,7 +299,7 @@ function EditorContent() {
                     ) : (
                         <div className="flex-1 flex overflow-hidden">
                             {/* Left Side: 2D Canvas Editor */}
-                            <div className="flex-1 border-r border-gray-100 relative bg-[#f8f9fa] flex flex-col min-w-0">
+                            <div className="flex-1 border-r border-gray-100 relative bg-[#f8f9fa] flex flex-row min-w-0">
                                 {/* Interactive 2D Editor */}
                                 <EditorCanvas
                                     width={canvasWidth}

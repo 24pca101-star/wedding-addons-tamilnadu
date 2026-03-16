@@ -1,13 +1,4 @@
-const BAG_TYPES = [
-  { id: 'paper-bag', name: 'Paper Bag Mockup', desc: 'Classic Brown Kraft' },
-  { id: 'luxury-tote', name: 'Luxury Shopping Bag', desc: 'Premium Yellow Matte' },
-  { id: 'carrier-bag', name: 'Carrier Bag Mockup', desc: 'Minimalist White' },
-  { id: 'white-tote', name: 'White Tote Bag', desc: 'Clean Canvas Cotton' },
-  { id: 'floral-gift-bag', name: 'Floral Gift Bag', desc: 'Elegant Pastel with Bow' },
-  { id: 'patterned-bag', name: 'Patterned Shopping Bag', desc: 'Orange Poppy Floral' },
-  { id: 'jute-bag', name: 'Traditional Jute Bag', desc: 'Eco-friendly Pink Trim' },
-  { id: 'gold-handle-bag', name: 'Luxury Gold Handle Bag', desc: 'Golden Loop Handles' },
-];
+const BAG_TYPES: any[] = [];
 
 export default function WelcomeToteBag() {
   return (

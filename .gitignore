@@ -68,6 +68,7 @@ Thumbs.dbu
 
 # Local Storage and Generated Assets
 /public/storage/
+*.psd
 
 # Local Debug and Log files
 services/**/*.txt

@@ -38,10 +38,14 @@ const FONTS_DIR = path.resolve(__dirname, './fonts');
 
 // Helper to find template file with various naming fallbacks (design-X vs designX)
 async function findTemplateFile(filename) {
+    console.log(`🔍 findTemplateFile looking for: ${filename} in ${TEMPLATES_DIR}`);
     const base = filename.endsWith('.psd') ? filename : `${filename}.psd`;
     const fullPath = path.join(TEMPLATES_DIR, base);
     
-    if (existsSync(fullPath)) return fullPath;
+    if (existsSync(fullPath)) {
+        console.log(`✅ Found direct match: ${fullPath}`);
+        return fullPath;
+    }
 
     // Fallback 1: Try adding/removing hyphen after 'design'
     let fallback;
@@ -54,7 +58,7 @@ async function findTemplateFile(filename) {
     if (fallback) {
         const fallbackPath = path.join(TEMPLATES_DIR, fallback);
         if (existsSync(fallbackPath)) {
-            console.log(`💡 Found fallback path: ${fallbackPath} for ${filename}`);
+            console.log(`💡 Found hyphen fallback: ${fallbackPath} for ${filename}`);
             return fallbackPath;
         }
     }
@@ -63,11 +67,15 @@ async function findTemplateFile(filename) {
     try {
         const files = await fs.readdir(TEMPLATES_DIR);
         const match = files.find(f => f.toLowerCase() === base.toLowerCase());
-        if (match) return path.join(TEMPLATES_DIR, match);
+        if (match) {
+            console.log(`💡 Found case-insensitive match: ${match}`);
+            return path.join(TEMPLATES_DIR, match);
+        }
     } catch (e) {
         console.error('Error in readdir fallback:', e);
     }
 
+    console.warn(`❌ Template not found anywhere: ${filename}`);
     return null;
 }
 
@@ -133,7 +141,9 @@ app.get('/api/psd/fonts', (req, res) => {
 
 app.get('/api/psd/layers/:filename', async (req, res) => {
     try {
-        const filePath = await findTemplateFile(req.params.filename);
+        const requestedFile = req.params.filename;
+        console.log(`📥 Incoming metadata request for: ${requestedFile}`);
+        const filePath = await findTemplateFile(requestedFile);
         if (!filePath) {
             console.warn(`❌ 404: Template not found: ${req.params.filename}`);
             return res.status(404).json({ error: 'File not found' });

@@ -76,16 +76,31 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
         const elements = [];
         let layerCounter = 0;
 
+        /**
+         * Recursively checks if a node or any of its children contains a text layer.
+         */
+        function hasTextLayers(node) {
+            if (node.text != null) return true;
+            if (node.children) {
+                return node.children.some(child => hasTextLayers(child));
+            }
+            return false;
+        }
+
         async function processLayers(item, parentVisible = true, parentOpacity = 1) {
             const name = item.name || 'Unnamed Layer';
             const isGroup = !!item.children;
             const effectiveVisible = parentVisible && (item.visible !== false);
             const effectiveOpacity = parentOpacity * (item.opacity ?? 1);
+            const containsText = hasTextLayers(item);
 
             const dims = getLayerDimensions(item);
 
-            if (isGroup) {
-                console.log(`📂 Entering Group: ${name} [X: ${dims.x}, Y: ${dims.y}]`);
+            if (isGroup && !containsText) {
+                console.log(`📂 Entering Group (Flattened): ${name} [Visible: ${effectiveVisible}]`);
+                // Flattening logic will be handled below by treating this group as a single layer
+            } else if (isGroup) {
+                console.log(`📂 Entering Group (Open): ${name} [Visible: ${effectiveVisible}]`);
                 if (item.children) {
                     for (const child of item.children) {
                         await processLayers(child, effectiveVisible, effectiveOpacity);
@@ -97,13 +112,66 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
             const layerIndex = layerCounter++;
             let layerImageUrl = null;
             const isText = (item.text != null);
+            const shouldFlatten = isGroup && !containsText;
 
-            console.log(`📄 Processing Layer: ${name} [Type: ${isText ? 'Text' : 'Image'}] [X: ${dims.x}, Y: ${dims.y}]`);
-            // Export image
-            if (!isText && item.canvas && layerStorageDir) {
+            console.log(`📄 Processing Layer: ${name} [Type: ${isText ? 'Text' : (shouldFlatten ? 'Flattened Group' : 'Image')}] [Visible: ${effectiveVisible}]`);
+
+            // Export image/flattened group layers
+            let canvasToExport = item.canvas;
+
+            // If it's a flattened group, we MUST compose it
+            if (shouldFlatten) {
+                console.log(`🛠️ Composing Flattened Group: ${name}`);
+                const groupCanvas = createCanvas(psd.width, psd.height);
+                const gCtx = groupCanvas.getContext('2d');
+
+                function compose(node) {
+                    if (node.children) {
+                        for (let i = node.children.length - 1; i >= 0; i--) compose(node.children[i]);
+                    } else if (node.canvas && node.visible !== false) {
+                        gCtx.globalAlpha = node.opacity ?? 1;
+                        gCtx.drawImage(node.canvas, Math.round(node.left || 0), Math.round(node.top || 0));
+                    }
+                }
+                compose(item);
+
+                if (dims.width > 0 && dims.height > 0) {
+                    const finalCanvas = createCanvas(dims.width, dims.height);
+                    const fCtx = finalCanvas.getContext('2d');
+                    fCtx.drawImage(groupCanvas, -dims.x, -dims.y);
+                    canvasToExport = finalCanvas;
+                } else {
+                    canvasToExport = groupCanvas;
+                }
+            }
+
+            if (canvasToExport && item.mask && item.mask.canvas) {
+                console.log(`🎭 Correcting Mask Alpha & Applying for layer: ${name}`);
+                const maskCanvas = item.mask.canvas;
+                const maskCtx = maskCanvas.getContext('2d');
+                const maskData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+                
+                for (let i = 0; i < maskData.data.length; i += 4) {
+                    maskData.data[i + 3] = maskData.data[i];
+                }
+                maskCtx.putImageData(maskData, 0, 0);
+
+                const maskedCanvas = createCanvas(canvasToExport.width, canvasToExport.height);
+                const mCtx = maskedCanvas.getContext('2d');
+                mCtx.drawImage(canvasToExport, 0, 0);
+
+                const mLeft = (item.mask.left || 0) - (item.left || 0);
+                const mTop = (item.mask.top || 0) - (item.top || 0);
+
+                mCtx.globalCompositeOperation = 'destination-in';
+                mCtx.drawImage(maskCanvas, mLeft, mTop);
+                canvasToExport = maskedCanvas;
+            }
+
+            if (canvasToExport && layerStorageDir) {
                 const layerId = `${layerIndex}.png`;
                 const layerPath = `${layerStorageDir}/${layerId}`;
-                const pngBuffer = item.canvas.toBuffer('image/png');
+                const pngBuffer = canvasToExport.toBuffer('image/png');
                 await sharp(pngBuffer).toFile(layerPath);
                 layerImageUrl = `/storage/layers/${filename}/${layerId}`;
             }
@@ -119,6 +187,8 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
                     opacity: Math.round(effectiveOpacity * 255),
                     visible: effectiveVisible,
                     imageUrl: layerImageUrl,
+                    isFlattened: shouldFlatten,
+                    blendMode: item.blendMode || 'normal',
                     text: isText ? {
                         value: item.text.text,
                         font: item.text.style?.font?.name || 'Inter',
@@ -152,15 +222,18 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
                     fontFamily: layer.text?.font,
                     color: layer.text?.color,
                     textAlign: layer.text?.alignment,
-                    opacity: layer.opacity,
-                    visible: layer.visible
+                    opacity: Math.round(effectiveOpacity * 255),
+                    visible: effectiveVisible,
+                    isFlattened: shouldFlatten,
+                    blendMode: layer.blendMode
                 });
             }
         }
 
         if (psd.children) {
-            for (const child of psd.children) {
-                await processLayers(child, true, 1.0);
+            // Process children in reverse order (bottom-to-top) so they are added to Fabric in correct Z-order
+            for (let i = psd.children.length - 1; i >= 0; i--) {
+                await processLayers(psd.children[i], true, 1.0);
             }
         }
 

@@ -9,6 +9,7 @@ const TEMPLATES = [
   { id: 'hand-fan-4.psd', name: 'Vintage Wedding', preview: 'http://localhost:5005/preview/hand-fan-4.png' },
   { id: 'hand-fan-5.psd', name: 'Modern Rose Bloom', preview: 'http://localhost:5005/preview/hand-fan-5.png' },
   { id: 'hand-fan-6.psd', name: 'Classic Script', preview: 'http://localhost:5005/preview/hand-fan-6.png' },
+  { id: 'handfan1-gtfygh.psd', name: 'Custom Hand Fan 1', preview: 'http://localhost:5005/preview/handfan1-gtfygh.png' },
 ];
 
 export default function PrintedVisiriHandFan() {

@@ -144,13 +144,15 @@ app.get('/api/psd/layers/:filename', async (req, res) => {
         const requestedFile = req.params.filename;
         console.log(`📥 Incoming metadata request for: ${requestedFile}`);
         const filePath = await findTemplateFile(requestedFile);
+        
         if (!filePath) {
-            console.warn(`❌ 404: Template not found: ${req.params.filename}`);
-            return res.status(404).json({ error: 'File not found' });
+            const files = await fs.readdir(TEMPLATES_DIR);
+            console.warn(`❌ 404: Template not found: ${requestedFile}. Available: ${files.slice(0, 5).join(', ')}...`);
+            return res.status(404).json({ error: 'File not found', available: files });
         }
         
         const filename = path.basename(filePath);
-        console.log(`✨ Loading layers for: ${filename}`);
+        console.log(`✨ Loading layers for: ${filename} from ${filePath}`);
 
         const PUBLIC_DIR = path.resolve(process.cwd(), '../../public');
         const metadata = await parsePsdMetadata(filePath, PUBLIC_DIR);
@@ -305,6 +307,9 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'psd-service-node' });
 });
 
-app.listen(PORT, () => {
+const HOST = '0.0.0.0'; // Allow both localhost and IP access
+app.listen(PORT, HOST, () => {
     console.log(`🚀 PSD Node Service (ESM) running on http://localhost:${PORT}`);
+    console.log(`📂 Templates: ${TEMPLATES_DIR}`);
+    console.log(`📂 Previews: ${PREVIEWS_DIR}`);
 });

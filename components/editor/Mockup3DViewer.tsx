@@ -16,21 +16,17 @@ function BagModel({ designUrl, productType }: Mockup3DViewerProps) {
 
     // 1. High-Quality Process and Cutout the Bag Image
     useEffect(() => {
-        // Normalize productType mapping for directories
         const dirMap: Record<string, string> = {
             'welcome-tote-bag': 'tote-bags',
             'printed-visiri-hand-fan': 'hand-fans',
-            'tote-bag': 'tote-bags', // Fallback
-            'hand-fan': 'hand-fans'   // Fallback
+            'tote-bag': 'tote-bags',
+            'hand-fan': 'hand-fans'
         };
 
         const dir = dirMap[productType] || productType;
         const internalBagType = (productType === 'welcome-tote-bag' || dir === 'tote-bags') ? 'totebag1' : 'handfan1';
         
-        // Use the generated PNG as the base for the 3D mockup
         const bagPath = `/assets/mockups/${dir}/${designUrl ? (designUrl.split('template=')[1]?.replace('.psd', '') || internalBagType) : internalBagType}.png`;
-        
-        console.log(`3D Viewer: Loading mockup base from ${bagPath}`);
         
         const img = new Image();
         img.crossOrigin = "anonymous";
@@ -48,18 +44,14 @@ function BagModel({ designUrl, productType }: Mockup3DViewerProps) {
             ctx.drawImage(img, 0, 0);
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
-
-            // Sample corner for background color
             const br = data[0], bg = data[1], bb = data[2];
 
             for (let i = 0; i < data.length; i += 4) {
                 const r = data[i], g = data[i + 1], b = data[i + 2];
-                // Slightly tighter threshold for white backgrounds to avoid killing the bag itself
                 const diff = Math.abs(r - br) + Math.abs(g - bg) + Math.abs(b - bb);
-
-                if (diff < 30) { // Reduced from 50
+                if (diff < 30) {
                     data[i + 3] = 0;
-                } else if (diff < 60) { // Reduced from 80
+                } else if (diff < 60) {
                     data[i + 3] = ((diff - 30) / 30) * 255;
                 }
             }
@@ -70,7 +62,7 @@ function BagModel({ designUrl, productType }: Mockup3DViewerProps) {
             tex.anisotropy = 16;
             setBagTexture(tex);
         };
-    }, [productType]);
+    }, [productType, designUrl]);
 
     // 2. User Design Texture
     const designTexture = useMemo(() => {
@@ -85,29 +77,61 @@ function BagModel({ designUrl, productType }: Mockup3DViewerProps) {
     // 3. Dimensions Logic
     const height = 3.6;
     const width = height * aspect;
+    const thickness = 0.2; // Add some depth for 3D feel
 
     if (!bagTexture) return null;
 
     return (
-        <group rotation={[0, 0.15, 0]}> {/* Slight angle for 3D feel */}
-            {/* The actual bag cutout */}
+        <group>
+            {/* The 3D Bag Body */}
             <mesh castShadow receiveShadow>
-                <planeGeometry args={[width, height]} />
-                <meshStandardMaterial
+                <boxGeometry args={[width, height, thickness]} />
+                {/* 
+                  Materials array: [right, left, top, bottom, front, back]
+                  We apply the bag texture to front and back, and a simple side color for edges.
+                */}
+                <meshPhysicalMaterial
+                    attach="material-0" // right
+                    color="#f5f5f5"
+                    roughness={0.9}
+                />
+                <meshPhysicalMaterial
+                    attach="material-1" // left
+                    color="#f5f5f5"
+                    roughness={0.9}
+                />
+                <meshPhysicalMaterial
+                    attach="material-2" // top
+                    color="#f5f5f5"
+                    roughness={0.9}
+                />
+                <meshPhysicalMaterial
+                    attach="material-3" // bottom
+                    color="#f5f5f5"
+                    roughness={0.9}
+                />
+                <meshPhysicalMaterial
+                    attach="material-4" // front
                     map={bagTexture}
                     transparent
-                    side={THREE.DoubleSide}
-                    roughness={0.9}
+                    roughness={0.8}
+                    metalness={0.0}
+                    alphaTest={0.01}
+                />
+                <meshPhysicalMaterial
+                    attach="material-5" // back
+                    map={bagTexture}
+                    transparent
+                    roughness={0.8}
                     metalness={0.0}
                     alphaTest={0.01}
                 />
             </mesh>
 
-            {/* Design Layer - Balanced & Clean */}
+            {/* Front Design Layer */}
             {designTexture && (
-                <group position={[0, -height * 0.05, 0.012]}>
+                <group position={[0, -height * 0.05, thickness / 2 + 0.005]}>
                     <mesh>
-                        {/* More natural size to fill the bag face */}
                         <planeGeometry args={[width * 0.85, height * 0.7]} />
                         <meshStandardMaterial
                             map={designTexture}
@@ -120,13 +144,41 @@ function BagModel({ designUrl, productType }: Mockup3DViewerProps) {
                         />
                     </mesh>
 
-                    {/* Simple overlay to inherit some subtle bag shadows without ghosting */}
+                    {/* Simple overlay to inherit some subtle bag shadows */}
                     <mesh position={[0, 0, 0.001]}>
                         <planeGeometry args={[width * 0.85, height * 0.7]} />
                         <meshBasicMaterial
                             map={bagTexture}
                             transparent
-                            opacity={0.12} // Very subtle
+                            opacity={0.12}
+                            blending={THREE.MultiplyBlending}
+                            premultipliedAlpha={true}
+                        />
+                    </mesh>
+                </group>
+            )}
+
+            {/* Back Design Layer (Optional: Mirroring if user wants both sides, or just leave blank) */}
+            {designTexture && (
+                <group position={[0, -height * 0.05, -(thickness / 2 + 0.005)]} rotation={[0, Math.PI, 0]}>
+                    <mesh>
+                        <planeGeometry args={[width * 0.85, height * 0.7]} />
+                        <meshStandardMaterial
+                            map={designTexture}
+                            transparent
+                            opacity={0.98}
+                            roughness={0.8}
+                            metalness={0.0}
+                            polygonOffset
+                            polygonOffsetFactor={-1}
+                        />
+                    </mesh>
+                    <mesh position={[0, 0, 0.001]}>
+                        <planeGeometry args={[width * 0.85, height * 0.7]} />
+                        <meshBasicMaterial
+                            map={bagTexture}
+                            transparent
+                            opacity={0.12}
                             blending={THREE.MultiplyBlending}
                             premultipliedAlpha={true}
                         />

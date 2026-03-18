@@ -47,7 +47,7 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
         if (activeObject) {
             c.bringObjectToFront(activeObject);
             c.renderAll();
-            saveHistory();
+            c.fire("object:modified");
         }
     }, [canvasRef, saveHistory]);
 
@@ -62,7 +62,7 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
                 c.sendObjectToBack(safeArea);
             }
             c.renderAll();
-            saveHistory();
+            c.fire("object:modified");
         }
     }, [canvasRef, saveHistory]);
 
@@ -73,7 +73,7 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
         if (activeObject) {
             c.bringObjectForward(activeObject);
             c.renderAll();
-            saveHistory();
+            c.fire("object:modified");
         }
     }, [canvasRef, saveHistory]);
 
@@ -88,7 +88,7 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
                 c.sendObjectToBack(safeArea);
             }
             c.renderAll();
-            saveHistory();
+            c.fire("object:modified");
         }
     }, [canvasRef, saveHistory]);
 
@@ -106,10 +106,10 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
                 lockRotation: isLocked,
                 editable: !isLocked,
                 hasControls: !isLocked,
-                selectable: !isLocked,
+                // selectable: !isLocked, // Keep selectable so we can unlock it via toolbar
             });
             c.renderAll();
-            saveHistory();
+            c.fire("object:modified");
         }
     }, [canvasRef, saveHistory]);
 
@@ -121,7 +121,7 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
             c.centerObjectH(activeObject);
             activeObject.setCoords();
             c.renderAll();
-            saveHistory();
+            c.fire("object:modified");
         }
     }, [canvasRef, saveHistory]);
 
@@ -133,7 +133,7 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
             c.centerObjectV(activeObject);
             activeObject.setCoords();
             c.renderAll();
-            saveHistory();
+            c.fire("object:modified");
         }
     }, [canvasRef, saveHistory]);
 
@@ -144,7 +144,7 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
         if (activeObject) {
             activeObject.set("opacity", value);
             c.renderAll();
-            saveHistory();
+            c.fire("selection:updated");
         }
     }, [canvasRef, saveHistory]);
 
@@ -155,7 +155,7 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
         if (activeObject) {
             activeObject.set("visible", !activeObject.visible);
             c.requestRenderAll();
-            saveHistory();
+            c.fire("object:modified");
         }
     }, [canvasRef, saveHistory]);
 
@@ -173,7 +173,7 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
         c.add(cloned);
         c.setActiveObject(cloned);
         c.renderAll();
-        saveHistory();
+        c.fire("object:modified");
     }, [canvasRef, saveHistory]);
 
     return {

@@ -1,5 +1,6 @@
 "use client";
 import TemplateCard from "@/components/TemplateCard";
+import TemplateUploadCard from "@/components/TemplateUploadCard";
 
 const TEMPLATES = [
   { id: 'hand-fan-1.psd', name: 'Traditional Floral', preview: 'http://localhost:5005/preview/hand-fan-1.png' },
@@ -24,10 +25,7 @@ export default function PrintedVisiriHandFan() {
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          <TemplateCard
-            id="blank"
-            name="Start from Scratch"
-            previewUrl="/assets/blank-canvas.png"
+          <TemplateUploadCard
             category="traditional-utility-items"
             subcategory="printed-visiri-hand-fan"
           />

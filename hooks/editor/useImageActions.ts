@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import * as fabric from "fabric";
 import { Canvas, FabricImage, Shadow } from "fabric";
 
 interface Props {
@@ -10,36 +11,61 @@ interface Props {
 
 export const useImageActions = ({ canvasRef, saveHistory }: Props) => {
     
-    const replaceImage = useCallback((url: string) => {
+    const replaceImage = useCallback((url: string, autoRemove: boolean = true, isAlreadyTransparent: boolean = false) => {
         const c = canvasRef.current;
         if (!c) return;
 
-        const activeObject = c.getActiveObject() as FabricImage;
+        const activeObject = c.getActiveObject() as any;
         if (!activeObject || activeObject.type !== 'image') {
             console.warn("No image is currently selected to replace.");
             return;
         }
 
+        const originalWidth = activeObject.width * activeObject.scaleX;
+        const originalHeight = activeObject.height * activeObject.scaleY;
+
         const {
-            left, top, scaleX, scaleY, angle, opacity, flipX, flipY, originX, originY
+            left, top, angle, opacity, flipX, flipY, originX, originY
         } = activeObject;
 
         const objects = c.getObjects();
         const zIndex = objects.indexOf(activeObject);
-        console.log(`Fabric: Replacing image with CORS anonymous: ${url}`);
+        console.log(`Fabric: Replacing image with Magic Replace (${autoRemove ? 'Chroma Key' : 'Normal'}): ${url}`);
 
         FabricImage.fromURL(url, { crossOrigin: 'anonymous' }).then((img) => {
+            console.log(`Fabric: Image loaded for replacement, zIndex=${zIndex}, isAlreadyTransparent=${isAlreadyTransparent}`);
+            
+            // Transparency is now handled server-side via Freepik Binary Upload API.
+            if (autoRemove) {
+                // No client-side filter needed when server-side AI removal is working perfectly.
+            }
+
+            // Safety Fallback: If AI removal failed (isAlreadyTransparent=false) but user wants auto-remove,
+            // apply a conservative client-side filter to ensure the white box is gone.
+            if (autoRemove && !isAlreadyTransparent) {
+                console.log("Fabric: AI removal failed/incomplete, applying fallback RemoveColor filter for #FFFFFF");
+                const filter = new (fabric.filters as any).RemoveColor({
+                    color: '#FFFFFF',
+                    distance: 0.08 // Very conservative to keep flower colors safe
+                });
+                img.filters.push(filter);
+                img.applyFilters();
+            }
+
+            const newScaleX = originalWidth / img.width;
+            const newScaleY = originalHeight / img.height;
+
             img.set({
-                left,
-                top,
-                scaleX: scaleX !== undefined ? scaleX : 1,
-                scaleY: scaleY !== undefined ? scaleY : 1,
+                scaleX: newScaleX,
+                scaleY: newScaleY,
                 angle: angle || 0,
                 opacity: opacity !== undefined ? opacity : 1,
                 flipX: flipX || false,
                 flipY: flipY || false,
-                originX: originX || 'left',
-                originY: originY || 'top',
+                originX: 'center',
+                originY: 'center',
+                left: left + (originalWidth / 2),
+                top: top + (originalHeight / 2),
                 shadow: activeObject.shadow || new Shadow({
                     color: 'rgba(0,0,0,0.1)',
                     blur: 10,
@@ -56,7 +82,7 @@ export const useImageActions = ({ canvasRef, saveHistory }: Props) => {
             c.fire("object:modified");
             saveHistory();
         }).catch(err => {
-            console.error("Failed to load image for replacement:", err);
+            console.error("Magic Replace Failed:", err);
         });
     }, [canvasRef, saveHistory]);
 

@@ -27,7 +27,11 @@ export const useFabricEditor = () => {
     const {
         saveHistory,
         undo,
-        redo
+        redo,
+        canUndo,
+        canRedo,
+        pauseHistory,
+        resumeHistory
     } = useHistory({ canvasRef, isAlive });
 
     // 3. View Actions (Moved up to provide stable handleZoom)
@@ -42,7 +46,7 @@ export const useFabricEditor = () => {
         loadPsdTemplate,
         previewUrl,
         psdMetadata
-    } = usePsdLoader({ canvasRef, isAlive, handleZoom });
+    } = usePsdLoader({ canvasRef, isAlive, handleZoom, saveHistory, pauseHistory, resumeHistory });
 
     // 5. Feature Actions (Granular)
     const {
@@ -78,44 +82,16 @@ export const useFabricEditor = () => {
         addShape
     } = useShapeActions({ canvasRef, saveHistory });
 
-    // 6. Mockup Mode (Automated vs Manual)
-    const [mockupMode, setMockupMode] = useState<"automated" | "manual">("automated");
-    const [isPreview, setIsPreview] = useState(false);
-
     // Local state for the facade
     const [selectedObject, setSelectedObject] = useState<FabricObject | null>(null);
-
-    const autoLayout = useCallback(() => {
-        const c = canvasRef.current;
-        if (!c) return;
-        const objects = c.getObjects("image");
-        if (objects.length === 0) return;
-
-        const img = objects[objects.length - 1] as any;
-        const targetSize = Math.min(c.width! * 0.8, c.height! * 0.8);
-        const scale = Math.min(targetSize / img.width!, targetSize / img.height!);
-
-        img.set({
-            scaleX: scale,
-            scaleY: scale,
-            originX: 'center',
-            originY: 'center',
-            selectable: false,
-            evented: false,
-            hasControls: false
-        });
-
-        c.centerObject(img);
-        c.discardActiveObject();
-        c.requestRenderAll();
-        c.fire("object:modified");
-    }, [canvasRef]);
+    const [selectionVersion, setSelectionVersion] = useState(0);
 
     const updateSelection = useCallback(() => {
         const c = canvasRef.current;
         if (!c) return;
         const active = c.getActiveObject();
         setSelectedObject(active || null);
+        setSelectionVersion(v => v + 1);
     }, [canvasRef]);
 
     // Glue: Event Listeners
@@ -123,18 +99,31 @@ export const useFabricEditor = () => {
         const c = canvasRef.current;
         if (!c) return;
 
-        const handleObjectModified = () => saveHistory();
+        const handleHistorySave = () => saveHistory();
 
         c.on("selection:created", updateSelection);
         c.on("selection:updated", updateSelection);
         c.on("selection:cleared", updateSelection);
-        c.on("object:modified", handleObjectModified);
+        c.on("object:modified", (e) => {
+            handleHistorySave();
+            updateSelection();
+        });
+        c.on("object:scaling", updateSelection);
+        c.on("object:moving", updateSelection);
+        c.on("object:rotating", updateSelection);
+        c.on("object:added", handleHistorySave);
+        c.on("object:removed", handleHistorySave);
 
         return () => {
             c.off("selection:created", updateSelection);
             c.off("selection:updated", updateSelection);
             c.off("selection:cleared", updateSelection);
-            c.off("object:modified", handleObjectModified);
+            c.off("object:modified", handleHistorySave);
+            c.off("object:scaling", updateSelection);
+            c.off("object:moving", updateSelection);
+            c.off("object:rotating", updateSelection);
+            c.off("object:added", handleHistorySave);
+            c.off("object:removed", handleHistorySave);
         };
     }, [canvas, updateSelection, saveHistory, canvasRef]);
 
@@ -147,8 +136,14 @@ export const useFabricEditor = () => {
         addRect,
         deleteSelected,
         selectedObject,
+        selectionVersion,
+        saveHistory,
         undo,
         redo,
+        canUndo,
+        canRedo,
+        pauseHistory,
+        resumeHistory,
         zoom,
         handleZoom,
         addSafeArea,
@@ -171,23 +166,17 @@ export const useFabricEditor = () => {
         centerObjectH,
         centerObjectV,
         setBackgroundImage,
-        mockupMode,
-        setMockupMode,
-        isPreview,
-        setIsPreview,
-        autoLayout,
         replaceImage,
         addImage,
         addShape,
         duplicateObject
     }), [
-        canvas, setCanvas, initCanvas, addText, addRect, deleteSelected, selectedObject, 
-        undo, redo, zoom, handleZoom, addSafeArea, toggleLock, toggleVisibility, 
+        canvas, setCanvas, initCanvas, addText, addRect, deleteSelected, selectedObject, selectionVersion, saveHistory,
+        undo, redo, canUndo, canRedo, pauseHistory, resumeHistory, zoom, handleZoom, addSafeArea, toggleLock, toggleVisibility, 
         resizeCanvas, disposeCanvas, bringToFront, sendToBack, bringForward, 
         sendBackward, setOpacity, setFontFamily, setTextSize, setTextColor, 
         setTextAlign, loadPsdTemplate, previewUrl, psdMetadata, centerObjectH, 
-        centerObjectV, setBackgroundImage, mockupMode, setMockupMode, isPreview, 
-        setIsPreview, autoLayout, replaceImage, addImage, addShape, duplicateObject
+        centerObjectV, setBackgroundImage, replaceImage, addImage, addShape, duplicateObject
     ]);
 
     return value;

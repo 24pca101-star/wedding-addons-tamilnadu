@@ -76,89 +76,39 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
         const elements = [];
         let layerCounter = 0;
 
-        /**
-         * Recursively checks if a node or any of its children contains a text layer.
-         */
-        function hasTextLayers(node) {
-            if (node.text != null) return true;
-            if (node.children) {
-                return node.children.some(child => hasTextLayers(child));
-            }
-            return false;
-        }
-
-        async function processLayers(item) {
+        async function processLayers(item, parentVisible = true, parentOpacity = 1) {
             const name = item.name || 'Unnamed Layer';
             const isGroup = !!item.children;
-            const containsText = hasTextLayers(item);
+            const effectiveVisible = parentVisible && (item.visible !== false);
+            const effectiveOpacity = parentOpacity * (item.opacity ?? 1);
 
-            const isTextLayer = (item.text != null);
-            const textValue = item.text?.value || '';
+            const dims = getLayerDimensions(item);
 
-            // Filter out Aspose watermarks
-            if (name.includes('Aspose') || name.includes('Evaluation') ||
-                textValue.includes('Aspose') || textValue.includes('Evaluation only')) {
-                console.log(`🚫 Skipping Watermark Layer: ${name}`);
+            if (isGroup) {
+                console.log(`📂 Entering Group: ${name} [X: ${dims.x}, Y: ${dims.y}]`);
+                if (item.children) {
+                    for (const child of item.children) {
+                        await processLayers(child, effectiveVisible, effectiveOpacity);
+                    }
+                }
                 return;
             }
 
-            // Disable auto-flattening to allow access to all layers within folders as requested.
-            // Only flatten if the layer is not a group.
-            const shouldFlatten = false;
+            const layerIndex = layerCounter++;
+            let layerImageUrl = null;
+            const isText = (item.text != null);
 
-            if (isGroup && !shouldFlatten) {
-                console.log(`📂 Entering Group (Open): ${name}`);
-                for (const child of item.children) {
-                    await processLayers(child);
-                }
-            } else {
-                const layerIndex = layerCounter++;
-                let layerImageUrl = null;
-                const isText = (item.text != null);
-                const dims = getLayerDimensions(item);
+            console.log(`📄 Processing Layer: ${name} [Type: ${isText ? 'Text' : 'Image'}] [X: ${dims.x}, Y: ${dims.y}]`);
+            // Export image
+            if (!isText && item.canvas && layerStorageDir) {
+                const layerId = `${layerIndex}.png`;
+                const layerPath = `${layerStorageDir}/${layerId}`;
+                const pngBuffer = item.canvas.toBuffer('image/png');
+                await sharp(pngBuffer).toFile(layerPath);
+                layerImageUrl = `/storage/layers/${filename}/${layerId}`;
+            }
 
-                console.log(`📄 Processing Layer: ${name} [Type: ${isText ? 'Text' : (shouldFlatten ? 'Flattened Group' : 'Image')}] [Visible: ${item.visible !== false}]`);
-
-                // Export image/flattened group layers
-                let canvasToExport = item.canvas;
-
-                // If it's a flattened group, we MUST compose it (ag-psd group nodes rarely have a pre-rendered canvas)
-                if (shouldFlatten) {
-                    console.log(`🛠️ Composing Flattened Group: ${name}`);
-                    const groupCanvas = createCanvas(psd.width, psd.height);
-                    const gCtx = groupCanvas.getContext('2d');
-
-                    function compose(node) {
-                        if (node.children) {
-                            // Bottom to Top for correct layering
-                            for (let i = node.children.length - 1; i >= 0; i--) compose(node.children[i]);
-                        } else if (node.canvas && node.visible !== false) {
-                            gCtx.globalAlpha = node.opacity ?? 1;
-                            gCtx.drawImage(node.canvas, Math.round(node.left || 0), Math.round(node.top || 0));
-                        }
-                    }
-                    compose(item);
-
-                    // Crop to bounding box (if it exists)
-                    if (dims.width > 0 && dims.height > 0) {
-                        const finalCanvas = createCanvas(dims.width, dims.height);
-                        const fCtx = finalCanvas.getContext('2d');
-                        fCtx.drawImage(groupCanvas, -dims.x, -dims.y);
-                        canvasToExport = finalCanvas;
-                    } else {
-                        // Fallback to full PSD canvas if dimensions are weird
-                        canvasToExport = groupCanvas;
-                    }
-                }
-
-                if (canvasToExport && layerStorageDir) {
-                    const layerId = `${layerIndex}.png`;
-                    const layerPath = `${layerStorageDir}/${layerId}`;
-                    const pngBuffer = canvasToExport.toBuffer('image/png');
-                    await sharp(pngBuffer).toFile(layerPath);
-                    layerImageUrl = `/storage/layers/${filename}/${layerId}`;
-                }
-
+            if (isText || layerImageUrl) {
                 const layer = {
                     name: name,
                     type: isText ? 'text' : 'image',
@@ -166,37 +116,29 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
                     left: dims.x,
                     width: dims.width,
                     height: dims.height,
-                    opacity: Math.round((item.opacity ?? 1) * 255), // Convert 0-1 to 0-255
-                    visible: item.visible !== false,
+                    opacity: Math.round(effectiveOpacity * 255),
+                    visible: effectiveVisible,
                     imageUrl: layerImageUrl,
-                    isFlattened: shouldFlatten,
                     text: isText ? {
                         value: item.text.text,
-                        font: item.text.style?.font?.name || item.text.fonts?.[0]?.name || 'Inter',
-                        // ag-psd text layers have a transform matrix [a, b, c, d, tx, ty]
-                        // We must multiply the style fontSize by the scale factor from the transform (usually diagonals a and d)
+                        font: item.text.style?.font?.name || 'Inter',
                         size: (() => {
-                            const baseFontSize = item.text.style?.fontSize || item.text.fonts?.[0]?.size || 24;
+                            const baseFontSize = item.text.style?.fontSize || 24;
                             const transform = item.text.transform;
                             let scaleFactor = 1;
                             if (transform && transform.length >= 4) {
-                                // Scale is the magnitude of the basis vectors (usually just transform[0] or transform[3])
                                 scaleFactor = Math.sqrt(transform[0] * transform[0] + transform[1] * transform[1]);
                             }
-                            // PSD resolution: 72dpi means 1pt = 1px.
-                            const resolution = typeof psd.resolution === 'object' ? psd.resolution.horizontal : (psd.resolution || 72);
-                            const resFactor = resolution / 72;
-                            return Math.round(baseFontSize * scaleFactor * resFactor);
+                            return Math.round(baseFontSize * scaleFactor);
                         })(),
                         color: item.text.style?.fillColor 
                             ? [item.text.style.fillColor.r, item.text.style.fillColor.g, item.text.style.fillColor.b, 255]
-                            : (item.text.colors?.[0] || [0, 0, 0, 255]),
-                        alignment: item.text.paragraphStyle?.justification || item.text.justification || 'left'
+                            : [0, 0, 0, 255],
+                        alignment: item.text.paragraphStyle?.justification || 'left'
                     } : null
                 };
                 layers.push(layer);
 
-                // Elements array for alternative frontend formats
                 elements.push({
                     id: `psd-${elements.length}`,
                     type: layer.type,
@@ -210,16 +152,15 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
                     fontFamily: layer.text?.font,
                     color: layer.text?.color,
                     textAlign: layer.text?.alignment,
-                    opacity: Math.round((item.opacity ?? 1) * 255),
-                    visible: layer.visible,
-                    isFlattened: shouldFlatten
+                    opacity: layer.opacity,
+                    visible: layer.visible
                 });
             }
         }
 
         if (psd.children) {
             for (const child of psd.children) {
-                await processLayers(child);
+                await processLayers(child, true, 1.0);
             }
         }
 
@@ -238,12 +179,11 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
 }
 
 /**
- * Generates a high-quality "Clean" preview by iterating layers BOTTOM-TO-TOP.
+ * Generates a high-quality "Clean" preview.
  */
 export async function generateCleanPreview(filePath, outputPath) {
     try {
         const psd = await loadPsdWithFallback(filePath);
-
         const mainCanvas = createCanvas(psd.width, psd.height);
         const ctx = mainCanvas.getContext('2d');
 
@@ -254,17 +194,15 @@ export async function generateCleanPreview(filePath, outputPath) {
 
         function drawLayers(item, parentVisible = true) {
             const isVisible = parentVisible && item.visible !== false;
+            const dims = getLayerDimensions(item);
 
             if (item.children) {
                 for (const child of item.children) {
                     drawLayers(child, isVisible);
                 }
-            } else {
-                const isText = (item.text != null);
-                if (!isText && isVisible && item.canvas) {
-                    ctx.globalAlpha = item.opacity ?? 1;
-                    ctx.drawImage(item.canvas, Math.round(item.left || 0), Math.round(item.top || 0));
-                }
+            } else if (!item.text && isVisible && item.canvas) {
+                ctx.globalAlpha = item.opacity ?? 1;
+                ctx.drawImage(item.canvas, Math.round(dims.x), Math.round(dims.y));
             }
         }
 

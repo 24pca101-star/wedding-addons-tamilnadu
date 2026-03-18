@@ -1,5 +1,6 @@
 "use client";
 import TemplateCard from "@/components/TemplateCard";
+import TemplateUploadCard from "@/components/TemplateUploadCard";
 
 const BAG_TYPES = [
   { id: 'totebag1', name: 'Premium Canvas Tote', desc: 'Natural White Texture' },
@@ -35,13 +36,10 @@ export default function WelcomeToteBag() {
         <section className="mb-20">
           <h2 className="text-2xl font-black text-gray-900 mb-8 uppercase tracking-tight">Design Templates</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-            <TemplateCard
-              id="blank"
-              name="Start from Scratch"
-              previewUrl="/assets/blank-canvas.png"
-              category="guest-gift-keepsakes"
-              subcategory="welcome-tote-bag"
-            />
+          <TemplateUploadCard 
+            category="guest-gift-keepsakes"
+            subcategory="welcome-tote-bag"
+          />
             {TEMPLATES.map(t => (
               <TemplateCard
                 key={t.id}

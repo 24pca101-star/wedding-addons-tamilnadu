@@ -1,5 +1,6 @@
 "use client";
 import TemplateCard from "@/components/TemplateCard";
+import TemplateUploadCard from "@/components/TemplateUploadCard";
 
 export default function TraditionalUmbrellaParasol() {
   return (
@@ -15,10 +16,7 @@ export default function TraditionalUmbrellaParasol() {
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          <TemplateCard
-            id="blank"
-            name="Start from Scratch"
-            previewUrl="/assets/blank-canvas.png"
+          <TemplateUploadCard
             category="traditional-utility-items"
             subcategory="traditional-umbrella-parasol"
           />

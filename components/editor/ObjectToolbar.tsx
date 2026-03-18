@@ -82,7 +82,7 @@ export default function ObjectToolbar() {
         >
             <div className="flex items-center gap-1">
                 <button
-                    onClick={duplicateObject}
+                    onClick={() => duplicateObject()}
                     className="p-2 hover:bg-white/10 rounded-lg transition-colors flex flex-col items-center gap-1 group"
                     title="Duplicate"
                 >
@@ -92,7 +92,7 @@ export default function ObjectToolbar() {
                 <div className="w-[1px] h-4 bg-white/10 mx-1" />
 
                 <button
-                    onClick={bringForward}
+                    onClick={() => bringForward()}
                     className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
                     title="Bring Forward"
                 >
@@ -100,7 +100,7 @@ export default function ObjectToolbar() {
                 </button>
 
                 <button
-                    onClick={sendBackward}
+                    onClick={() => sendBackward()}
                     className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
                     title="Send Backward"
                 >
@@ -110,7 +110,7 @@ export default function ObjectToolbar() {
                 <div className="w-[1px] h-4 bg-white/10 mx-1" />
 
                 <button
-                    onClick={centerObjectH}
+                    onClick={() => centerObjectH()}
                     className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
                     title="Center Horizontally"
                 >
@@ -118,7 +118,7 @@ export default function ObjectToolbar() {
                 </button>
 
                 <button
-                    onClick={centerObjectV}
+                    onClick={() => centerObjectV()}
                     className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
                     title="Center Vertically"
                 >
@@ -128,7 +128,7 @@ export default function ObjectToolbar() {
                 <div className="w-[1px] h-4 bg-white/10 mx-1" />
 
                 <button
-                    onClick={deleteSelected}
+                    onClick={() => deleteSelected()}
                     className="p-2 hover:bg-red-500 rounded-lg transition-colors group"
                     title="Delete"
                 >

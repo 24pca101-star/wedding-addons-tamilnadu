@@ -1,6 +1,6 @@
 "use client";
 
-import { Undo2, Redo2, Download, Lock, Unlock, MoveUp, MoveDown, ChevronsUp, ChevronsDown } from "lucide-react";
+import { Undo2, Redo2, Download, MoveUp, MoveDown, ChevronsUp, ChevronsDown } from "lucide-react";
 import { useFabric } from "@/context/FabricContext";
 
 type Props = {
@@ -12,32 +12,36 @@ export default function Toolbar({ download }: Props) {
     canvas,
     undo,
     redo,
-    toggleLock,
+    canUndo,
+    canRedo,
     selectedObject,
     bringToFront,
     sendToBack,
     bringForward,
     sendBackward,
-    setOpacity
+    setOpacity,
+    saveHistory,
+    selectionVersion
   } = useFabric();
 
-  const isLocked = selectedObject?.lockMovementX;
   const currentOpacity = selectedObject?.opacity ?? 1;
 
   return (
     <div className="h-14 bg-white border-b flex items-center justify-between px-6 shadow-sm z-30">
       <div className="flex items-center gap-2">
         <button
-          onClick={undo}
-          className="p-2 hover:bg-gray-100 rounded-md text-gray-700 transition-colors flex items-center gap-1 text-sm font-medium"
+          onClick={() => undo()}
+          disabled={!canUndo}
+          className={`p-2 rounded-md transition-colors flex items-center gap-1 text-sm font-medium ${canUndo ? "text-gray-700 hover:bg-gray-100" : "text-gray-300 cursor-not-allowed"}`}
           title="Undo (Ctrl+Z)"
         >
           <Undo2 size={18} />
           <span>Undo</span>
         </button>
         <button
-          onClick={redo}
-          className="p-2 hover:bg-gray-100 rounded-md text-gray-700 transition-colors flex items-center gap-1 text-sm font-medium"
+          onClick={() => redo()}
+          disabled={!canRedo}
+          className={`p-2 rounded-md transition-colors flex items-center gap-1 text-sm font-medium ${canRedo ? "text-gray-700 hover:bg-gray-100" : "text-gray-300 cursor-not-allowed"}`}
           title="Redo (Ctrl+Y)"
         >
           <Redo2 size={18} />
@@ -51,28 +55,28 @@ export default function Toolbar({ download }: Props) {
         {selectedObject && (
           <div className="flex items-center gap-1">
             <button
-              onClick={bringToFront}
+              onClick={() => bringToFront()}
               className="p-2 hover:bg-gray-100 rounded-md text-gray-700"
               title="Bring to Front"
             >
               <ChevronsUp size={18} />
             </button>
             <button
-              onClick={bringForward}
+              onClick={() => bringForward()}
               className="p-2 hover:bg-gray-100 rounded-md text-gray-700"
               title="Bring Forward"
             >
               <MoveUp size={18} />
             </button>
             <button
-              onClick={sendBackward}
+              onClick={() => sendBackward()}
               className="p-2 hover:bg-gray-100 rounded-md text-gray-700"
               title="Send Backward"
             >
               <MoveDown size={18} />
             </button>
             <button
-              onClick={sendToBack}
+              onClick={() => sendToBack()}
               className="p-2 hover:bg-gray-100 rounded-md text-gray-700"
               title="Send to Back"
             >
@@ -95,6 +99,7 @@ export default function Toolbar({ download }: Props) {
               step="0.01"
               value={currentOpacity}
               onChange={(e) => setOpacity(parseFloat(e.target.value))}
+              onMouseUp={() => saveHistory()}
               className="w-24 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-pink-600"
             />
             <span className="text-xs font-bold text-gray-600 w-8">{Math.round(currentOpacity * 100)}%</span>
@@ -103,18 +108,6 @@ export default function Toolbar({ download }: Props) {
 
         {selectedObject && (
           <div className="h-6 w-[1px] bg-gray-200 mx-2" />
-        )}
-
-        {selectedObject && (
-          <button
-            onClick={toggleLock}
-            className={`p-2 rounded-md transition-colors flex items-center gap-1 text-sm font-medium ${isLocked ? "bg-pink-50 text-pink-600" : "hover:bg-gray-100 text-gray-700"
-              }`}
-            title={isLocked ? "Unlock Object" : "Lock Object"}
-          >
-            {isLocked ? <Lock size={18} /> : <Unlock size={18} />}
-            <span>{isLocked ? "Locked" : "Lock"}</span>
-          </button>
         )}
       </div>
 

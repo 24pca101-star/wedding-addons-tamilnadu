@@ -28,7 +28,7 @@ export default function FloatingToolbar({
             <div className="h-[1px] w-6 bg-gray-100 mx-auto my-1" />
 
             <button
-                onClick={undo}
+                onClick={() => undo()}
                 className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-900 rounded-xl hover:bg-gray-50 transition-all"
                 title="Undo"
             >
@@ -36,7 +36,7 @@ export default function FloatingToolbar({
             </button>
 
             <button
-                onClick={redo}
+                onClick={() => redo()}
                 className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-900 rounded-xl hover:bg-gray-50 transition-all"
                 title="Redo"
             >

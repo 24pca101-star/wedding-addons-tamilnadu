@@ -1,5 +1,6 @@
 "use client";
 import TemplateCard from "@/components/TemplateCard";
+import TemplateUploadCard from "@/components/TemplateUploadCard";
 
 const TEMPLATES = [
   { id: 'design-1.psd', name: 'Winter Watercolor', preview: '/storage/previews/design-1.png' },
@@ -26,11 +27,8 @@ export default function WelcomeBannerPage() {
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {/* Blank Canvas Option */}
-          <TemplateCard
-            id="blank"
-            name="Start from Scratch"
-            previewUrl="/assets/blank-canvas.png"
+          {/* PSD Upload Option */}
+          <TemplateUploadCard
             category="ceremony-decor"
             subcategory="welcome-banner"
           />

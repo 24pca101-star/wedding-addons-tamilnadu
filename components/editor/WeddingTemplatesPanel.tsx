@@ -24,16 +24,10 @@ const TEMPLATE_CATEGORIES = [
 ];
 
 const BOARD_STYLES = [
-    { id: 'easel-arch', name: 'Luxury Arch' },
-    { id: 'stake-floral', name: 'Floral Stake' },
-    { id: 'easel-black-floral', name: 'Black Floral' },
-    { id: 'easel-white', name: 'White Minimalist' },
-    { id: 'easel-pre-gold', name: 'Gold & Acrylic' },
-    { id: 'easel-pre-vintage', name: 'Vintage Ornate' },
-    { id: 'easel-pre-black', name: 'Stylish Black' },
-    { id: 'easel-custom-darkwood', name: 'Dark Wood' },
-    { id: 'easel-custom-hanging', name: 'Hanging Gold' },
-    { id: 'easel-custom-round', name: 'Round White' },
+    { id: 'directional-sign-1', name: 'Directional Classic' },
+    { id: 'directional-sign-2', name: 'Directional Modern' },
+    { id: 'directional-sign-3', name: 'Directional Rustic' },
+    { id: 'directional-sign-4', name: 'Directional Elegant' },
 ];
 
 const DECORATIONS = [

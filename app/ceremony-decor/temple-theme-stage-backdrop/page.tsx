@@ -1,5 +1,6 @@
 "use client";
 import TemplateCard from "@/components/TemplateCard";
+import TemplateUploadCard from "@/components/TemplateUploadCard";
 
 export default function TempleThemeStageBackdrop() {
   return (
@@ -15,12 +16,9 @@ export default function TempleThemeStageBackdrop() {
         </header>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          <TemplateCard
-            id="blank"
-            name="Start from Scratch"
-            previewUrl="/assets/blank-canvas.png"
-            category="ceremony-decor"
-            subcategory="temple-theme-stage-backdrop"
+          <TemplateUploadCard 
+              category="ceremony-decor"
+              subcategory="temple-theme-stage-backdrop"
           />
         </div>
       </div>

@@ -7,9 +7,12 @@ interface Props {
     canvasRef: React.MutableRefObject<Canvas | null>;
     isAlive: React.MutableRefObject<boolean>;
     handleZoom: (value: number) => void;
+    saveHistory: () => void;
+    pauseHistory: () => void;
+    resumeHistory: () => void;
 }
 
-export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
+export const usePsdLoader = ({ canvasRef, isAlive, handleZoom, saveHistory, pauseHistory, resumeHistory }: Props) => {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [psdMetadata, setPsdMetadata] = useState<any>(null);
     const latestLoadId = useRef(0);
@@ -59,6 +62,7 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
             const setupTemplate = async () => {
                 if (loadId !== latestLoadId.current) return;
 
+                pauseHistory();
                 const el = activeCanvas.lowerCanvasEl;
                 if (!el) {
                     console.warn("Fabric: Canvas element not ready, retrying...");
@@ -108,7 +112,9 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
                 setPreviewUrl(templatePreviewUrl);
 
                 let layersProcessed = 0;
-                for (const layer of metadata.layers) {
+                // Layers are now provided in Bottom-to-Top order from the server
+                const sortedLayers = [...metadata.layers];
+                for (const layer of sortedLayers) {
                     if (loadId !== latestLoadId.current) break;
 
                     try {
@@ -180,6 +186,8 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom }: Props) => {
 
                 console.log(`Fabric: Processed ${layersProcessed} layers at ${Math.round(targetScale * 100)}% scale`);
                 activeCanvas.requestRenderAll();
+                resumeHistory();
+                saveHistory();
             };
 
             await setupTemplate();

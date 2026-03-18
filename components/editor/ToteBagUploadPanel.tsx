@@ -6,7 +6,7 @@ import { useFabric } from "@/context/FabricContext";
 import * as fabric from "fabric";
 
 export default function ToteBagUploadPanel() {
-    const { canvas, mockupMode } = useFabric();
+    const { canvas } = useFabric();
     const [isDragging, setIsDragging] = useState(false);
 
     const handleUpload = (e: React.ChangeEvent<HTMLInputElement> | React.DragEvent) => {
@@ -24,7 +24,7 @@ export default function ToteBagUploadPanel() {
         reader.onload = (f) => {
             const data = f.target?.result as string;
             fabric.FabricImage.fromURL(data).then((img) => {
-                const isAutomated = mockupMode === "automated";
+                const isAutomated = false; // Default to manual mode now
 
                 if (isAutomated) {
                     // Start fresh for a perfect automated mockup

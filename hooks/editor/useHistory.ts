@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Canvas } from "fabric";
 
 interface Props {
@@ -12,6 +12,7 @@ export const useHistory = ({ canvasRef, isAlive }: Props) => {
     const history = useRef<string[]>([]);
     const historyIndex = useRef(-1);
     const isReloadingHistory = useRef(false);
+    const [historyVersion, setHistoryVersion] = useState(0);
 
     const saveHistory = useCallback(() => {
         const currentCanvas = canvasRef.current;
@@ -19,6 +20,11 @@ export const useHistory = ({ canvasRef, isAlive }: Props) => {
 
         try {
             const json = JSON.stringify(currentCanvas.toJSON());
+            
+            // Deduplicate: Don't save if state is same as last
+            if (history.current.length > 0 && history.current[historyIndex.current] === json) {
+                return;
+            }
 
             if (historyIndex.current < history.current.length - 1) {
                 history.current = history.current.slice(0, historyIndex.current + 1);
@@ -31,6 +37,7 @@ export const useHistory = ({ canvasRef, isAlive }: Props) => {
                 history.current.shift();
                 historyIndex.current--;
             }
+            setHistoryVersion((v: number) => v + 1);
         } catch (err) {
             console.warn("Fabric: History save failed", err);
         }
@@ -45,12 +52,15 @@ export const useHistory = ({ canvasRef, isAlive }: Props) => {
         const json = history.current[historyIndex.current];
 
         try {
-            await c.loadFromJSON(json);
+            const state = JSON.parse(json);
+            await c.loadFromJSON(state);
             if (!isAlive.current || !c.lowerCanvasEl) {
                 isReloadingHistory.current = false;
                 return;
             }
             c.renderAll();
+            c.fire("selection:updated");
+            setHistoryVersion((v: number) => v + 1);
         } catch (err) {
             console.error("Fabric: Undo failed", err);
         } finally {
@@ -67,12 +77,15 @@ export const useHistory = ({ canvasRef, isAlive }: Props) => {
         const json = history.current[historyIndex.current];
 
         try {
-            await c.loadFromJSON(json);
+            const state = JSON.parse(json);
+            await c.loadFromJSON(state);
             if (!isAlive.current || !c.lowerCanvasEl) {
                 isReloadingHistory.current = false;
                 return;
             }
             c.renderAll();
+            c.fire("selection:updated");
+            setHistoryVersion((v: number) => v + 1);
         } catch (err) {
             console.error("Fabric: Redo failed", err);
         } finally {
@@ -80,10 +93,22 @@ export const useHistory = ({ canvasRef, isAlive }: Props) => {
         }
     }, [canvasRef, isAlive]);
 
+    const pauseHistory = useCallback(() => {
+        isReloadingHistory.current = true;
+    }, []);
+
+    const resumeHistory = useCallback(() => {
+        isReloadingHistory.current = false;
+    }, []);
+
     return {
         saveHistory,
         undo,
         redo,
+        canUndo: historyIndex.current > 0,
+        canRedo: historyIndex.current < history.current.length - 1,
+        pauseHistory,
+        resumeHistory,
         history,
         historyIndex,
         isReloadingHistory

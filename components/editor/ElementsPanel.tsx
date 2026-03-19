@@ -4,6 +4,14 @@ import * as fabric from "fabric";
 import { useFabric } from "@/context/FabricContext";
 import { Star, Square, Circle, Layout, Leaf } from "lucide-react";
 
+const ELEMENTS = [
+    { name: "Rectangle", icon: Square, type: "rect", color: "#FF5ACD" },
+    { name: "Circle", icon: Circle, type: "circle", color: "#4B0082" },
+    { name: "Star", icon: Star, type: "star", color: "#FFD700" },
+    { name: "Leaf", icon: Leaf, type: "floral", color: "#228B22" },
+    { name: "Layout", icon: Layout, type: "rect", color: "#00CED1" },
+];
+
 export default function ElementsPanel() {
     const { addShape } = useFabric();
 

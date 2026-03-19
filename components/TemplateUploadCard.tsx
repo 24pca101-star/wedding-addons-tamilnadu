@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation';
 import { Upload, Loader2 } from 'lucide-react';
 
 interface TemplateUploadCardProps {
-    category: string;
-    subcategory: string;
+    category?: string;
+    subcategory?: string;
 }
 
-export default function TemplateUploadCard({ category, subcategory }: TemplateUploadCardProps) {
+export default function TemplateUploadCard({ category = '', subcategory = '' }: TemplateUploadCardProps) {
     const [isUploading, setIsUploading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -26,7 +26,12 @@ export default function TemplateUploadCard({ category, subcategory }: TemplateUp
         formData.append('psd', file);
 
         try {
-            const response = await fetch('http://localhost:5005/api/psd/upload', {
+            let url = 'http://localhost:5005/api/psd/upload';
+            if (category && subcategory) {
+                url += `?category=${category}&subcategory=${subcategory}`;
+            }
+
+            const response = await fetch(url, {
                 method: 'POST',
                 body: formData,
             });
@@ -35,8 +40,11 @@ export default function TemplateUploadCard({ category, subcategory }: TemplateUp
 
             const data = await response.json();
             if (data.success && data.filename) {
-                // Redirect to editor with the new template filename
-                router.push(`/editor/${category}/${subcategory}?template=${data.filename}`);
+                // Redirect to editor
+                const targetUrl = category && subcategory 
+                    ? `/editor/${category}/${subcategory}?template=${data.filename}`
+                    : `/editor/upload?template=${data.filename}`;
+                router.push(targetUrl);
             }
         } catch (error) {
             console.error('PSD Upload Error:', error);

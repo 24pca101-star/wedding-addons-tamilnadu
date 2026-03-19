@@ -2,16 +2,11 @@
 import TemplateCard from "@/components/TemplateCard";
 import TemplateUploadCard from "@/components/TemplateUploadCard";
 
-const TEMPLATES = [
-  { id: 'design-1.psd', name: 'Winter Watercolor', preview: '/storage/previews/design-1.png' },
-  { id: 'design-2.psd', name: 'Modern Pink Floral', preview: '/storage/previews/design-2.png' },
-  { id: 'design-3.psd', name: 'Classic Floral Invite', preview: '/storage/previews/design-3.png' },
-  { id: 'design-4.psd', name: 'Vintage Wedding Planner', preview: '/storage/previews/design-4.png' },
-  { id: 'design-5.psd', name: 'Elegant Resort Banner', preview: '/storage/previews/design-5.png' },
-  { id: 'design-6.psd', name: 'Autumn Watercolor', preview: '/storage/previews/design-6.png' },
-  { id: 'design-9.psd', name: 'Royal Wedding Bloom', preview: '/storage/previews/design-9.png' },
-  { id: 'design-10.psd', name: 'Royal Garden Bloom', preview: '/storage/previews/design-10.png' },
-];
+import { getTemplates } from "@/lib/templates";
+
+const CATEGORY = "ceremony-decor";
+const SUBCATEGORY = "welcome-banner";
+const TEMPLATES = getTemplates(CATEGORY, SUBCATEGORY);
 
 export default function WelcomeBannerPage() {
   return (
@@ -37,9 +32,9 @@ export default function WelcomeBannerPage() {
               key={t.id}
               id={t.id}
               name={t.name}
-              previewUrl={t.preview.replace('.psd', '.png')}
-              category="ceremony-decor"
-              subcategory="welcome-banner"
+              previewUrl={`http://localhost:5005/preview/${t.preview}`}
+              category={CATEGORY}
+              subcategory={SUBCATEGORY}
             />
           ))}
         </div>

@@ -39,43 +39,49 @@ const FONTS_DIR = path.resolve(__dirname, './fonts');
 // Helper to find template file with various naming fallbacks (design-X vs designX)
 async function findTemplateFile(filename) {
     console.log(`🔍 findTemplateFile looking for: ${filename} in ${TEMPLATES_DIR}`);
-    const base = filename.endsWith('.psd') ? filename : `${filename}.psd`;
-    const fullPath = path.join(TEMPLATES_DIR, base);
     
-    if (existsSync(fullPath)) {
+    // Normalize path (decoding URI components like %20)
+    const normalized = decodeURIComponent(filename).replace(/\\/g, '/');
+    const basename = normalized.split('/').pop().endsWith('.psd') ? normalized : `${normalized}.psd`;
+    
+    // 1. Try Direct Match
+    const fullPath = path.resolve(TEMPLATES_DIR, basename);
+    if (fullPath.startsWith(TEMPLATES_DIR) && existsSync(fullPath)) {
         console.log(`✅ Found direct match: ${fullPath}`);
         return fullPath;
     }
 
-    // Fallback 1: Try adding/removing hyphen after 'design'
-    let fallback;
-    if (base.startsWith('design-')) {
-        fallback = base.replace('design-', 'design');
-    } else if (base.startsWith('design')) {
-        fallback = base.replace('design', 'design-');
-    }
-    
-    if (fallback) {
-        const fallbackPath = path.join(TEMPLATES_DIR, fallback);
-        if (existsSync(fallbackPath)) {
-            console.log(`💡 Found hyphen fallback: ${fallbackPath} for ${filename}`);
-            return fallbackPath;
-        }
+    // 2. Try Space -> Hyphen Mapping
+    const hyphenated = basename.replace(/ /g, '-');
+    const hyphenPath = path.resolve(TEMPLATES_DIR, hyphenated);
+    if (hyphenPath.startsWith(TEMPLATES_DIR) && existsSync(hyphenPath)) {
+        console.log(`✅ Found hyphenated match: ${hyphenPath}`);
+        return hyphenPath;
     }
 
-    // Fallback 2: Case-insensitive search
-    try {
-        const files = await fs.readdir(TEMPLATES_DIR);
-        const match = files.find(f => f.toLowerCase() === base.toLowerCase());
-        if (match) {
-            console.log(`💡 Found case-insensitive match: ${match}`);
-            return path.join(TEMPLATES_DIR, match);
+    // 3. Recursive Search (Robust fallback)
+    console.log(`🕵️ Searching recursively for ${basename.split('/').pop()}...`);
+    async function searchRecursive(dir, targetBase) {
+        const entries = await fs.readdir(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const full = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                const found = await searchRecursive(full, targetBase);
+                if (found) return found;
+            } else if (entry.name.toLowerCase() === targetBase.toLowerCase()) {
+                return full;
+            }
         }
-    } catch (e) {
-        console.error('Error in readdir fallback:', e);
+        return null;
     }
 
-    console.warn(`❌ Template not found anywhere: ${filename}`);
+    const recursiveMatch = await searchRecursive(TEMPLATES_DIR, basename.split('/').pop());
+    if (recursiveMatch) {
+        console.log(`✅ Found via recursive search: ${recursiveMatch}`);
+        return recursiveMatch;
+    }
+
+    console.warn(`❌ Template not found: ${filename}`);
     return null;
 }
 
@@ -139,20 +145,19 @@ app.get('/api/psd/fonts', (req, res) => {
     }
 });
 
-app.get('/api/psd/layers/:filename', async (req, res) => {
+app.get('/api/psd/layers/:category/:subcategory/:filename', async (req, res) => {
     try {
-        const requestedFile = req.params.filename;
+        const { category, subcategory, filename } = req.params;
+        const requestedFile = `${category}/${subcategory}/${filename}`;
         console.log(`📥 Incoming metadata request for: ${requestedFile}`);
         const filePath = await findTemplateFile(requestedFile);
         
         if (!filePath) {
-            const files = await fs.readdir(TEMPLATES_DIR);
-            console.warn(`❌ 404: Template not found: ${requestedFile}. Available: ${files.slice(0, 5).join(', ')}...`);
-            return res.status(404).json({ error: 'File not found', available: files });
+            return res.status(404).json({ error: 'File not found' });
         }
         
-        const filename = path.basename(filePath);
-        console.log(`✨ Loading layers for: ${filename} from ${filePath}`);
+        const filenameBase = path.basename(filePath);
+        console.log(`✨ Loading layers for: ${filenameBase} from ${filePath}`);
 
         const PUBLIC_DIR = path.resolve(process.cwd(), '../../public');
         const metadata = await parsePsdMetadata(filePath, PUBLIC_DIR);
@@ -163,12 +168,23 @@ app.get('/api/psd/layers/:filename', async (req, res) => {
     }
 });
 
-app.get('/parse/:filename', async (req, res) => {
+// Backward compatibility or flat fallback
+app.get('/api/psd/layers/:filename', async (req, res) => {
     try {
         const filePath = await findTemplateFile(req.params.filename);
         if (!filePath) return res.status(404).json({ error: 'File not found' });
+        const metadata = await parsePsdMetadata(filePath, path.resolve(process.cwd(), '../../public'));
+        res.json(metadata);
+    } catch (error) {
+        res.status(500).json({ error: 'Parsing failed' });
+    }
+});
 
-        const filename = path.basename(filePath);
+app.get('/parse/:category/:subcategory/:filename', async (req, res) => {
+    try {
+        const { category, subcategory, filename } = req.params;
+        const filePath = await findTemplateFile(`${category}/${subcategory}/${filename}`);
+        if (!filePath) return res.status(404).json({ error: 'File not found' });
 
         const PUBLIC_DIR = path.resolve(process.cwd(), '../../public');
         const metadata = await parsePsdMetadata(filePath, PUBLIC_DIR);
@@ -179,16 +195,23 @@ app.get('/parse/:filename', async (req, res) => {
     }
 });
 
-app.get('/preview/:filename', async (req, res) => {
+app.get('/preview/:category/:subcategory/:filename', async (req, res) => {
     try {
-        const filename = req.params.filename;
-        const psdFilename = filename.endsWith('.psd') ? filename : filename.replace('.png', '.psd');
-        const pngFilename = psdFilename.replace('.psd', '.png');
+        const { category, subcategory, filename } = req.params;
+        const psdRelativePath = `${category}/${subcategory}/${filename.replace('.png', '.psd')}`;
+        const pngRelativePath = psdRelativePath.replace('.psd', '.png');
 
-        const inputPath = path.join(TEMPLATES_DIR, psdFilename);
-        const outputPath = path.join(PREVIEWS_DIR, pngFilename);
+        const inputPath = path.resolve(TEMPLATES_DIR, psdRelativePath);
+        const outputPath = path.resolve(PREVIEWS_DIR, pngRelativePath);
 
-        if (!existsSync(inputPath)) return res.status(404).json({ error: 'PSD File not found' });
+        if (!existsSync(inputPath)) {
+            console.warn(`❌ Preview Source Not Found: ${inputPath}`);
+            return res.status(404).json({ error: 'PSB File not found' });
+        }
+
+        // Ensure output subdirectory exists
+        const outputDir = path.dirname(outputPath);
+        if (!existsSync(outputDir)) mkdirSync(outputDir, { recursive: true });
 
         let needsGeneration = true;
         try {
@@ -196,14 +219,14 @@ app.get('/preview/:filename', async (req, res) => {
             const pngStats = await fs.stat(outputPath);
             if (pngStats.mtime >= psdStats.mtime) {
                 needsGeneration = false;
-                console.log(`🚀 Serving CACHED preview for ${psdFilename}`);
+                console.log(`🚀 Serving CACHED preview for ${psdRelativePath}`);
             }
         } catch (e) {
             // PNG doesn't exist
         }
 
         if (needsGeneration) {
-            console.log(`🎨 Generating NEW preview for ${psdFilename}`);
+            console.log(`🎨 Generating NEW preview for ${psdRelativePath}`);
             await generatePreview(inputPath, outputPath);
         }
 
@@ -212,6 +235,22 @@ app.get('/preview/:filename', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Preview generation failed' });
+    }
+});
+
+// Flat fallback for previews
+app.get('/preview/:filename', async (req, res) => {
+    try {
+        const filename = req.params.filename;
+        const psdFilename = filename.endsWith('.psd') ? filename : filename.replace('.png', '.psd');
+        const inputPath = path.join(TEMPLATES_DIR, psdFilename);
+        const outputPath = path.join(PREVIEWS_DIR, psdFilename.replace('.psd', '.png'));
+
+        if (!existsSync(inputPath)) return res.status(404).send('Not found');
+        await generatePreview(inputPath, outputPath);
+        res.sendFile(outputPath);
+    } catch (e) {
+        res.status(500).send('Error');
     }
 });
 
@@ -240,16 +279,32 @@ const upload = multer({ storage });
 app.post('/api/psd/upload', upload.single('psd'), async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     try {
-        const inputPath = req.file.path;
-        const outputPath = path.join(PREVIEWS_DIR, req.file.originalname.replace('.psd', '.png'));
+        const { category, subcategory } = req.query;
+        let finalPath = req.file.path;
+        let relativePath = req.file.originalname;
+
+        if (category && subcategory) {
+            const targetDir = path.join(TEMPLATES_DIR, category, subcategory);
+            const targetFile = path.join(targetDir, req.file.originalname);
+            
+            if (!existsSync(targetDir)) mkdirSync(targetDir, { recursive: true });
+            
+            await fs.rename(req.file.path, targetFile);
+            finalPath = targetFile;
+            relativePath = `${category}/${subcategory}/${req.file.originalname}`;
+        }
+
+        const previewPath = path.join(PREVIEWS_DIR, relativePath.replace('.psd', '.png'));
+        const previewDir = path.dirname(previewPath);
+        if (!existsSync(previewDir)) mkdirSync(previewDir, { recursive: true });
 
         // Ensure preview is generated
-        await generatePreview(inputPath, outputPath);
+        await generatePreview(finalPath, previewPath);
 
         res.json({
             success: true,
-            filename: req.file.originalname,
-            previewUrl: `http://localhost:5005/preview/${req.file.originalname.replace('.psd', '.png')}`
+            filename: relativePath,
+            previewUrl: `http://localhost:5005/preview/${relativePath.replace('.psd', '.png')}`
         });
     } catch (error) {
         console.error('Upload failed:', error);

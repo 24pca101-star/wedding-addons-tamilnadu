@@ -118,9 +118,9 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom, saveHistory, paus
                     if (loadId !== latestLoadId.current) break;
 
                     try {
-                        const scaledLeft = layer.left * targetScale;
-                        const scaledTop = layer.top * targetScale;
-                        const scaledLayerWidth = (layer.width || 1) * targetScale;
+                        const scaledLeft = Math.round(layer.left * targetScale);
+                        const scaledTop = Math.round(layer.top * targetScale);
+                        const scaledLayerWidth = Math.round((layer.width || 1) * targetScale);
 
                         if (layer.type === 'text' && layer.text) {
                             // Defensive check for font size

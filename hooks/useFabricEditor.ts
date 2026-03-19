@@ -75,7 +75,8 @@ export const useFabricEditor = () => {
         centerObjectV,
         setOpacity,
         toggleVisibility,
-        duplicateObject
+        duplicateObject,
+        rotate
     } = useLayerActions({ canvasRef, saveHistory });
 
     const {
@@ -169,14 +170,15 @@ export const useFabricEditor = () => {
         replaceImage,
         addImage,
         addShape,
-        duplicateObject
+        duplicateObject,
+        rotate
     }), [
         canvas, setCanvas, initCanvas, addText, addRect, deleteSelected, selectedObject, selectionVersion, saveHistory,
         undo, redo, canUndo, canRedo, pauseHistory, resumeHistory, zoom, handleZoom, addSafeArea, toggleLock, toggleVisibility, 
         resizeCanvas, disposeCanvas, bringToFront, sendToBack, bringForward, 
         sendBackward, setOpacity, setFontFamily, setTextSize, setTextColor, 
         setTextAlign, loadPsdTemplate, previewUrl, psdMetadata, centerObjectH, 
-        centerObjectV, setBackgroundImage, replaceImage, addImage, addShape, duplicateObject
+        centerObjectV, setBackgroundImage, replaceImage, addImage, addShape, duplicateObject, rotate
     ]);
 
     return value;

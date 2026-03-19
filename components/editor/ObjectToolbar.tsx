@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Copy, Trash2, MoveUp, MoveDown, AlignCenter, AlignVerticalJustifyCenter } from 'lucide-react';
+import { Copy, Trash2, MoveUp, MoveDown, AlignCenter, AlignVerticalJustifyCenter, RotateCw } from 'lucide-react';
 import { useFabric } from '@/context/FabricContext';
 
 export default function ObjectToolbar() {
@@ -15,6 +15,7 @@ export default function ObjectToolbar() {
         centerObjectH,
         centerObjectV,
         duplicateObject,
+        rotate,
         canvas
     } = useFabric();
 
@@ -123,6 +124,16 @@ export default function ObjectToolbar() {
                     title="Center Vertically"
                 >
                     <AlignVerticalJustifyCenter size={16} className="group-hover:scale-110 transition-transform" />
+                </button>
+
+                <div className="w-[1px] h-4 bg-white/10 mx-1" />
+
+                <button
+                    onClick={() => rotate(90)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
+                    title="Rotate 90°"
+                >
+                    <RotateCw size={16} className="group-hover:rotate-180 transition-transform duration-500" />
                 </button>
 
                 <div className="w-[1px] h-4 bg-white/10 mx-1" />

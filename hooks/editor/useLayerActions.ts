@@ -176,6 +176,19 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
         c.fire("object:modified");
     }, [canvasRef, saveHistory]);
 
+    const rotate = useCallback((angle: number) => {
+        const c = canvasRef.current;
+        if (!c) return;
+        const activeObject = c.getActiveObject();
+        if (activeObject) {
+            activeObject.set("angle", (activeObject.angle || 0) + angle);
+            activeObject.setCoords();
+            c.renderAll();
+            c.fire("object:modified");
+            saveHistory();
+        }
+    }, [canvasRef, saveHistory]);
+
     return {
         addRect,
         deleteSelected,
@@ -188,6 +201,7 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
         centerObjectV,
         setOpacity,
         toggleVisibility,
-        duplicateObject
+        duplicateObject,
+        rotate
     };
 };

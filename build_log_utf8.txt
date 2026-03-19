@@ -1,0 +1,48 @@
+﻿
+> wedding-add-ons@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 32.2s
+  Running TypeScript ...
+node.exe : Failed to compile.
+At C:\Program Files\nodejs\npm.ps1:29 char:3
++   & $NODE_EXE $NPM_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Fai  
+  led to compile.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./components/editor/ElementsPanel.tsx:14:18
+Type error: Cannot find name 'ELEMENTS'. Did you 
+mean 'Element'?
+
+[0m [90m 12 |[39m             
+[33m<[39m[33mh3[39m 
+className[33m=[39m[32m"text-xl font-extrabold 
+text-gray-900 mb-6 font-sans"[39m[33m>[39m[33m
+Elements[39m[33m<[39m[33m/[39m[33mh3[39m[3
+3m>[39m
+ [90m 13 |[39m             
+[33m<[39m[33mdiv[39m 
+className[33m=[39m[32m"grid grid-cols-2 
+gap-3"[39m[33m>[39m
+[31m[1m>[22m[39m[90m 14 |[39m               
+  {[33mELEMENTS[39m[33m.[39mmap((item) 
+[33m=>[39m (
+ [90m    |[39m                  
+[31m[1m^[22m[39m
+ [90m 15 |[39m                     
+[33m<[39m[33mbutton[39m
+ [90m 16 |[39m                         
+key[33m=[39m{item[33m.[39mname}
+ [90m 17 |[39m                         
+onClick[33m=[39m{() [33m=>[39m 
+addShape(item[33m.[39mtype[33m,[39m { 
+color[33m:[39m item[33m.[39mcolor })}[0m
+Next.js build worker exited with code: 1 and 
+signal: null
+

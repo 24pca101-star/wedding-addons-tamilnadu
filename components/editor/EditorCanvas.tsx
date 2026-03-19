@@ -37,9 +37,13 @@ export default function EditorCanvas({
                 {bgImage && !isDirectionalBoard && (
                     <div className="absolute inset-[-80px] z-0 flex items-center justify-center pointer-events-none">
                         <img
-                            src={bgImage}
+                            src={bgImage.includes('welcome-tote-bag') ? bgImage.replace('welcome-tote-bag', 'tote-bags/totebag1') : bgImage}
                             alt="Product Background"
                             className="w-full h-full object-contain opacity-100 scale-125 transition-transform duration-1000"
+                            onError={(e) => {
+                                // Fallback if path is still wrong
+                                (e.target as HTMLImageElement).src = '/assets/blank-canvas.png';
+                            }}
                         />
                         {/* Subtle fabric overlay for the design area */}
                         <div className="absolute inset-[80px] bg-black/5 rounded-sm mix-blend-multiply pointer-events-none border border-black/5" />

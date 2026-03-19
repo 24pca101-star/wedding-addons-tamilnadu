@@ -11,11 +11,11 @@ const BAG_TYPES = [
 ];
 
 const TEMPLATES = [
-  { id: 'tote-bag-1.psd', name: 'Floral Welcome', preview: 'http://localhost:5005/preview/tote-bag-1.png' },
-  { id: 'tote-bag-2.psd', name: 'Royal Monogram', preview: 'http://localhost:5005/preview/tote-bag-2.png' },
-  { id: 'tote-bag-3.psd', name: 'Minimalist Script', preview: 'http://localhost:5005/preview/tote-bag-3.png' },
-  { id: 'tote-bag-4.psd', name: 'Traditional Pattern', preview: 'http://localhost:5005/preview/tote-bag-4.png' },
-  { id: 'tote-bag-5.psd', name: 'Modern Eucalyptus', preview: 'http://localhost:5005/preview/tote-bag-5.png' },
+  { id: 'tote-bag-design-1.psd', name: 'Elegant Floral', preview: 'http://localhost:5005/preview/tote-bag-design-1.png' },
+  { id: 'tote-bag-design-2.psd', name: 'Royal Gold', preview: 'http://localhost:5005/preview/tote-bag-design-2.png' },
+  { id: 'tote-bag-design-3.psd', name: 'Minimalist Modern', preview: 'http://localhost:5005/preview/tote-bag-design-3.png' },
+  { id: 'tote-bag-design-4.psd', name: 'Traditional Ethnic', preview: 'http://localhost:5005/preview/tote-bag-design-4.png' },
+  { id: 'tote-bag-design-5.psd', name: 'Boho Eucalyptus', preview: 'http://localhost:5005/preview/tote-bag-design-5.png' },
 ];
 
 export default function WelcomeToteBag() {

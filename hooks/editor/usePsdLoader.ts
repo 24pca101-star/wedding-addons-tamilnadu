@@ -48,9 +48,10 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom, saveHistory, paus
         const loadId = ++latestLoadId.current;
 
         try {
-            console.log(`Fabric: Loading LAYERED PSD template ${filename} (LoadID: ${loadId})`);
+            const url = `http://localhost:5005/api/psd/layers/${filename}`;
+            console.log(`Fabric: Fetching layers from ${url} (LoadID: ${loadId})`);
 
-            const response = await fetch(`http://localhost:5005/api/psd/layers/${filename}`);
+            const response = await fetch(url);
             if (!response.ok) throw new Error(`Metadata fetch failed: ${response.status}`);
 
             if (loadId !== latestLoadId.current) return;
@@ -140,6 +141,7 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom, saveHistory, paus
                                     : 1.16,
                                 opacity: Math.max((layer.opacity ?? 255) / 255, 0.01), // Avoid total invisibility
                                 visible: layer.visible ?? true,
+                                globalCompositeOperation: (layer.blendMode === 'pass through' || !layer.blendMode) ? 'source-over' : layer.blendMode,
                                 psdLayerName: layer.name,
                                 originX: 'left',
                                 originY: 'top'
@@ -151,10 +153,12 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom, saveHistory, paus
                             const imageUrl = layer.imageUrl || layer.layerUrl || layer.LayerUrl || layer.url;
 
                             if (imageUrl) {
-                                // Use relative path if it's a local storage path, otherwise use as is
+                                // Use absolute URL targeting the PSD service for relative paths
                                 const imgUrl = imageUrl.startsWith('http')
                                     ? imageUrl
-                                    : (imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`);
+                                    : `http://localhost:5005${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
+
+                                console.log(`Fabric: Loading image layer "${layer.name}" from ${imgUrl}`);
 
                                 try {
                                     const layerImg = await FabricImage.fromURL(imgUrl, { crossOrigin: 'anonymous' });
@@ -166,6 +170,7 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom, saveHistory, paus
                                             scaleY: targetScale,
                                             opacity: (layer.opacity ?? 255) / 255,
                                             visible: layer.visible ?? true,
+                                            globalCompositeOperation: (layer.blendMode === 'pass through' || !layer.blendMode) ? 'source-over' : layer.blendMode,
                                             selectable: true,
                                             psdLayerName: layer.name,
                                             originX: 'left',

@@ -245,7 +245,7 @@ const DECORATIONS = [
 ];
 
 export default function WeddingTemplatesPanel() {
-    const { addText, canvas, setBackgroundImage, isPreview } = useFabric();
+    const { addText, canvas, setBackgroundImage } = useFabric();
 
     const handleBoardChange = (boardId: string) => {
         if (!canvas) return;
@@ -348,9 +348,8 @@ export default function WeddingTemplatesPanel() {
                                 <button
                                     key={board.id}
                                     onClick={() => handleBoardChange(board.id)}
-                                    disabled={isPreview}
-                                    className={`group flex flex-col items-center gap-2 p-2 rounded-xl border border-transparent transition-all ${isPreview ? 'opacity-50 cursor-not-allowed' : 'bg-gray-50 hover:bg-pink-50/50 hover:border-pink-100 active:scale-[0.95]'}`}
-                                    title={isPreview ? "Exit preview to change board" : board.name}
+                                    className={`group flex flex-col items-center gap-2 p-2 rounded-xl border border-transparent transition-all bg-gray-50 hover:bg-pink-50/50 hover:border-pink-100 active:scale-[0.95]`}
+                                    title={board.name}
                                 >
                                     <div className="w-full aspect-square bg-white rounded-lg overflow-hidden border border-gray-100">
                                         <img
@@ -383,8 +382,7 @@ export default function WeddingTemplatesPanel() {
                             <button
                                 key={template}
                                 onClick={() => handleAddTemplate(template)}
-                                disabled={isPreview}
-                                className={`group flex items-center justify-between p-4 rounded-2xl border border-transparent transition-all text-left ${isPreview ? 'opacity-50 cursor-not-allowed' : 'bg-gray-50 hover:bg-pink-50/50 hover:border-pink-100 active:scale-[0.98]'}`}
+                                className={`group flex items-center justify-between p-4 rounded-2xl border border-transparent transition-all text-left bg-gray-50 hover:bg-pink-50/50 hover:border-pink-100 active:scale-[0.98]`}
                             >
                                 <span className="text-sm font-bold text-gray-700 group-hover:text-pink-600 transition-colors">
                                     {template}
@@ -410,8 +408,7 @@ export default function WeddingTemplatesPanel() {
                             <button
                                 key={decor.name}
                                 onClick={() => handleAddDecoration(decor)}
-                                disabled={isPreview}
-                                className={`group flex items-center gap-4 p-4 rounded-2xl border border-transparent transition-all text-left ${isPreview ? 'opacity-50 cursor-not-allowed' : 'bg-gray-50 hover:bg-white hover:border-pink-100 hover:shadow-xl hover:shadow-pink-500/5 active:scale-[0.98]'}`}
+                                className={`group flex items-center gap-4 p-4 rounded-2xl border border-transparent transition-all text-left bg-gray-50 hover:bg-white hover:border-pink-100 hover:shadow-xl hover:shadow-pink-500/5 active:scale-[0.98]`}
                             >
                                 <div
                                     className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 group-hover:scale-110 transition-transform shadow-sm"

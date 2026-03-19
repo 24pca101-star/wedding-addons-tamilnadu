@@ -76,32 +76,18 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
         const elements = [];
         let layerCounter = 0;
 
-        /**
-         * Recursively checks if a node or any of its children contains a text layer.
-         */
-        function hasTextLayers(node) {
-            if (node.text != null) return true;
-            if (node.children) {
-                return node.children.some(child => hasTextLayers(child));
-            }
-            return false;
-        }
+
 
         async function processLayers(item, parentVisible = true, parentOpacity = 1) {
             const name = item.name || 'Unnamed Layer';
             const isGroup = !!item.children;
             const effectiveVisible = parentVisible && (item.visible !== false);
             const effectiveOpacity = parentOpacity * (item.opacity ?? 1);
-            const containsText = hasTextLayers(item);
 
-            const dims = getLayerDimensions(item);
-
-            if (isGroup && !containsText) {
-                console.log(`📂 Entering Group (Flattened): ${name} [Visible: ${effectiveVisible}]`);
-                // Flattening logic will be handled below by treating this group as a single layer
-            } else if (isGroup) {
-                console.log(`📂 Entering Group (Open): ${name} [Visible: ${effectiveVisible}]`);
+            if (isGroup) {
+                console.log(`📂 Entering Group: ${name} [Visible: ${effectiveVisible}]`);
                 if (item.children) {
+                    // Process children in forward order (already bottom-to-top from ag-psd)
                     for (const child of item.children) {
                         await processLayers(child, effectiveVisible, effectiveOpacity);
                     }
@@ -109,41 +95,15 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
                 return;
             }
 
+            const dims = getLayerDimensions(item);
             const layerIndex = layerCounter++;
             let layerImageUrl = null;
             const isText = (item.text != null);
-            const shouldFlatten = isGroup && !containsText;
 
-            console.log(`📄 Processing Layer: ${name} [Type: ${isText ? 'Text' : (shouldFlatten ? 'Flattened Group' : 'Image')}] [Visible: ${effectiveVisible}]`);
+            console.log(`📄 Processing Layer: ${name} [Type: ${isText ? 'Text' : 'Image'}] [Visible: ${effectiveVisible}]`);
 
-            // Export image/flattened group layers
+            // Export image layers
             let canvasToExport = item.canvas;
-
-            // If it's a flattened group, we MUST compose it
-            if (shouldFlatten) {
-                console.log(`🛠️ Composing Flattened Group: ${name}`);
-                const groupCanvas = createCanvas(psd.width, psd.height);
-                const gCtx = groupCanvas.getContext('2d');
-
-                function compose(node) {
-                    if (node.children) {
-                        for (let i = node.children.length - 1; i >= 0; i--) compose(node.children[i]);
-                    } else if (node.canvas && node.visible !== false) {
-                        gCtx.globalAlpha = node.opacity ?? 1;
-                        gCtx.drawImage(node.canvas, Math.round(node.left || 0), Math.round(node.top || 0));
-                    }
-                }
-                compose(item);
-
-                if (dims.width > 0 && dims.height > 0) {
-                    const finalCanvas = createCanvas(dims.width, dims.height);
-                    const fCtx = finalCanvas.getContext('2d');
-                    fCtx.drawImage(groupCanvas, -dims.x, -dims.y);
-                    canvasToExport = finalCanvas;
-                } else {
-                    canvasToExport = groupCanvas;
-                }
-            }
 
             if (canvasToExport && item.mask && item.mask.canvas) {
                 console.log(`🎭 Correcting Mask Alpha & Applying for layer: ${name}`);
@@ -187,7 +147,7 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
                     opacity: Math.round(effectiveOpacity * 255),
                     visible: effectiveVisible,
                     imageUrl: layerImageUrl,
-                    isFlattened: shouldFlatten,
+                    isFlattened: false,
                     blendMode: item.blendMode || 'normal',
                     text: isText ? {
                         value: item.text.text,
@@ -224,16 +184,16 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
                     textAlign: layer.text?.alignment,
                     opacity: Math.round(effectiveOpacity * 255),
                     visible: effectiveVisible,
-                    isFlattened: shouldFlatten,
+                    isFlattened: false,
                     blendMode: layer.blendMode
                 });
             }
         }
 
         if (psd.children) {
-            // Process children in reverse order (bottom-to-top) so they are added to Fabric in correct Z-order
-            for (let i = psd.children.length - 1; i >= 0; i--) {
-                await processLayers(psd.children[i], true, 1.0);
+            // Process children in forward order (already bottom-to-top from ag-psd)
+            for (const child of psd.children) {
+                await processLayers(child, true, 1.0);
             }
         }
 

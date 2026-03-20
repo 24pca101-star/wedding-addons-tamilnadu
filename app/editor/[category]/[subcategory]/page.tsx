@@ -93,8 +93,15 @@ function EditorContent() {
             if (isDirectionalBoard && bagType) {
                 boardPath = `/storage/mockups/ceremony-decor/directional-sign-boards/${bagType}-no-bg.png`;
             } else if (isToteBag) {
-                // Map subcategory to asset folder 'tote-bags' and use selected bagType or default
-                const internalBagType = bagType || "totebag1";
+                // For templates, extract the design number (e.g., tote-bag-design-1) from the path
+                const templateFilename = template?.split('/').pop()?.replace('.psd', '');
+                let internalBagType = templateFilename || bagType || "tote-bag-design-1";
+                
+                // Map totebagX to tote-bag-design-X if it's a blank bag selection
+                if (internalBagType.startsWith('totebag')) {
+                    internalBagType = internalBagType.replace('totebag', 'tote-bag-design-');
+                }
+                
                 boardPath = `/storage/mockups/guest-gift-keepsakes/welcome-tote-bag/${internalBagType}.png`;
             } else if (isHandFan) {
                 // Map subcategory to asset folder 'hand-fans'
@@ -249,7 +256,7 @@ function EditorContent() {
                 />
 
                 <div className={`flex-1 relative overflow-hidden flex flex-col ${isCustomMockup ? 'bg-white' : ''}`}>
-                    {(!isCustomMockup || isDirectionalBoard || isHandFan) ? (
+                    {(!isCustomMockup || isDirectionalBoard || isHandFan || isToteBag) ? (
                         <EditorCanvas
                             width={canvasWidth}
                             height={canvasHeight}
@@ -260,25 +267,14 @@ function EditorContent() {
                         />
                     ) : (
                         <div className="flex-1 flex overflow-hidden">
-                            {/* Left Side: 2D Canvas Editor */}
+                            {/* This fallback block is now only for unexpected custom mockups */}
                             <div className="flex-1 border-r border-gray-100 relative bg-[#f8f9fa] flex flex-row min-w-0">
-                                {/* Interactive 2D Editor */}
                                 <EditorCanvas
                                     width={canvasWidth}
                                     height={canvasHeight}
                                     canvasRef={canvasElementRef}
                                     previewUrl={previewUrl}
                                     zoom={zoom}
-                                    bgImage={`/storage/mockups/guest-gift-keepsakes/welcome-tote-bag/${bagType || "totebag1"}/white bag.png`}
-                                />
-                                {/* On-Object Toolbar */}
-                                <MockupPreview
-                                    active={true}
-                                    onClose={() => { }}
-                                    psdFilename={template || "design-1.psd"}
-                                    productType={bagType || subcategory || "tote-bag"}
-                                    canvas={canvas}
-                                    isIntegrated={true}
                                 />
                             </div>
                         </div>

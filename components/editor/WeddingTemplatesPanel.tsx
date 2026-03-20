@@ -244,7 +244,7 @@ const DECORATIONS = [
     }
 ];
 
-export default function WeddingTemplatesPanel() {
+export default function WeddingTemplatesPanel({ isDirectionalBoard }: { isDirectionalBoard?: boolean }) {
     const { addText, canvas, setBackgroundImage } = useFabric();
 
     const handleBoardChange = (boardId: string) => {
@@ -370,83 +370,91 @@ export default function WeddingTemplatesPanel() {
                 <div className="h-px bg-gray-50 mx-2" />
 
                 {/* 1. WEDDING TEMPLATES */}
-                <section className="space-y-4">
-                    <div className="flex items-center gap-2 px-1">
-                        <Type className="text-pink-500" size={16} />
-                        <h4 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">
-                            Wedding Templates
-                        </h4>
-                    </div>
-                    <div className="grid gap-2">
-                        {TEMPLATE_CATEGORIES[0].templates.map((template) => (
-                            <button
-                                key={template}
-                                onClick={() => handleAddTemplate(template)}
-                                className={`group flex items-center justify-between p-4 rounded-2xl border border-transparent transition-all text-left bg-gray-50 hover:bg-pink-50/50 hover:border-pink-100 active:scale-[0.98]`}
-                            >
-                                <span className="text-sm font-bold text-gray-700 group-hover:text-pink-600 transition-colors">
-                                    {template}
-                                </span>
-                                <MousePointer2 size={14} className="text-pink-300 opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </button>
-                        ))}
-                    </div>
-                </section>
-
-                <div className="h-px bg-gray-50 mx-2" />
-
-                {/* 2. DECORATIONS */}
-                <section className="space-y-4 pb-6">
-                    <div className="flex items-center gap-2 px-1">
-                        <Palette className="text-pink-500" size={16} />
-                        <h4 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">
-                            Decorations
-                        </h4>
-                    </div>
-                    <div className="grid gap-3">
-                        {DECORATIONS.map((decor) => (
-                            <button
-                                key={decor.name}
-                                onClick={() => handleAddDecoration(decor)}
-                                className={`group flex items-center gap-4 p-4 rounded-2xl border border-transparent transition-all text-left bg-gray-50 hover:bg-white hover:border-pink-100 hover:shadow-xl hover:shadow-pink-500/5 active:scale-[0.98]`}
-                            >
-                                <div
-                                    className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 group-hover:scale-110 transition-transform shadow-sm"
+                {isDirectionalBoard && (
+                    <section className="space-y-4">
+                        <div className="flex items-center gap-2 px-1">
+                            <Type className="text-pink-500" size={16} />
+                            <h4 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">
+                                Wedding Templates
+                            </h4>
+                        </div>
+                        <div className="grid gap-2">
+                            {TEMPLATE_CATEGORIES[0].templates.map((template) => (
+                                <button
+                                    key={template}
+                                    onClick={() => handleAddTemplate(template)}
+                                    className={`group flex items-center justify-between p-4 rounded-2xl border border-transparent transition-all text-left bg-gray-50 hover:bg-pink-50/50 hover:border-pink-100 active:scale-[0.98]`}
                                 >
-                                    {decor.svg ? (
-                                        <div
-                                            dangerouslySetInnerHTML={{ __html: decor.svg }}
-                                            className="w-full h-full p-2 flex items-center justify-center text-gray-400 group-hover:text-pink-500 transition-colors"
-                                        />
-                                    ) : decor.image ? (
-                                        <img
-                                            src={decor.image}
-                                            alt={decor.name}
-                                            className="w-full h-full object-contain p-1"
-                                        />
-                                    ) : null}
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-xs font-black text-gray-800 uppercase tracking-tight">
-                                        {decor.name}
+                                    <span className="text-sm font-bold text-gray-700 group-hover:text-pink-600 transition-colors">
+                                        {template}
                                     </span>
-                                    <span className="text-[10px] font-bold text-gray-400">Click to add decoration</span>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
-                </section>
+                                    <MousePointer2 size={14} className="text-pink-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </button>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {isDirectionalBoard && (
+                    <>
+                        <div className="h-px bg-gray-50 mx-2" />
+
+                        {/* 2. DECORATIONS */}
+                        <section className="space-y-4 pb-6">
+                            <div className="flex items-center gap-2 px-1">
+                                <Palette className="text-pink-500" size={16} />
+                                <h4 className="text-[11px] font-black text-gray-900 uppercase tracking-[0.2em]">
+                                    Decorations
+                                </h4>
+                            </div>
+                            <div className="grid gap-3">
+                                {DECORATIONS.map((decor) => (
+                                    <button
+                                        key={decor.name}
+                                        onClick={() => handleAddDecoration(decor)}
+                                        className={`group flex items-center gap-4 p-4 rounded-2xl border border-transparent transition-all text-left bg-gray-50 hover:bg-white hover:border-pink-100 hover:shadow-xl hover:shadow-pink-500/5 active:scale-[0.98]`}
+                                    >
+                                        <div
+                                            className="w-12 h-12 bg-white rounded-xl flex items-center justify-center p-2 group-hover:scale-110 transition-transform shadow-sm"
+                                        >
+                                            {decor.svg ? (
+                                                <div
+                                                    dangerouslySetInnerHTML={{ __html: decor.svg }}
+                                                    className="w-full h-full p-2 flex items-center justify-center text-gray-400 group-hover:text-pink-500 transition-colors"
+                                                />
+                                            ) : decor.image ? (
+                                                <img
+                                                    src={decor.image}
+                                                    alt={decor.name}
+                                                    className="w-full h-full object-contain p-1"
+                                                />
+                                            ) : null}
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-xs font-black text-gray-800 uppercase tracking-tight">
+                                                {decor.name}
+                                            </span>
+                                            <span className="text-[10px] font-bold text-gray-400">Click to add decoration</span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </section>
+                    </>
+                )}
             </div>
 
             {/* Footer Tip */}
-            <div className="p-6 bg-pink-50/30 border-t border-pink-50 shrink-0">
-                <div className="flex gap-2">
-                    <Type className="text-pink-400 shrink-0" size={14} />
-                    <p className="text-[10px] text-pink-700 leading-relaxed font-bold">
-                        Tip: Select any element on the board to change its color, size, or position.
-                    </p>
+            {isDirectionalBoard && (
+                <div className="p-6 bg-pink-50/30 border-t border-pink-50 shrink-0">
+                    <div className="flex gap-2">
+                        <Type className="text-pink-400 shrink-0" size={14} />
+                        <p className="text-[10px] text-pink-700 leading-relaxed font-bold">
+                            Tip: Select any element on the board to change its color, size, or position.
+                        </p>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

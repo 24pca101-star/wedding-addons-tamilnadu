@@ -237,7 +237,7 @@ function EditorContent() {
                 {activePanel === "elements" && <ElementsPanel />}
                 {activePanel === "shapes" && <ShapesPanel />}
                 {activePanel === "uploads" && (
-                    (isDirectionalBoard || isHandFan) ? <WeddingTemplatesPanel /> : (isToteBag ? <ToteBagUploadPanel /> : <UploadsPanel />)
+                    isDirectionalBoard ? <WeddingTemplatesPanel isDirectionalBoard={true} /> : (isToteBag ? <ToteBagUploadPanel /> : <UploadsPanel />)
                 )}
                 {activePanel === "ai" && <AIPanel />}
                 {activePanel === "layers" && <LayersPanel />}

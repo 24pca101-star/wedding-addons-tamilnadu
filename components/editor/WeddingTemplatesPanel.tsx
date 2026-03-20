@@ -226,15 +226,15 @@ const DECORATIONS = [
     },
     {
         name: "Mauve Rose Cluster",
-        image: "/assets/decorations/mauve-realistic.png"
+        image: "/storage/assets/decorations/mauve-realistic.png"
     },
     {
         name: "Cascading Pink Floral",
-        image: "/assets/decorations/pink-waterfall-realistic.png"
+        image: "/storage/assets/decorations/pink-waterfall-realistic.png"
     },
     {
         name: "White Rose Cluster",
-        image: "/assets/decorations/white-cluster-realistic.png"
+        image: "/storage/assets/decorations/white-cluster-realistic.png"
     },
     {
         name: "Simple Line",
@@ -249,7 +249,7 @@ export default function WeddingTemplatesPanel({ isDirectionalBoard }: { isDirect
 
     const handleBoardChange = (boardId: string) => {
         if (!canvas) return;
-        const noBgPath = `/assets/mockups/directional-boards/${boardId}-no-bg.png`;
+        const noBgPath = `/storage/mockups/ceremony-decor/directional-sign-boards/${boardId}-no-bg.png`;
         setBackgroundImage(noBgPath);
     };
 
@@ -353,7 +353,7 @@ export default function WeddingTemplatesPanel({ isDirectionalBoard }: { isDirect
                                 >
                                     <div className="w-full aspect-square bg-white rounded-lg overflow-hidden border border-gray-100">
                                         <img
-                                            src={`/assets/mockups/directional-boards/${board.id}.png`}
+                                            src={`/storage/mockups/ceremony-decor/directional-sign-boards/${board.id}.png`}
                                             alt={board.name}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                         />

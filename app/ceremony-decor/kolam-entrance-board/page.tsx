@@ -2,6 +2,12 @@
 import TemplateCard from "@/components/TemplateCard";
 import TemplateUploadCard from "@/components/TemplateUploadCard";
 
+import { getTemplates } from "@/lib/templates";
+
+const CATEGORY = "ceremony-decor";
+const SUBCATEGORY = "kolam-entrance-board";
+const TEMPLATES = getTemplates(CATEGORY, SUBCATEGORY);
+
 export default function KolamEntranceBoard() {
   return (
     <div className="min-h-screen bg-pink-50/30 pt-32 pb-20 px-6">
@@ -17,17 +23,19 @@ export default function KolamEntranceBoard() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           <TemplateUploadCard 
-            category="ceremony-decor"
-            subcategory="kolam-entrance-board"
+            category={CATEGORY}
+            subcategory={SUBCATEGORY}
           />
-          {/* Template placeholders */}
-          <TemplateCard
-            id="kolam-1.psd"
-            name="Traditional Lotus Kolam"
-            previewUrl="http://localhost:5005/preview/kolam-1.png"
-            category="ceremony-decor"
-            subcategory="kolam-entrance-board"
-          />
+          {TEMPLATES.map(t => (
+            <TemplateCard
+              key={t.id}
+              id={t.id}
+              name={t.name}
+              previewUrl={`http://localhost:5005/preview/${t.preview}`}
+              category={CATEGORY}
+              subcategory={SUBCATEGORY}
+            />
+          ))}
         </div>
       </div>
     </div>

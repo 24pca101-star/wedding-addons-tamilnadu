@@ -2,13 +2,11 @@
 import TemplateCard from "@/components/TemplateCard";
 import TemplateUploadCard from "@/components/TemplateUploadCard";
 
-const TEMPLATES = [
-  { id: 'directional-sign-1.psd', name: 'Classic Wedding Sign', preview: 'http://localhost:5005/preview/directional-sign-1.png' },
-  { id: 'directional-sign-2.psd', name: 'Modern Entrance', preview: 'http://localhost:5005/preview/directional-sign-2.png' },
-  { id: 'directional-sign-3.psd', name: 'Rustic Reception', preview: 'http://localhost:5005/preview/directional-sign-3.png' },
-  { id: 'directional-sign-4.psd', name: 'Grand Ballroom', preview: 'http://localhost:5005/preview/directional-sign-4.png' },
-  { id: 'directional-sign-5.psd', name: 'Elegant Chic Signage', preview: 'http://localhost:5005/preview/directional-sign-5.png' },
-];
+import { getTemplates } from "@/lib/templates";
+
+const CATEGORY = "ceremony-decor";
+const SUBCATEGORY = "directional-sign-boards";
+const TEMPLATES = getTemplates(CATEGORY, SUBCATEGORY);
 
 export default function DirectionalSignBoards() {
   return (

@@ -2,15 +2,11 @@
 import TemplateCard from "@/components/TemplateCard";
 import TemplateUploadCard from "@/components/TemplateUploadCard";
 
-const TEMPLATES = [
-  { id: 'hand-fan-1.psd', name: 'Traditional Floral', preview: 'http://localhost:5005/preview/hand-fan-1.png' },
-  { id: 'hand-fan-2.psd', name: 'Royal Gold Border', preview: 'http://localhost:5005/preview/hand-fan-2.png' },
-  { id: 'hand-fan-3.psd', name: 'Peacock Theme', preview: 'http://localhost:5005/preview/hand-fan-3.png' },
-  { id: 'hand-fan-4.psd', name: 'Vintage Wedding', preview: 'http://localhost:5005/preview/hand-fan-4.png' },
-  { id: 'hand-fan-5.psd', name: 'Modern Rose Bloom', preview: 'http://localhost:5005/preview/hand-fan-5.png' },
-  { id: 'hand-fan-6.psd', name: 'Classic Script', preview: 'http://localhost:5005/preview/hand-fan-6.png' },
-  { id: 'handfan1-gtfygh.psd', name: 'Custom Hand Fan 1', preview: 'http://localhost:5005/preview/handfan1-gtfygh.png' },
-];
+import { getTemplates } from "@/lib/templates";
+
+const CATEGORY = "traditional-utility-items";
+const SUBCATEGORY = "printed-visiri-hand-fan";
+const TEMPLATES = getTemplates(CATEGORY, SUBCATEGORY);
 
 export default function PrintedVisiriHandFan() {
   return (
@@ -35,7 +31,7 @@ export default function PrintedVisiriHandFan() {
               key={t.id}
               id={t.id}
               name={t.name}
-              previewUrl={t.preview}
+              previewUrl={`http://localhost:5005/preview/${t.preview}`}
               category="traditional-utility-items"
               subcategory="printed-visiri-hand-fan"
             />

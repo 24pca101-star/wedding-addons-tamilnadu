@@ -91,15 +91,15 @@ function EditorContent() {
                 : "";
             
             if (isDirectionalBoard && bagType) {
-                boardPath = `/assets/mockups/directional-boards/${bagType}-no-bg.png`;
+                boardPath = `/storage/mockups/ceremony-decor/directional-sign-boards/${bagType}-no-bg.png`;
             } else if (isToteBag) {
                 // Map subcategory to asset folder 'tote-bags' and use selected bagType or default
                 const internalBagType = bagType || "totebag1";
-                boardPath = `/assets/mockups/tote-bags/${internalBagType}.png`;
+                boardPath = `/storage/mockups/guest-gift-keepsakes/welcome-tote-bag/${internalBagType}.png`;
             } else if (isHandFan) {
                 // Map subcategory to asset folder 'hand-fans'
                 const internalFanType = bagType || "handfan1";
-                boardPath = `/assets/mockups/hand-fans/${internalFanType}.png`; 
+                boardPath = `/storage/mockups/traditional-utility-items/printed-visiri-hand-fan/${internalFanType}.png`; 
             }
 
             const setCustomBackground = async (path: string) => {
@@ -112,12 +112,12 @@ function EditorContent() {
                         if (generatedPreviewPath) {
                             setBackgroundImage(generatedPreviewPath);
                         } else {
-                            setBackgroundImage("/assets/blank-canvas.png");
+                            setBackgroundImage("/storage/assets/blank-canvas.png");
                         }
                     };
                     img.src = path;
                 } catch (e) {
-                    setBackgroundImage("/assets/blank-canvas.png");
+                    setBackgroundImage("/storage/assets/blank-canvas.png");
                 }
             };
 
@@ -139,9 +139,9 @@ function EditorContent() {
         }
     }, [isCustomMockup, isDirectionalBoard, isToteBag, isHandFan, canvas, bagType, template, setBackgroundImage]);
 
-    // Standardize dimensions for Custom Mockups
-    const canvasWidth = isToteBag ? 400 : (isDirectionalBoard ? 600 : (isHandFan ? 500 : (canvas?.width || psdMetadata?.width || 400)));
-    const canvasHeight = isToteBag ? 500 : (isDirectionalBoard ? 600 : (isHandFan ? 500 : (canvas?.height || psdMetadata?.height || 600)));
+    // Standaridzed dynamic dimensions (will be updated by loadPsdTemplate)
+    const canvasWidth = canvas?.width || psdMetadata?.width || 800;
+    const canvasHeight = canvas?.height || psdMetadata?.height || 800;
 
     useEffect(() => {
         if (canvasElementRef.current && category && subcategory) {
@@ -269,7 +269,7 @@ function EditorContent() {
                                     canvasRef={canvasElementRef}
                                     previewUrl={previewUrl}
                                     zoom={zoom}
-                                    bgImage={`/assets/mockups/${bagType || subcategory || "tote-bag"}/white bag.png`}
+                                    bgImage={`/storage/mockups/guest-gift-keepsakes/welcome-tote-bag/${bagType || "totebag1"}/white bag.png`}
                                 />
                                 {/* On-Object Toolbar */}
                                 <MockupPreview

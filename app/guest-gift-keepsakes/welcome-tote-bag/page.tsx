@@ -10,13 +10,11 @@ const BAG_TYPES = [
   { id: 'totebag6', name: 'Mini Welcome Bag', desc: 'Compact Gift Style' },
 ];
 
-const TEMPLATES = [
-  { id: 'tote-bag-design-1.psd', name: 'Elegant Floral', preview: 'http://localhost:5005/preview/tote-bag-design-1.png' },
-  { id: 'tote-bag-design-2.psd', name: 'Royal Gold', preview: 'http://localhost:5005/preview/tote-bag-design-2.png' },
-  { id: 'tote-bag-design-3.psd', name: 'Minimalist Modern', preview: 'http://localhost:5005/preview/tote-bag-design-3.png' },
-  { id: 'tote-bag-design-4.psd', name: 'Traditional Ethnic', preview: 'http://localhost:5005/preview/tote-bag-design-4.png' },
-  { id: 'tote-bag-design-5.psd', name: 'Boho Eucalyptus', preview: 'http://localhost:5005/preview/tote-bag-design-5.png' },
-];
+import { getTemplates } from "@/lib/templates";
+
+const CATEGORY = "guest-gift-keepsakes";
+const SUBCATEGORY = "welcome-tote-bag";
+const TEMPLATES = getTemplates(CATEGORY, SUBCATEGORY);
 
 export default function WelcomeToteBag() {
   return (
@@ -45,7 +43,7 @@ export default function WelcomeToteBag() {
                 key={t.id}
                 id={t.id}
                 name={t.name}
-                previewUrl={t.preview}
+                previewUrl={`http://localhost:5005/preview/${t.preview}`}
                 category="guest-gift-keepsakes"
                 subcategory="welcome-tote-bag"
               />
@@ -60,11 +58,11 @@ export default function WelcomeToteBag() {
               {/* Image Container */}
               <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden bg-gray-50/50 mb-6 group-hover:bg-white transition-colors duration-500">
                 <img
-                  src={`/assets/mockups/${bag.id}/white bag.png`}
+                  src={`/storage/mockups/guest-gift-keepsakes/welcome-tote-bag/${bag.id}/white bag.png`}
                   alt={bag.name}
                   className="w-full h-full object-contain p-6 group-hover:scale-110 transition-transform duration-700 ease-out"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/assets/blank-canvas.png';
+                    (e.target as HTMLImageElement).src = '/storage/assets/blank-canvas.png';
                   }}
                 />
 

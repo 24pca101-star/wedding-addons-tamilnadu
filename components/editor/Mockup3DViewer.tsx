@@ -16,17 +16,26 @@ function BagModel({ designUrl, productType }: Mockup3DViewerProps) {
 
     // 1. High-Quality Process and Cutout the Bag Image
     useEffect(() => {
-        const dirMap: Record<string, string> = {
-            'welcome-tote-bag': 'tote-bags',
-            'printed-visiri-hand-fan': 'hand-fans',
-            'tote-bag': 'tote-bags',
-            'hand-fan': 'hand-fans'
+        const categoryMap: Record<string, string> = {
+            'welcome-tote-bag': 'guest-gift-keepsakes',
+            'printed-visiri-hand-fan': 'traditional-utility-items',
+            'directional-sign-boards': 'ceremony-decor',
+            'traditional-umbrella-parasol': 'traditional-utility-items'
         };
 
-        const dir = dirMap[productType] || productType;
+        const subcategoryMap: Record<string, string> = {
+            'welcome-tote-bag': 'welcome-tote-bag',
+            'printed-visiri-hand-fan': 'printed-visiri-hand-fan',
+            'tote-bag': 'welcome-tote-bag',
+            'hand-fan': 'printed-visiri-hand-fan'
+        };
+
+        const category = categoryMap[productType] || 'guest-gift-keepsakes';
+        const subcategory = subcategoryMap[productType] || productType;
         const internalBagType = (productType === 'welcome-tote-bag' || dir === 'tote-bags') ? 'totebag1' : 'handfan1';
         
-        const bagPath = `/assets/mockups/${dir}/${designUrl ? (designUrl.split('template=')[1]?.replace('.psd', '') || internalBagType) : internalBagType}.png`;
+        const fileName = designUrl ? (designUrl.split('template=')[1]?.replace('.psd', '') || internalBagType) : internalBagType;
+        const bagPath = `/storage/mockups/${category}/${subcategory}/${fileName}.png`;
         
         const img = new Image();
         img.crossOrigin = "anonymous";

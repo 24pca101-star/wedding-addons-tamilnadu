@@ -79,67 +79,61 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom, saveHistory, paus
                 let targetScale = 1;
 
                 if (workspace && workspace.clientWidth > 0 && workspace.clientHeight > 0) {
-                    const padding = 80; // Total padding around canvas
+                    const padding = 80;
                     const availableWidth = workspace.clientWidth - padding;
                     const availableHeight = workspace.clientHeight - padding;
 
                     const scaleX = availableWidth / metadata.width;
                     const scaleY = availableHeight / metadata.height;
 
-                    // Use a slightly smaller scale (0.9x of fit) to prevent "zoomed in" feel
-                    targetScale = Math.min(scaleX, scaleY, 1) * 0.9;
-
-                    console.log(`Fabric: Workspace size ${workspace.clientWidth}x${workspace.clientHeight}`);
-                    console.log(`Fabric: Calculated targetScale: ${targetScale.toFixed(4)} (FitX: ${scaleX.toFixed(4)}, FitY: ${scaleY.toFixed(4)})`);
+                    targetScale = Math.min(scaleX, scaleY, 1) * 0.95;
                 } else {
-                    console.warn("Fabric: Workspace element not found or has no size. Using default scale 0.5");
                     targetScale = 0.5;
                 }
 
-                const scaledWidth = Math.round(metadata.width * targetScale);
-                const scaledHeight = Math.round(metadata.height * targetScale);
+                // Final Visual Canvas Size (The viewport window)
+                const visualWidth = Math.round(metadata.width * targetScale);
+                const visualHeight = Math.round(metadata.height * targetScale);
 
-                console.log(`Fabric: Final Canvas Dimensions: ${scaledWidth}x${scaledHeight} (Scale: ${targetScale})`);
+                console.log(`Fabric: Workspace Scale: ${targetScale.toFixed(4)} | Resolution: ${metadata.width}x${metadata.height} | Visual: ${visualWidth}x${visualHeight}`);
 
-                activeCanvas.setDimensions({ width: scaledWidth, height: scaledHeight });
-                activeCanvas.setZoom(1);
-                handleZoom(1);
+                // Set dimensions to the visual size, but zoom the world to match
+                activeCanvas.setDimensions({ width: visualWidth, height: visualHeight });
+                activeCanvas.setZoom(targetScale);
 
                 // Force a small state change to ensure page.tsx re-renders with new dimensions
                 setPreviewUrl(prev => prev || "");
 
-                // 2. Load layers with Manual Scaling (Explicit Property Calculation)
+                // 2. Load layers with 1:1 Coordination (No manual scaling!)
                 const templatePreviewUrl = `http://localhost:5005/preview/${filename.replace('.psd', '.png')}`;
                 setPreviewUrl(templatePreviewUrl);
 
                 let layersProcessed = 0;
-                // Layers are now provided in Bottom-to-Top order from the server
                 const sortedLayers = [...metadata.layers];
+                
                 for (const layer of sortedLayers) {
                     if (loadId !== latestLoadId.current) break;
 
                     try {
-                        const scaledLeft = Math.round(layer.left * targetScale);
-                        const scaledTop = Math.round(layer.top * targetScale);
-                        const scaledLayerWidth = Math.round((layer.width || 1) * targetScale);
+                        const originalLeft = layer.left || 0;
+                        const originalTop = layer.top || 0;
+                        const originalWidth = layer.width || 1;
 
                         if (layer.type === 'text' && layer.text) {
-                            // Defensive check for font size
                             const originalFontSize = layer.text.size || 24;
-                            const scaledFontSize = originalFontSize * targetScale;
 
                             const text = new Textbox(layer.text.value || " ", {
-                                left: scaledLeft,
-                                top: scaledTop,
-                                width: Math.max(scaledLayerWidth, 50),
-                                fontSize: scaledFontSize > 1 ? scaledFontSize : 12,
+                                left: originalLeft,
+                                top: originalTop,
+                                width: Math.max(originalWidth, 50),
+                                fontSize: originalFontSize,
                                 fontFamily: layer.text.font || "Inter, Arial, sans-serif",
                                 fill: layer.text.color ? `rgba(${layer.text.color[0]}, ${layer.text.color[1]}, ${layer.text.color[2]}, ${(layer.text.color[3] || 255) / 255})` : "#000000",
                                 textAlign: layer.text.alignment || "left",
                                 lineHeight: layer.text.lineHeight > 0 && originalFontSize > 0
                                     ? layer.text.lineHeight / originalFontSize
                                     : 1.16,
-                                opacity: Math.max((layer.opacity ?? 255) / 255, 0.01), // Avoid total invisibility
+                                opacity: Math.max((layer.opacity ?? 255) / 255, 0.01),
                                 visible: layer.visible ?? true,
                                 globalCompositeOperation: (layer.blendMode === 'pass through' || !layer.blendMode) ? 'source-over' : layer.blendMode,
                                 psdLayerName: layer.name,
@@ -149,25 +143,22 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom, saveHistory, paus
                             activeCanvas.add(text);
                             layersProcessed++;
                         } else {
-                            // Robust check for any image/design layer
                             const imageUrl = layer.imageUrl || layer.layerUrl || layer.LayerUrl || layer.url;
 
                             if (imageUrl) {
-                                // Use absolute URL targeting the PSD service for relative paths
                                 const imgUrl = imageUrl.startsWith('http')
                                     ? imageUrl
                                     : `http://localhost:5005${imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`}`;
-
-                                console.log(`Fabric: Loading image layer "${layer.name}" from ${imgUrl}`);
 
                                 try {
                                     const layerImg = await FabricImage.fromURL(imgUrl, { crossOrigin: 'anonymous' });
                                     if (loadId === latestLoadId.current) {
                                         layerImg.set({
-                                            left: scaledLeft,
-                                            top: scaledTop,
-                                            scaleX: targetScale,
-                                            scaleY: targetScale,
+                                            left: originalLeft,
+                                            top: originalTop,
+                                            // scaleX/scaleY should be 1 because coords are 1:1
+                                            scaleX: 1,
+                                            scaleY: 1,
                                             opacity: (layer.opacity ?? 255) / 255,
                                             visible: layer.visible ?? true,
                                             globalCompositeOperation: (layer.blendMode === 'pass through' || !layer.blendMode) ? 'source-over' : layer.blendMode,

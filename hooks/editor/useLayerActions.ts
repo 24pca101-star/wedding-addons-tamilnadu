@@ -13,9 +13,10 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
     const addRect = useCallback(() => {
         const c = canvasRef.current;
         if (!c) return;
+        const center = c.getVpCenter();
         const rect = new Rect({
-            left: c.width! / 2,
-            top: c.height! / 2,
+            left: center.x,
+            top: center.y,
             fill: "#FF5ACD",
             width: 150,
             height: 150,

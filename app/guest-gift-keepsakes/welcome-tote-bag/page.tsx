@@ -10,24 +10,19 @@ const BAG_TYPES = [
   { id: 'totebag6', name: 'Mini Welcome Bag', desc: 'Compact Gift Style' },
 ];
 
-const TEMPLATES = [
-  { id: 'tote-bag-design-1.psd', name: 'Elegant Floral', preview: 'http://localhost:5005/preview/tote-bag-design-1.png' },
-  { id: 'tote-bag-design-2.psd', name: 'Royal Gold', preview: 'http://localhost:5005/preview/tote-bag-design-2.png' },
-  { id: 'tote-bag-design-3.psd', name: 'Minimalist Modern', preview: 'http://localhost:5005/preview/tote-bag-design-3.png' },
-  { id: 'tote-bag-design-4.psd', name: 'Traditional Ethnic', preview: 'http://localhost:5005/preview/tote-bag-design-4.png' },
-  { id: 'tote-bag-design-5.psd', name: 'Boho Eucalyptus', preview: 'http://localhost:5005/preview/tote-bag-design-5.png' },
-];
+import { getTemplates } from "@/lib/templates";
 
 export default function WelcomeToteBag() {
+  const templates = getTemplates("guest-gift-keepsakes", "welcome-tote-bag");
   return (
     <div className="min-h-screen bg-[#fafafa] pt-32 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-16 text-center">
-          <h1 className="text-5xl font-black text-pink-900 font-serif mb-4 uppercase tracking-tighter">
-            Welcome / Tote Bag
+          <h1 className="text-5xl font-black text-pink-900 font-serif mb-6">
+            Welcome Tote Bag
           </h1>
           <p className="text-gray-500 font-medium max-w-2xl mx-auto italic">
-            "Your design, our craft. Choose a style to begin your wedding masterpiece."
+            "Carry your wedding memories. Custom realistic cotton tote bags for your special guest gifts."
           </p>
           <div className="mt-8 h-1 w-24 mx-auto bg-pink-100 rounded-full" />
         </header>
@@ -40,7 +35,7 @@ export default function WelcomeToteBag() {
             category="guest-gift-keepsakes"
             subcategory="welcome-tote-bag"
           />
-            {TEMPLATES.map(t => (
+            {templates.map(t => (
               <TemplateCard
                 key={t.id}
                 id={t.id}

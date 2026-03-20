@@ -2,20 +2,15 @@
 import TemplateCard from "@/components/TemplateCard";
 import TemplateUploadCard from "@/components/TemplateUploadCard";
 
-const TEMPLATES = [
-  { id: 'directional-sign-1.psd', name: 'Classic Wedding Sign', preview: 'http://localhost:5005/preview/directional-sign-1.png' },
-  { id: 'directional-sign-2.psd', name: 'Modern Entrance', preview: 'http://localhost:5005/preview/directional-sign-2.png' },
-  { id: 'directional-sign-3.psd', name: 'Rustic Reception', preview: 'http://localhost:5005/preview/directional-sign-3.png' },
-  { id: 'directional-sign-4.psd', name: 'Grand Ballroom', preview: 'http://localhost:5005/preview/directional-sign-4.png' },
-  { id: 'directional-sign-5.psd', name: 'Elegant Chic Signage', preview: 'http://localhost:5005/preview/directional-sign-5.png' },
-];
+import { getTemplates } from "@/lib/templates";
 
 export default function DirectionalSignBoards() {
+  const templates = getTemplates("ceremony-decor", "directional-sign-boards");
   return (
     <div className="min-h-screen bg-[#fafafa] pt-32 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-16 text-center">
-          <h1 className="text-5xl font-black text-pink-900 font-serif mb-4 uppercase tracking-tighter">
+          <h1 className="text-5xl font-black text-pink-900 font-serif mb-6">
             Directional Sign Boards
           </h1>
           <p className="text-gray-500 font-medium max-w-2xl mx-auto italic">
@@ -32,7 +27,7 @@ export default function DirectionalSignBoards() {
               category="ceremony-decor"
               subcategory="directional-sign-boards"
             />
-            {TEMPLATES.map(t => (
+            {templates.map(t => (
               <TemplateCard
                 key={t.id}
                 id={t.id}

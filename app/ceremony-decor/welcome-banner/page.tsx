@@ -13,7 +13,7 @@ export default function WelcomeBannerPage() {
     <div className="min-h-screen bg-pink-50/30 pt-32 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-12 text-center">
-          <h1 className="text-4xl font-black text-pink-800 font-serif mb-4">
+          <h1 className="text-5xl font-black text-pink-900 font-serif mb-6">
             Welcome Banners
           </h1>
           <p className="text-gray-600 font-medium max-w-2xl mx-auto">
@@ -21,23 +21,26 @@ export default function WelcomeBannerPage() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {/* PSD Upload Option */}
-          <TemplateUploadCard
-            category="ceremony-decor"
-            subcategory="welcome-banner"
-          />
-          {TEMPLATES.map(t => (
-            <TemplateCard
-              key={t.id}
-              id={t.id}
-              name={t.name}
-              previewUrl={`http://localhost:5005/preview/${t.preview}`}
-              category={CATEGORY}
-              subcategory={SUBCATEGORY}
+        <section className="mb-20">
+          <h2 className="text-2xl font-black text-gray-900 mb-8 uppercase tracking-tight">Design Templates</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {/* PSD Upload Option */}
+            <TemplateUploadCard
+              category="ceremony-decor"
+              subcategory="welcome-banner"
             />
-          ))}
-        </div>
+            {TEMPLATES.map(template => (
+              <TemplateCard
+                key={template.id}
+                id={template.id}
+                name={template.name}
+                previewUrl={`http://localhost:5005/preview/${template.preview}`}
+                category="ceremony-decor"
+                subcategory="welcome-banner"
+              />
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

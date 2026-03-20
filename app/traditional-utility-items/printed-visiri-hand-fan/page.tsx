@@ -2,22 +2,15 @@
 import TemplateCard from "@/components/TemplateCard";
 import TemplateUploadCard from "@/components/TemplateUploadCard";
 
-const TEMPLATES = [
-  { id: 'hand-fan-1.psd', name: 'Traditional Floral', preview: 'http://localhost:5005/preview/hand-fan-1.png' },
-  { id: 'hand-fan-2.psd', name: 'Royal Gold Border', preview: 'http://localhost:5005/preview/hand-fan-2.png' },
-  { id: 'hand-fan-3.psd', name: 'Peacock Theme', preview: 'http://localhost:5005/preview/hand-fan-3.png' },
-  { id: 'hand-fan-4.psd', name: 'Vintage Wedding', preview: 'http://localhost:5005/preview/hand-fan-4.png' },
-  { id: 'hand-fan-5.psd', name: 'Modern Rose Bloom', preview: 'http://localhost:5005/preview/hand-fan-5.png' },
-  { id: 'hand-fan-6.psd', name: 'Classic Script', preview: 'http://localhost:5005/preview/hand-fan-6.png' },
-  { id: 'handfan1-gtfygh.psd', name: 'Custom Hand Fan 1', preview: 'http://localhost:5005/preview/handfan1-gtfygh.png' },
-];
+import { getTemplates } from "@/lib/templates";
 
 export default function PrintedVisiriHandFan() {
+  const templates = getTemplates("traditional-utility-items", "printed-visiri-hand-fan");
   return (
     <div className="min-h-screen bg-pink-50/30 pt-32 pb-20 px-6">
       <div className="max-w-7xl mx-auto text-center">
         <header className="mb-12">
-          <h1 className="text-4xl font-black text-pink-800 font-serif mb-4 uppercase tracking-tight">
+          <h1 className="text-5xl font-black text-pink-900 font-serif mb-6">
             Printed Visiri Hand Fan
           </h1>
           <p className="text-gray-600 font-medium max-w-2xl mx-auto">
@@ -25,22 +18,25 @@ export default function PrintedVisiriHandFan() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          <TemplateUploadCard
-            category="traditional-utility-items"
-            subcategory="printed-visiri-hand-fan"
-          />
-          {TEMPLATES.map(t => (
-            <TemplateCard
-              key={t.id}
-              id={t.id}
-              name={t.name}
-              previewUrl={t.preview}
-              category="traditional-utility-items"
-              subcategory="printed-visiri-hand-fan"
+        <section className="mb-20">
+          <h2 className="text-2xl font-black text-gray-900 mb-8 uppercase tracking-tight">Design Templates</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            <TemplateUploadCard
+                category="traditional-utility-items"
+                subcategory="printed-visiri-hand-fan"
             />
-          ))}
-        </div>
+            {templates.map((template) => (
+              <TemplateCard
+                key={template.id}
+                id={template.id}
+                name={template.name}
+                previewUrl={`http://localhost:5005/preview/${template.preview}`}
+                category="traditional-utility-items"
+                subcategory="printed-visiri-hand-fan"
+              />
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

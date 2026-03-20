@@ -16,9 +16,13 @@ export const TEMPLATES_REGISTRY: Record<string, Record<string, Template[]>> = {
             { id: 'ceremony-decor/welcome-banner/design-9.psd', name: 'Royal Wedding Bloom', preview: 'ceremony-decor/welcome-banner/design-9.png' },
             { id: 'ceremony-decor/welcome-banner/design-10.psd', name: 'Royal Garden Bloom', preview: 'ceremony-decor/welcome-banner/design-10.png' },
         ],
-        "directional-sign-boards": [
-            { id: 'ceremony-decor/directional-sign-boards/design-1.psd', name: 'Easel Arch Board', preview: 'ceremony-decor/directional-sign-boards/design-1.png' },
-        ]
+        "directional-sign-boards": []
+    },
+    "guest-gift-keepsakes": {
+        "welcome-tote-bag": []
+    },
+    "traditional-utility-items": {
+        "printed-visiri-hand-fan": []
     },
     "apparel-wearables": {
         "bride-groom-t-shirts": [

@@ -66,13 +66,15 @@ export default function PsdTemplatesPage({ params }: { params: Promise<{ categor
         }
     };
 
+    const categoryText = `${category.replace('-', ' ')} Templates`;
+
     return (
         <div className="min-h-screen bg-pink-50/30 pt-32 pb-20 px-6">
             <div className="max-w-7xl mx-auto">
                 <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
                     <div>
-                        <h1 className="text-4xl font-black text-pink-800 font-serif mb-4 capitalize">
-                            {category.replace('-', ' ')} Templates
+                        <h1 className="text-5xl font-black text-pink-900 font-serif mb-6">
+                            {categoryText}
                         </h1>
                         <p className="text-gray-600 font-medium">Manage and customize your PSD templates.</p>
                     </div>
@@ -99,24 +101,27 @@ export default function PsdTemplatesPage({ params }: { params: Promise<{ categor
                         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-600"></div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                        {templates.map(t => (
-                            <TemplateCard
-                                key={t.id}
-                                id={t.id}
-                                name={t.name}
-                                previewUrl={t.preview}
-                                category={t.category}
-                                subcategory={t.subcategory}
-                                onDelete={handleDelete}
-                            />
-                        ))}
-                        {templates.length === 0 && (
-                            <div className="col-span-full py-20 text-center bg-white rounded-3xl border-2 border-dashed border-gray-200">
-                                <p className="text-gray-400 font-medium italic">No templates found for this category.</p>
-                            </div>
-                        )}
-                    </div>
+                    <section className="mb-20">
+                        <h2 className="text-2xl font-black text-gray-900 mb-8 uppercase tracking-tight">Design Templates</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                            {templates.map(t => (
+                                <TemplateCard
+                                    key={t.id}
+                                    id={t.id}
+                                    name={t.name}
+                                    previewUrl={t.preview}
+                                    category={t.category}
+                                    subcategory={t.subcategory}
+                                    onDelete={handleDelete}
+                                />
+                            ))}
+                            {templates.length === 0 && (
+                                <div className="col-span-full py-20 text-center bg-white rounded-3xl border-2 border-dashed border-gray-200">
+                                    <p className="text-gray-400 font-medium italic">No templates found for this category.</p>
+                                </div>
+                            )}
+                        </div>
+                    </section>
                 )}
             </div>
         </div>

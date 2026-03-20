@@ -27,11 +27,6 @@ export const TEMPLATES_REGISTRY: Record<string, Record<string, Template[]>> = {
             { id: 'ceremony-decor/kolam-entrance-board/kolam-1.psd', name: 'Traditional Lotus Kolam', preview: 'ceremony-decor/kolam-entrance-board/kolam-1.png' }
         ]
     },
-    "apparel-wearables": {
-        "bride-groom-t-shirts": [
-            { id: 'apparel-wearables/bride-groom-t-shirts/design-1.psd', name: 'Groom Squad Tee', preview: 'apparel-wearables/bride-groom-t-shirts/design-1.png' },
-        ]
-    },
     "guest-gift-keepsakes": {
         "welcome-tote-bag": [
             { id: 'guest-gift-keepsakes/tote-bag/tote-bag-design-1.psd', name: 'Elegant Floral', preview: 'guest-gift-keepsakes/tote-bag/tote-bag-design-1.png' },
@@ -50,6 +45,11 @@ export const TEMPLATES_REGISTRY: Record<string, Record<string, Template[]>> = {
             { id: 'traditional-utility-items/printed-visiri-hand-fan/hand-fan-5.psd', name: 'Modern Rose Bloom', preview: 'traditional-utility-items/printed-visiri-hand-fan/hand-fan-5.png' },
             { id: 'traditional-utility-items/printed-visiri-hand-fan/hand-fan-6.psd', name: 'Classic Script', preview: 'traditional-utility-items/printed-visiri-hand-fan/hand-fan-6.png' },
             { id: 'traditional-utility-items/printed-visiri-hand-fan/handfan1-gtfygh.psd', name: 'Custom Hand Fan 1', preview: 'traditional-utility-items/printed-visiri-hand-fan/handfan1-gtfygh.png' },
+        ]
+    },
+    "apparel-wearables": {
+        "bride-groom-t-shirts": [
+            { id: 'apparel-wearables/bride-groom-t-shirts/design-1.psd', name: 'Groom Squad Tee', preview: 'apparel-wearables/bride-groom-t-shirts/design-1.png' },
         ]
     }
 };

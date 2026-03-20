@@ -13,7 +13,7 @@ export default function DirectionalSignBoards() {
     <div className="min-h-screen bg-[#fafafa] pt-32 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-16 text-center">
-          <h1 className="text-5xl font-black text-pink-900 font-serif mb-4 uppercase tracking-tighter">
+          <h1 className="text-5xl font-black text-pink-900 font-serif mb-6">
             Directional Sign Boards
           </h1>
           <p className="text-gray-500 font-medium max-w-2xl mx-auto italic">

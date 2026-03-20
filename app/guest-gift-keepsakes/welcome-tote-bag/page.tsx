@@ -11,7 +11,6 @@ const BAG_TYPES = [
 ];
 
 import { getTemplates } from "@/lib/templates";
-
 const CATEGORY = "guest-gift-keepsakes";
 const SUBCATEGORY = "welcome-tote-bag";
 const TEMPLATES = getTemplates(CATEGORY, SUBCATEGORY);
@@ -21,11 +20,11 @@ export default function WelcomeToteBag() {
     <div className="min-h-screen bg-[#fafafa] pt-32 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-16 text-center">
-          <h1 className="text-5xl font-black text-pink-900 font-serif mb-4 uppercase tracking-tighter">
-            Welcome / Tote Bag
+          <h1 className="text-5xl font-black text-pink-900 font-serif mb-6">
+            Welcome Tote Bag
           </h1>
           <p className="text-gray-500 font-medium max-w-2xl mx-auto italic">
-            "Your design, our craft. Choose a style to begin your wedding masterpiece."
+            "Carry your wedding memories. Custom realistic cotton tote bags for your special guest gifts."
           </p>
           <div className="mt-8 h-1 w-24 mx-auto bg-pink-100 rounded-full" />
         </header>

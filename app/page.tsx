@@ -1,7 +1,7 @@
 export default function Home() {
   return (
     <section className="text-center py-24">
-      <h1 className="text-5xl font-extrabold text-pink-800 mb-6" suppressHydrationWarning={true}>
+      <h1 className="text-5xl font-black text-pink-900 font-serif mb-6">
         Wedding Add-Ons (Tamil Nadu)
       </h1>
       <p className="text-lg max-w-2xl mx-auto text-gray-700">

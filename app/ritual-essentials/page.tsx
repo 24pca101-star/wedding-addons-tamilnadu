@@ -24,7 +24,7 @@ export default function RitualEssentials() {
       <div className="inline-block mb-4">
         <span className="text-4xl">🪧</span>
       </div>
-      <h1 className="text-5xl font-extrabold text-pink-800 mb-6">
+      <h1 className="text-5xl font-black text-pink-900 font-serif mb-6">
         Ritual Essentials
       </h1>
       <p className="text-lg max-w-2xl mx-auto text-gray-700">

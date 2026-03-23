@@ -1,8 +1,14 @@
 "use client";
 import TemplateCard from "@/components/TemplateCard";
 import TemplateUploadCard from "@/components/TemplateUploadCard";
+import { getTemplates } from "@/lib/templates";
+
+const CATEGORY = "apparel-wearables";
+const SUBCATEGORY = "team-bride-t-shirts";
 
 export default function TeamBrideTShirts() {
+  const templates = getTemplates(CATEGORY, SUBCATEGORY);
+
   return (
     <div className="min-h-screen bg-pink-50/30 pt-32 pb-20 px-6">
       <div className="max-w-7xl mx-auto text-center">
@@ -11,7 +17,7 @@ export default function TeamBrideTShirts() {
             Team Bride T-Shirts
           </h1>
           <p className="text-gray-600 font-medium max-w-2xl mx-auto">
-            Custom traditional team bride t-shirts. Choose to begin customizing.
+            Show your support for the bride with custom team t-shirts.
           </p>
         </header>
 
@@ -19,9 +25,19 @@ export default function TeamBrideTShirts() {
           <h2 className="text-2xl font-black text-gray-900 mb-8 uppercase tracking-tight">Design Templates</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
             <TemplateUploadCard
-              category="apparel-wearables"
-              subcategory="team-bride-t-shirts"
+              category={CATEGORY}
+              subcategory={SUBCATEGORY}
             />
+            {templates.map((t) => (
+              <TemplateCard
+                key={t.id}
+                id={t.id}
+                name={t.name}
+                category={CATEGORY}
+                subcategory={SUBCATEGORY}
+                previewUrl={`http://localhost:5005/preview/${t.preview}`}
+              />
+            ))}
           </div>
         </section>
       </div>

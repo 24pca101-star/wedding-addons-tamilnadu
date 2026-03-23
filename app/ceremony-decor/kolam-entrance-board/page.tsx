@@ -5,10 +5,9 @@ import { getTemplates } from "@/lib/templates";
 
 const CATEGORY = "ceremony-decor";
 const SUBCATEGORY = "kolam-entrance-board";
-const TEMPLATES = getTemplates(CATEGORY, SUBCATEGORY);
 
 export default function KolamEntranceBoard() {
-  const templates = getTemplates("ceremony-decor", "kolam-entrance-board");
+  const templates = getTemplates(CATEGORY, SUBCATEGORY);
 
   return (
     <div className="min-h-screen bg-pink-50/30 pt-32 pb-20 px-6">
@@ -30,7 +29,7 @@ export default function KolamEntranceBoard() {
               category={CATEGORY}
               subcategory={SUBCATEGORY}
             />
-            {TEMPLATES.map((t) => (
+            {templates.map((t) => (
               <TemplateCard
                 key={t.id}
                 id={t.id}

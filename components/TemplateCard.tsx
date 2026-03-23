@@ -40,52 +40,55 @@ export default function TemplateCard({ id, name, previewUrl, category, subcatego
     const colors = getTemplateColors(name);
 
     return (
-        <Link
-            href={`/editor/${category}/${subcategory}?template=${id}`}
-            className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100 block h-full flex flex-col"
-        >
-            <div className={`relative overflow-hidden aspect-[3/2] flex items-center justify-center bg-gradient-to-br ${colors.bg}`}>
-                {!imgError && previewUrl ? (
-                    <img 
-                        src={previewUrl} 
-                        alt={name}
-                        className="object-contain w-full h-full transform group-hover:scale-105 transition-transform duration-500 p-2"
-                        onError={() => setImgError(true)}
-                    />
-                ) : (
-                    <span className={`text-5xl font-bold ${colors.text} transform group-hover:scale-110 transition-transform duration-500 opacity-80`}>
-                        {name.charAt(0).toUpperCase()}
-                    </span>
-                )}
-                
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
-            </div>
-            <div className="p-4 bg-white border-t border-gray-50 flex items-center justify-between mt-auto">
-                <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-bold text-gray-800 truncate">{name}</h3>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{subcategory}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    {onDelete && (
-                        <button
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                if (confirm(`Are you sure you want to delete ${name}?`)) {
-                                    onDelete(id);
-                                }
-                            }}
-                            className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors"
-                            title="Delete Template"
-                        >
-                            <span className="text-lg">×</span>
-                        </button>
+        <div className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100 flex flex-col relative h-full">
+            <Link
+                href={`/editor/${category}/${subcategory}?template=${id}`}
+                className="flex flex-col h-full"
+            >
+                <div className={`relative overflow-hidden aspect-[3/2] flex items-center justify-center bg-gradient-to-br ${colors.bg}`}>
+                    {!imgError && previewUrl ? (
+                        <img 
+                            src={previewUrl} 
+                            alt={name}
+                            className="object-contain w-full h-full transform group-hover:scale-105 transition-transform duration-500 p-2"
+                            onError={() => setImgError(true)}
+                        />
+                    ) : (
+                        <span className={`text-5xl font-bold ${colors.text} transform group-hover:scale-110 transition-transform duration-500 opacity-80`}>
+                            {name.charAt(0).toUpperCase()}
+                        </span>
                     )}
-                    <div className={`w-8 h-8 rounded-full bg-opacity-20 flex items-center justify-center ${colors.text.replace('text-', 'bg-')} ${colors.text} opacity-0 group-hover:opacity-100 transition-opacity`}>
-                        <span className="text-xl">→</span>
+                    
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors" />
+                </div>
+                <div className="p-4 bg-white border-t border-gray-50 flex items-center justify-between mt-auto">
+                    <div className="min-w-0 flex-1">
+                        <h3 className="text-sm font-bold text-gray-800 truncate">{name}</h3>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{subcategory}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-full bg-opacity-20 flex items-center justify-center ${colors.text.replace('text-', 'bg-')} ${colors.text} opacity-0 group-hover:opacity-100 transition-opacity`}>
+                            <span className="text-xl">→</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </Link>
+            </Link>
+
+            {onDelete && (
+                <button
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (confirm(`Are you sure you want to delete ${name}?`)) {
+                            onDelete(id);
+                        }
+                    }}
+                    className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 shadow-sm border border-gray-100 flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors z-20"
+                    title="Delete Template"
+                >
+                    <span className="text-lg">×</span>
+                </button>
+            )}
+        </div>
     );
 }

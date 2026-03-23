@@ -4,19 +4,19 @@ import TemplateUploadCard from "@/components/TemplateUploadCard";
 import { getTemplates } from "@/lib/templates";
 
 const CATEGORY = "guest-gift-keepsakes";
-const SUBCATEGORY = "fridge-magnet";
+const SUBCATEGORY = "water-bottle-label";
 const TEMPLATES = getTemplates(CATEGORY, SUBCATEGORY);
 
-export default function FridgeMagnetPage() {
+export default function WaterBottleLabelPage() {
   return (
     <div className="min-h-screen bg-[#fafafa] pt-32 pb-20 px-6">
       <div className="max-w-7xl mx-auto">
         <header className="mb-16 text-center">
           <h1 className="text-5xl font-black text-pink-900 font-serif mb-6">
-            Fridge Magnets
+            Water Bottle Labels
           </h1>
           <p className="text-gray-500 font-medium max-w-2xl mx-auto italic">
-            "Stick your wedding memories to the heart of the home. Custom designed magnets for your special day."
+            "Personalize your guest refreshments. Custom designer labels for wedding water bottles."
           </p>
           <div className="mt-8 h-1 w-24 mx-auto bg-pink-100 rounded-full" />
         </header>
@@ -46,12 +46,12 @@ export default function FridgeMagnetPage() {
           </div>
         </section>
 
-        {/* Technical Info */}
+        {/* Note on dimensions */}
         <div className="mt-20 p-8 bg-white rounded-[2rem] border border-gray-100 shadow-sm text-center max-w-3xl mx-auto">
           <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-2">Technical Specification</h3>
           <p className="text-xs text-gray-400 font-medium">
-            Standard 4"x4" or 3"x3" magnet formats supported. 
-            High-gloss finish templates with durable magnetic backing designs.
+            All labels are designed for standard 500ml water bottles. 
+            The PSD templates include safe zones and high-resolution layers for professional printing.
           </p>
         </div>
       </div>

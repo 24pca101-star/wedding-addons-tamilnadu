@@ -65,11 +65,7 @@ export default function WelcomeToteBag() {
                   }}
                 />
 
-                {/* Floating 3D Badge */}
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500 delay-100">
-                  <div className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
-                  <span className="text-[10px] font-bold text-gray-700 uppercase tracking-widest">3D View</span>
-                </div>
+
               </div>
 
               {/* Info & Actions */}
@@ -81,19 +77,12 @@ export default function WelcomeToteBag() {
                   <p className="text-xs text-gray-400 font-medium">{bag.desc}</p>
                 </div>
 
-                <div className="mt-auto grid grid-cols-2 gap-3">
                   <a
                     href={`/editor/guest-gift-keepsakes/welcome-tote-bag?template=blank&bagType=${bag.id}`}
-                    className="flex items-center justify-center py-3.5 bg-gray-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-pink-600 transition-all shadow-lg shadow-gray-200 hover:shadow-pink-200 active:scale-95"
+                    className="col-span-2 flex items-center justify-center py-3.5 bg-gray-900 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-pink-600 transition-all shadow-lg shadow-gray-200 hover:shadow-pink-200 active:scale-95"
                   >
                     Custom
                   </a>
-                  <button
-                    className="flex items-center justify-center py-3.5 bg-white border border-gray-100 text-gray-400 rounded-2xl text-[11px] font-black uppercase tracking-widest cursor-default group-hover:text-gray-900 group-hover:border-gray-200 transition-all"
-                  >
-                    3D Design
-                  </button>
-                </div>
               </div>
 
               {/* Premium Glow Effect */}

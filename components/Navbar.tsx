@@ -57,7 +57,7 @@ const categories: Category[] = [
     link: "/guest-gift-keepsakes",
     subModules: [
       { title: "Welcome / Tote Bag - வரவேற்பு டோட் பை", link: "/guest-gift-keepsakes/welcome-tote-bag" },
-      { title: "Water Bottle Labels - தண்ணீர் பாட்டில் லேபிள் ", link: "/guest-gift-keepsakes/water-bottle-labels" },
+      { title: "Water Bottle Labels - தண்ணீர் பாட்டில் லேபிள் ", link: "/guest-gift-keepsakes/water-bottle-label" },
       { title: "Photo Frame - புகைப்பட சட்டகம்", link: "/guest-gift-keepsakes/photo-frame" },
       { title: "Fridge Magnet - ஃப்ரிட்ஜ் மேக்னெட்", link: "/guest-gift-keepsakes/fridge-magnet" },
       { title: "Mini Calendar - சிறிய காலண்டர் ", link: "/guest-gift-keepsakes/mini-calendar" },

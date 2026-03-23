@@ -17,7 +17,6 @@ import WeddingTemplatesPanel from "@/components/editor/WeddingTemplatesPanel";
 import { exportAsPNG, exportAsPDF } from "@/utils/export";
 import { exportViaPsdService } from "@/utils/psdExport";
 import { FabricProvider, useFabric } from "@/context/FabricContext";
-import MockupPreview from "@/components/editor/MockupPreview";
 import ObjectToolbar from "@/components/editor/ObjectToolbar";
 
 import { Suspense } from "react";

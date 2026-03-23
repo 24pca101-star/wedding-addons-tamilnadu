@@ -14,7 +14,7 @@ export default function GuestGiftsKeepsakes() {
     {
       title: "Water Bottle Labels",
       subtitle: "தண்ணீர் பாட்டில் லேபிள்",
-      link: "/guest-gift-keepsakes/water-bottle-labels",
+      link: "/guest-gift-keepsakes/water-bottle-label",
       icon: "💧",
     },
     {
@@ -34,6 +34,12 @@ export default function GuestGiftsKeepsakes() {
       subtitle: "சிறிய காலண்டர்",
       link: "/guest-gift-keepsakes/mini-calendar",
       icon: "📅",
+    },
+    {
+      title: "Traditional Umbrella",
+      subtitle: "பாரம்பரிய குடை",
+      link: "/traditional-utility-items/traditional-umbrella-parasol",
+      icon: "⛱️",
     },
   ];
 

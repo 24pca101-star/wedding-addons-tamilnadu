@@ -1,7 +1,11 @@
 "use client";
 
-import { Undo2, Redo2, Download, MoveUp, MoveDown, ChevronsUp, ChevronsDown } from "lucide-react";
+import { Undo2, Redo2, Download, MoveUp, MoveDown, ChevronsUp, ChevronsDown, Cuboid } from "lucide-react";
 import { useFabric } from "@/context/FabricContext";
+import { useState } from "react";
+import { useParams } from "next/navigation";
+import { getMockupConfig } from "@/lib/mockup-config";
+import Mockup3D from "./Mockup3D";
 
 type Props = {
     download: (format: "png" | "pdf", forceDirect?: boolean) => void;
@@ -23,6 +27,31 @@ export default function Toolbar({ download }: Props) {
         saveHistory,
         selectionVersion
     } = useFabric();
+
+    const params = useParams();
+    const subcategory = params?.subcategory as string;
+    const mockupConfig = getMockupConfig(subcategory);
+
+    const [showMockup3D, setShowMockup3D] = useState(false);
+    const [mockupTexture, setMockupTexture] = useState<string | null>(null);
+
+    const handleOpenMockup = () => {
+        if (!canvas) return;
+        
+        // Deselect objects to get a clean export
+        canvas.discardActiveObject();
+        canvas.requestRenderAll();
+
+        // Export canvas as high-quality data URL
+        const dataURL = canvas.toDataURL({
+            format: 'png',
+            quality: 1,
+            multiplier: 2 // Higher resolution for 3D texture
+        });
+        
+        setMockupTexture(dataURL);
+        setShowMockup3D(true);
+    };
 
     const currentOpacity = selectedObject?.opacity ?? 1;
 
@@ -89,6 +118,16 @@ export default function Toolbar({ download }: Props) {
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
                     <div className="flex bg-gray-100 p-1 rounded-xl">
+                        {mockupConfig && (
+                            <button
+                                onClick={handleOpenMockup}
+                                className="flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-bold bg-white text-pink-600 shadow-sm transition-all hover:bg-pink-50 active:scale-95 border border-pink-100/50"
+                                title="View 3D Mockup"
+                            >
+                                <Cuboid size={16} />
+                                <span>3D Preview</span>
+                            </button>
+                        )}
                         <button
                             onClick={() => download("png", true)}
                             className="px-4 py-1.5 rounded-md text-sm font-semibold transition-all hover:bg-white hover:shadow-sm"
@@ -115,6 +154,15 @@ export default function Toolbar({ download }: Props) {
                     </button>
                 </div>
             </div>
+
+            {/* Global 3D Mockup Modal */}
+            {showMockup3D && mockupConfig && mockupTexture && (
+                <Mockup3D 
+                    config={mockupConfig}
+                    textureUrl={mockupTexture}
+                    onClose={() => setShowMockup3D(false)}
+                />
+            )}
         </div>
     );
 }

@@ -87,18 +87,21 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
             if (isGroup) {
                 console.log(`📂 Entering Group: ${name} [Visible: ${effectiveVisible}]`);
                 if (item.children) {
-                    // Process children in forward order (already bottom-to-top from ag-psd)
                     for (const child of item.children) {
                         await processLayers(child, effectiveVisible, effectiveOpacity);
                     }
                 }
+
+
                 return;
             }
 
             const dims = getLayerDimensions(item);
             const layerIndex = layerCounter++;
-            let layerImageUrl = null;
             const isText = (item.text != null);
+            let layerImageUrl = null;
+            
+            console.log(`  📄 Processing Layer: ${name} [Type: ${isText ? 'text' : 'image'}] index: ${layerIndex} clipping: ${item.clipping}`);
 
             console.log(`📄 Processing Layer: ${name} [Type: ${isText ? 'Text' : 'Image'}] [Visible: ${effectiveVisible}]`);
 
@@ -146,10 +149,42 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
                     height: dims.height,
                     opacity: Math.round(effectiveOpacity * 255),
                     visible: effectiveVisible,
+                    hidden: item.visible === false,
+                    clipping: !!item.clipping,
+                    index: layerIndex,
                     imageUrl: layerImageUrl,
                     isFlattened: false,
-                    blendMode: item.blendMode || 'normal',
+                    blendMode: (function(mode) {
+
+                        const mapping = {
+                            'norm': 'source-over',
+                            'dark': 'darken',
+                            'mul ': 'multiply',
+                            'idiv': 'color-dodge',
+                            'lite': 'lighten',
+                            'scrn': 'screen',
+                            'div ': 'color-burn',
+                            'over': 'overlay',
+                            'hLgt': 'hard-light',
+                            'sLgt': 'soft-light',
+                            'diff': 'difference',
+                            'smud': 'exclusion',
+                            'hue ': 'hue',
+                            'sat ': 'saturation',
+                            'colr': 'color',
+                            'lum ': 'luminosity',
+                            'lddg': 'lighter', // Linear Dodge (Add)
+                            'lbrn': 'color-burn', // Linear Burn
+                            'vLgt': 'vivid-light',
+                            'lLgt': 'linear-light',
+                            'pLgt': 'pin-light',
+                            'hMix': 'hard-mix'
+                        };
+                        return mapping[mode] || (mode === 'pass through' ? 'source-over' : mode);
+                    })(item.blendMode || 'norm'),
+
                     text: isText ? {
+
                         value: item.text.text,
                         font: item.text.style?.font?.name || 'Inter',
                         size: (() => {
@@ -166,6 +201,7 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
                             : [0, 0, 0, 255],
                         alignment: item.text.paragraphStyle?.justification || 'left'
                     } : null
+
                 };
                 layers.push(layer);
 
@@ -197,6 +233,8 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
             }
         }
 
+
+
         return {
             width: psd.width,
             height: psd.height,
@@ -206,7 +244,7 @@ export async function parsePsdMetadata(filePath, publicDir = '') {
             elements
         };
     } catch (error) {
-        console.error(`Metadata Extraction Failed:`, error.message);
+        console.error(`Metadata Extraction Failed:`, error.stack || error.message);
         throw error;
     }
 }

@@ -163,8 +163,8 @@ app.get('/api/psd/layers/:category/:subcategory/:filename', async (req, res) => 
         const metadata = await parsePsdMetadata(filePath, PUBLIC_DIR);
         res.json(metadata);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Parsing failed' });
+        console.error("Critical Route Error:", error.stack || error);
+        res.status(500).json({ error: 'Parsing failed', details: error.message });
     }
 });
 
@@ -176,7 +176,8 @@ app.get('/api/psd/layers/:filename', async (req, res) => {
         const metadata = await parsePsdMetadata(filePath, path.resolve(process.cwd(), '../../public'));
         res.json(metadata);
     } catch (error) {
-        res.status(500).json({ error: 'Parsing failed' });
+        console.error("Critical Fallback Error:", error.stack || error);
+        res.status(500).json({ error: 'Parsing failed', details: error.message });
     }
 });
 

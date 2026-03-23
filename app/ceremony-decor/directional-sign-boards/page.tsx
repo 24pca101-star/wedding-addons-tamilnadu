@@ -4,9 +4,12 @@ import TemplateUploadCard from "@/components/TemplateUploadCard";
 
 import { getTemplates } from "@/lib/templates";
 
+
+
 const CATEGORY = "ceremony-decor";
 const SUBCATEGORY = "directional-sign-boards";
 const TEMPLATES = getTemplates(CATEGORY, SUBCATEGORY);
+
 
 export default function DirectionalSignBoards() {
   return (
@@ -41,6 +44,7 @@ export default function DirectionalSignBoards() {
               />
             ))}
           </div>
+
         </section>
       </div>
     </div>

@@ -52,7 +52,16 @@ export const usePsdLoader = ({ canvasRef, isAlive, handleZoom, saveHistory, paus
             console.log(`Fabric: Fetching layers from ${url} (LoadID: ${loadId})`);
 
             const response = await fetch(url);
-            if (!response.ok) throw new Error(`Metadata fetch failed: ${response.status}`);
+            if (!response.ok) {
+                let errorDetails = "";
+                try {
+                    const errorJson = await response.json();
+                    errorDetails = errorJson.details || errorJson.error || "";
+                } catch (e) {
+                    // Not JSON or no details
+                }
+                throw new Error(`Metadata fetch failed: ${response.status}${errorDetails ? ` (${errorDetails})` : ""}`);
+            }
 
             if (loadId !== latestLoadId.current) return;
 

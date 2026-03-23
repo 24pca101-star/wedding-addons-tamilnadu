@@ -90,9 +90,10 @@ function EditorContent() {
                 ? `http://localhost:5005/preview/${template.replace('.psd', '.png')}` 
                 : "";
             
-            if (isDirectionalBoard && bagType) {
+            if (isDirectionalBoard && bagType && (!template || template === "blank")) {
                 boardPath = `/storage/mockups/ceremony-decor/directional-sign-boards/${bagType}-no-bg.png`;
-            } else if (isToteBag) {
+            } else if (isToteBag && (!template || template === "blank")) {
+
                 // For templates, extract the design number (e.g., tote-bag-design-1) from the path
                 const templateFilename = template?.split('/').pop()?.replace('.psd', '');
                 let internalBagType = templateFilename || bagType || "tote-bag-design-1";
@@ -103,11 +104,12 @@ function EditorContent() {
                 }
                 
                 boardPath = `/storage/mockups/guest-gift-keepsakes/welcome-tote-bag/${internalBagType}.png`;
-            } else if (isHandFan) {
+            } else if (isHandFan && (!template || template === "blank")) {
                 // Map subcategory to asset folder 'hand-fans'
                 const internalFanType = bagType || "handfan1";
                 boardPath = `/storage/mockups/traditional-utility-items/printed-visiri-hand-fan/${internalFanType}.png`; 
             }
+
 
             const setCustomBackground = async (path: string) => {
                 try {

@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Copy, Trash2, MoveUp, MoveDown, AlignCenter, AlignVerticalJustifyCenter, RotateCw } from 'lucide-react';
+import { Copy, Trash2, MoveUp, MoveDown, AlignCenter, AlignVerticalJustifyCenter, RotateCw, Bold, Italic } from 'lucide-react';
 import { useFabric } from '@/context/FabricContext';
+import { Textbox } from 'fabric';
 
 export default function ObjectToolbar() {
     const {
@@ -16,7 +17,9 @@ export default function ObjectToolbar() {
         centerObjectV,
         duplicateObject,
         rotate,
-        canvas
+        canvas,
+        toggleBold,
+        toggleItalic
     } = useFabric();
 
     const [coords, setCoords] = useState({ top: 0, left: 0 });
@@ -82,6 +85,25 @@ export default function ObjectToolbar() {
             }}
         >
             <div className="flex items-center gap-1">
+                {selectedObject instanceof Textbox && (
+                    <>
+                        <button
+                            onClick={() => toggleBold()}
+                            className={`p-2 hover:bg-white/10 rounded-lg transition-colors group ${selectedObject.fontWeight === 'bold' ? 'bg-white/20 text-pink-400' : ''}`}
+                            title="Bold"
+                        >
+                            <Bold size={16} className="group-hover:scale-110 transition-transform" />
+                        </button>
+                        <button
+                            onClick={() => toggleItalic()}
+                            className={`p-2 hover:bg-white/10 rounded-lg transition-colors group ${selectedObject.fontStyle === 'italic' ? 'bg-white/20 text-pink-400' : ''}`}
+                            title="Italic"
+                        >
+                            <Italic size={16} className="group-hover:scale-110 transition-transform" />
+                        </button>
+                        <div className="w-[1px] h-4 bg-white/10 mx-1" />
+                    </>
+                )}
                 <button
                     onClick={() => duplicateObject()}
                     className="p-2 hover:bg-white/10 rounded-lg transition-colors flex flex-col items-center gap-1 group"

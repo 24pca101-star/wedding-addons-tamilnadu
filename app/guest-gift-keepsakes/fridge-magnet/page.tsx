@@ -38,7 +38,7 @@ export default function FridgeMagnetPage() {
                 key={t.id}
                 id={t.id}
                 name={t.name}
-                previewUrl={`http://localhost:5005/preview/${t.preview}`}
+                previewUrl={t.preview}
                 category={CATEGORY}
                 subcategory={SUBCATEGORY}
               />

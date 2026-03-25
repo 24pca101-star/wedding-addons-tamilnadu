@@ -226,15 +226,42 @@ const DECORATIONS = [
     },
     {
         name: "Mauve Rose Cluster",
-        image: "/storage/assets/decorations/mauve-realistic.png"
+        svg: `<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="60" cy="60" r="45" fill="#D8B4FE" opacity="0.3"/>
+                <!-- Mauve Rose 1 -->
+                <path d="M40 40C30 30 20 40 20 50C20 65 40 90 40 90C40 90 60 65 60 50C60 40 50 30 40 40Z" fill="#A855F7" opacity="0.8"/>
+                <!-- Mauve Rose 2 -->
+                <path d="M80 40C70 30 60 40 60 50C60 65 80 90 80 90C80 90 100 65 100 50C100 40 90 30 80 40Z" fill="#9333EA" opacity="0.7"/>
+                <!-- Mauve Rose 3 -->
+                <path d="M60 70C50 60 40 70 40 80C40 95 60 110 60 110C60 110 80 95 80 80C80 70 70 60 60 70Z" fill="#7C3AED" opacity="0.9"/>
+                <circle cx="60" cy="50" r="15" fill="#D8B4FE" opacity="0.4"/>
+              </svg>`
     },
     {
         name: "Cascading Pink Floral",
-        image: "/storage/assets/decorations/pink-waterfall-realistic.png"
+        svg: `<svg width="100" height="150" viewBox="0 0 100 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 10C50 10 20 40 20 70C20 100 50 140 50 140" stroke="#F472B6" stroke-width="4" stroke-linecap="round" stroke-dasharray="4 8"/>
+                <circle cx="50" cy="20" r="10" fill="#FBCFE8"/>
+                <circle cx="35" cy="45" r="8" fill="#F9A8D4"/>
+                <circle cx="65" cy="70" r="12" fill="#F472B6"/>
+                <circle cx="40" cy="100" r="10" fill="#EC4899"/>
+                <circle cx="60" cy="130" r="8" fill="#DB2777"/>
+                <path d="M50 10Q70 40 50 70T30 130" stroke="#4ADE80" stroke-width="2" opacity="0.4"/>
+              </svg>`
     },
     {
         name: "White Rose Cluster",
-        image: "/storage/assets/decorations/white-cluster-realistic.png"
+        svg: `<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="60" cy="60" r="50" fill="#F8FAFC" opacity="0.5"/>
+                <!-- White Roses -->
+                <circle cx="45" cy="45" r="25" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+                <circle cx="75" cy="45" r="25" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+                <circle cx="60" cy="75" r="30" fill="white" stroke="#CBD5E1" stroke-width="1"/>
+                <!-- Accents -->
+                <circle cx="45" cy="45" r="5" fill="#F1F5F9"/>
+                <circle cx="75" cy="45" r="5" fill="#F1F5F9"/>
+                <circle cx="60" cy="75" r="8" fill="#F1F5F9"/>
+              </svg>`
     },
     {
         name: "Simple Line",
@@ -250,14 +277,22 @@ export default function WeddingTemplatesPanel({ isDirectionalBoard }: { isDirect
     const handleBoardChange = (boardId: string) => {
         if (!canvas) return;
         const noBgPath = `/storage/mockups/ceremony-decor/directional-sign-boards/${boardId}-no-bg.png`;
-        setBackgroundImage(noBgPath);
+        
+        // Silent pre-load to avoid console 404 spam if file is missing
+        const img = new Image();
+        img.onload = () => setBackgroundImage(noBgPath);
+        img.onerror = () => {
+            console.warn(`Mockup ${boardId} not found, falling back to clean canvas.`);
+            // Use a 1x1 transparent PNG data URL to "silence" the background load
+            setBackgroundImage("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==");
+        };
+        img.src = noBgPath;
     };
 
     const handleAddTemplate = (text: string) => {
         if (!canvas) return;
-        addText(text);
+        const activeObject = addText(text);
 
-        const activeObject = canvas.getActiveObject();
         if (activeObject && activeObject.type === 'textbox') {
             activeObject.set({
                 width: 300,
@@ -265,7 +300,19 @@ export default function WeddingTemplatesPanel({ isDirectionalBoard }: { isDirect
                 fontFamily: "Outfit, Inter, sans-serif",
                 textAlign: "center"
             });
-            canvas.centerObject(activeObject);
+
+            if (isDirectionalBoard) {
+                // For directional boards, move down to target the easel's printable area
+                // Default centerObject puts it at 0.5; 0.6 puts it perfectly on the board.
+                canvas.centerObject(activeObject);
+                activeObject.set({
+                    top: canvas.getHeight() * 0.6,
+                    fontSize: 80 // Increased for better visibility on high-res canvases
+                });
+                activeObject.setCoords();
+            } else {
+                canvas.centerObject(activeObject);
+            }
             canvas.requestRenderAll();
         }
     };

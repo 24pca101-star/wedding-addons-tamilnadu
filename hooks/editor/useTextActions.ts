@@ -13,7 +13,12 @@ export const useTextActions = ({ canvasRef, isAlive, saveHistory }: Props) => {
     
     const addText = useCallback((text: string = "Type here...") => {
         const c = canvasRef.current;
-        if (!c || !isAlive.current) return;
+        if (!c || !isAlive.current) return null;
+
+        // Disable drawing mode when adding text
+        if (c.isDrawingMode) {
+            c.isDrawingMode = false;
+        }
 
         const textbox = new Textbox(text, {
             left: c.width! / 2,
@@ -43,6 +48,8 @@ export const useTextActions = ({ canvasRef, isAlive, saveHistory }: Props) => {
 
         c.requestRenderAll();
         saveHistory();
+
+        return textbox;
     }, [canvasRef, isAlive, saveHistory]);
 
     const setFontFamily = useCallback((font: string) => {
@@ -93,11 +100,37 @@ export const useTextActions = ({ canvasRef, isAlive, saveHistory }: Props) => {
         }
     }, [canvasRef, saveHistory]);
 
+    const toggleBold = useCallback(() => {
+        const c = canvasRef.current;
+        if (!c) return;
+        const activeObject = c.getActiveObject();
+        if (activeObject instanceof Textbox) {
+            const currentWeight = activeObject.get("fontWeight");
+            activeObject.set("fontWeight", currentWeight === "bold" ? "normal" : "bold");
+            c.renderAll();
+            saveHistory();
+        }
+    }, [canvasRef, saveHistory]);
+
+    const toggleItalic = useCallback(() => {
+        const c = canvasRef.current;
+        if (!c) return;
+        const activeObject = c.getActiveObject();
+        if (activeObject instanceof Textbox) {
+            const currentStyle = activeObject.get("fontStyle");
+            activeObject.set("fontStyle", currentStyle === "italic" ? "normal" : "italic");
+            c.renderAll();
+            saveHistory();
+        }
+    }, [canvasRef, saveHistory]);
+
     return {
         addText,
         setFontFamily,
         setTextColor,
         setTextAlign,
-        setTextSize
+        setTextSize,
+        toggleBold,
+        toggleItalic
     };
 };

@@ -35,7 +35,7 @@ export default function BrideGroomTShirts() {
                 name={t.name}
                 category={CATEGORY}
                 subcategory={SUBCATEGORY}
-                previewUrl={`http://localhost:5005/preview/${t.preview}`}
+                previewUrl={t.preview}
               />
             ))}
           </div>

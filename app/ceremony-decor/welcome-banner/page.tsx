@@ -34,7 +34,7 @@ export default function WelcomeBannerPage() {
                 key={template.id}
                 id={template.id}
                 name={template.name}
-                previewUrl={`http://localhost:5005/preview/${template.preview}`}
+                previewUrl={template.preview}
                 category="ceremony-decor"
                 subcategory="welcome-banner"
               />

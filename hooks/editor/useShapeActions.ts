@@ -14,6 +14,11 @@ export const useShapeActions = ({ canvasRef, saveHistory }: Props) => {
         const c = canvasRef.current;
         if (!c) return;
 
+        // Disable drawing mode when adding shapes
+        if (c.isDrawingMode) {
+            c.isDrawingMode = false;
+        }
+
         let shape: any;
         const color = options.fill || options.color || "#FF5ACD";
         

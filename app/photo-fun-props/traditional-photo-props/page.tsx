@@ -1,8 +1,11 @@
 "use client";
+import { getTemplates } from "@/lib/templates";
 import TemplateCard from "@/components/TemplateCard";
 import TemplateUploadCard from "@/components/TemplateUploadCard";
 
 export default function TraditionalPhotoProps() {
+  const templates = getTemplates("photo-fun-props", "traditional-photo-props");
+
   return (
     <div className="min-h-screen bg-pink-50/30 pt-32 pb-20 px-6">
       <div className="max-w-7xl mx-auto text-center">
@@ -22,6 +25,16 @@ export default function TraditionalPhotoProps() {
               category="photo-fun-props"
               subcategory="traditional-photo-props"
             />
+            {templates.map((template) => (
+              <TemplateCard
+                key={template.id}
+                id={template.id}
+                name={template.name}
+                previewUrl={template.preview}
+                category="photo-fun-props"
+                subcategory="traditional-photo-props"
+              />
+            ))}
           </div>
         </section>
       </div>

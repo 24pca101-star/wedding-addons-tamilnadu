@@ -7,8 +7,7 @@ import EditorCanvas from "@/components/editor/EditorCanvas";
 import Sidebar from "@/components/editor/Sidebar";
 import Toolbar from "@/components/editor/Toolbar";
 import TextPanel from "@/components/editor/TextPanel";
-import ElementsPanel from "@/components/editor/ElementsPanel";
-import ShapesPanel from "@/components/editor/ShapesPanel";
+import ToolsPanel from "@/components/editor/ToolsPanel";
 import UploadsPanel from "@/components/editor/UploadPanel";
 import ToteBagUploadPanel from "@/components/editor/ToteBagUploadPanel";
 import AIPanel from "@/components/editor/AIPanel";
@@ -61,7 +60,7 @@ function EditorContent() {
         toggleVisibility
     } = useFabric();
 
-    const [activePanel, setActivePanel] = useState<"text" | "elements" | "uploads" | "shapes" | "ai" | "layers">("text");
+    const [activePanel, setActivePanel] = useState<"text" | "uploads" | "ai" | "layers" | "tools">("text");
 
     // In Next.js 15+, useParams() returns a plain object on the client, but we should handle it safely.
     const category = params?.category as string;
@@ -120,12 +119,12 @@ function EditorContent() {
                         if (generatedPreviewPath) {
                             setBackgroundImage(generatedPreviewPath);
                         } else {
-                            setBackgroundImage("/storage/assets/blank-canvas.png");
+                            setBackgroundImage("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
                         }
                     };
                     img.src = path;
                 } catch (e) {
-                    setBackgroundImage("/storage/assets/blank-canvas.png");
+                    setBackgroundImage("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
                 }
             };
 
@@ -242,8 +241,7 @@ function EditorContent() {
 
             <div className="w-80 bg-white border-r overflow-y-auto overflow-x-hidden shadow-sm z-10">
                 {activePanel === "text" && <TextPanel />}
-                {activePanel === "elements" && <ElementsPanel />}
-                {activePanel === "shapes" && <ShapesPanel />}
+                {activePanel === "tools" && <ToolsPanel />}
                 {activePanel === "uploads" && (
                     isDirectionalBoard ? <WeddingTemplatesPanel isDirectionalBoard={true} /> : (isToteBag ? <ToteBagUploadPanel /> : <UploadsPanel />)
                 )}

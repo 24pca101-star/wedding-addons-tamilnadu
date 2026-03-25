@@ -42,7 +42,8 @@ export default function EditorCanvas({
                             className="w-full h-full object-contain opacity-100 scale-125 transition-transform duration-1000"
                             onError={(e) => {
                                 // Fallback if path is still wrong
-                                (e.target as HTMLImageElement).src = '/storage/assets/blank-canvas.png';
+                                // Fallback to transparent pixel to stop the 404 loop
+                                (e.target as HTMLImageElement).src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
                             }}
                         />
                         {/* Subtle fabric overlay for the design area */}

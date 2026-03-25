@@ -20,6 +20,7 @@ export default function Toolbar({ download }: Props) {
         bringForward,
         sendBackward,
         setOpacity,
+        setFillColor,
         saveHistory,
         selectionVersion
     } = useFabric();
@@ -82,6 +83,20 @@ export default function Toolbar({ download }: Props) {
                                 {Math.round(currentOpacity * 100)}%
                             </span>
                         </div>
+
+                        {selectedObject && !["textbox", "image", "IText", "path"].includes(selectedObject.type as string) && (
+                            <div className="flex items-center gap-2 ml-2 bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200/50">
+                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Color</span>
+                                <div className="relative w-8 h-8 rounded-full border-2 border-white shadow-sm overflow-hidden group cursor-pointer" style={{ backgroundColor: (selectedObject as any).fill || "#000000" }}>
+                                    <input
+                                        type="color"
+                                        value={(selectedObject as any).fill || "#000000"}
+                                        onChange={(e) => setFillColor(e.target.value)}
+                                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full scale-150"
+                                    />
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

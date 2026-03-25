@@ -1,19 +1,18 @@
 "use client";
 
-import { Sparkles, Layers, Type, Layout, Square, Upload, Home } from "lucide-react";
+import { Sparkles, Layers, Type, Upload, Home, MousePointer2 } from "lucide-react";
 import Link from "next/link";
 
 type SidebarProps = {
-    activePanel: "text" | "elements" | "uploads" | "shapes" | "ai" | "layers";
-    setActivePanel: (panel: "text" | "elements" | "uploads" | "shapes" | "ai" | "layers") => void;
+    activePanel: "text" | "uploads" | "ai" | "layers" | "tools";
+    setActivePanel: (panel: "text" | "uploads" | "ai" | "layers" | "tools") => void;
     isDirectionalBoard?: boolean;
 };
 
 export default function Sidebar({ activePanel, setActivePanel, isDirectionalBoard }: SidebarProps) {
     const menuItems = [
         { id: "text", icon: Type, label: "Text" },
-        { id: "elements", icon: Layout, label: "Elements" },
-        { id: "shapes", icon: Square, label: "Shapes" },
+        { id: "tools", icon: MousePointer2, label: "Tools" },
         { id: "uploads", icon: Upload, label: isDirectionalBoard ? "Signs" : "Uploads" },
         { id: "ai", icon: Sparkles, label: "AI Help" },
         { id: "layers", icon: Layers, label: "Layers" },

@@ -190,6 +190,17 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
         }
     }, [canvasRef, saveHistory]);
 
+    const setFillColor = useCallback((color: string) => {
+        const c = canvasRef.current;
+        if (!c) return;
+        const activeObject = c.getActiveObject();
+        if (activeObject) {
+            activeObject.set("fill", color);
+            c.renderAll();
+            c.fire("object:modified");
+        }
+    }, [canvasRef, saveHistory]);
+
     return {
         addRect,
         deleteSelected,
@@ -201,6 +212,7 @@ export const useLayerActions = ({ canvasRef, saveHistory }: Props) => {
         centerObjectH,
         centerObjectV,
         setOpacity,
+        setFillColor,
         toggleVisibility,
         duplicateObject,
         rotate

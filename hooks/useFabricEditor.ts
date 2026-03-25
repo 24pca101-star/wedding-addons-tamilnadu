@@ -154,7 +154,7 @@ export const useFabricEditor = () => {
         if (c && c.isDrawingMode && c.freeDrawingBrush) {
             c.freeDrawingBrush.color = color;
             c.freeDrawingBrush.width = brushSettingsRef.current.width;
-            c.freeDrawingBrush.globalCompositeOperation = "source-over";
+            (c.freeDrawingBrush as any).globalCompositeOperation = "source-over";
         }
     }, [canvasRef]);
 
@@ -180,11 +180,11 @@ export const useFabricEditor = () => {
         if (c && c.isDrawingMode && c.freeDrawingBrush) {
             if (enabled) {
                 c.freeDrawingBrush.color = "rgba(0,0,0,1)";
-                c.freeDrawingBrush.globalCompositeOperation = "destination-out";
+                (c.freeDrawingBrush as any).globalCompositeOperation = "destination-out";
                 c.freeDrawingBrush.width = brushSettingsRef.current.width * 3;
             } else {
                 c.freeDrawingBrush.color = brushSettingsRef.current.color;
-                c.freeDrawingBrush.globalCompositeOperation = "source-over";
+                (c.freeDrawingBrush as any).globalCompositeOperation = "source-over";
                 c.freeDrawingBrush.width = brushSettingsRef.current.width;
             }
         }
@@ -207,7 +207,7 @@ export const useFabricEditor = () => {
             c.freeDrawingBrush.width = isEraser ? width * 3 : width;
             // Use light pink during drawing for eraser, source-over so it's visible
             c.freeDrawingBrush.color = isEraser ? "rgba(255,192,203,0.5)" : color;
-            c.freeDrawingBrush.globalCompositeOperation = "source-over";
+            (c.freeDrawingBrush as any).globalCompositeOperation = "source-over";
             
             c.discardActiveObject();
             c.requestRenderAll();

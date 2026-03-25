@@ -30,7 +30,13 @@ const BOARD_STYLES = [
     { id: 'directional-sign-4', name: 'Directional Elegant' },
 ];
 
-const DECORATIONS = [
+interface DecorationItem {
+    name: string;
+    svg?: string;
+    image?: string;
+}
+
+const DECORATIONS: DecorationItem[] = [
     {
         name: "Premium Realistic Rose",
         svg: `<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
